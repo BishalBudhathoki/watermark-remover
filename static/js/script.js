@@ -136,15 +136,27 @@ document.getElementById('clearButton')?.addEventListener('click', () => {
 video.addEventListener('loadedmetadata', initializeCanvas);
 window.addEventListener('resize', initializeCanvas);
 
-// Form submission
-const watermarkForm = document.getElementById('watermarkForm');
-if (watermarkForm) {
-    watermarkForm.addEventListener('submit', (e) => {
-        if (regions.length === 0) {
-            e.preventDefault();
-            alert('Please select at least one watermark area');
-            return;
-        }
-        document.getElementById('spinner').style.display = 'block';
-    });
-}
+// Form submission and processing overlay
+document.addEventListener('DOMContentLoaded', () => {
+    const watermarkForm = document.getElementById('watermarkForm');
+    const processingOverlay = document.getElementById('processing-overlay');
+
+    if (watermarkForm && processingOverlay) {
+        watermarkForm.addEventListener('submit', (e) => {
+            if (regions.length === 0) {
+                e.preventDefault();
+                alert('Please select at least one watermark area');
+                return;
+            }
+            
+            // Show processing overlay
+            processingOverlay.style.display = 'flex';
+            
+            // Ensure Lottie animation is playing
+            const lottiePlayer = processingOverlay.querySelector('lottie-player');
+            if (lottiePlayer) {
+                lottiePlayer.play();
+            }
+        });
+    }
+});

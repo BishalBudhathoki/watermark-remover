@@ -432,3 +432,43 @@ video:invalid + canvas::after {
 .secondary-btn:hover {
     background: #e2e8f0;
 }
+
+/* Add these styles to your existing CSS file */
+.processing-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+}
+
+.processing-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    min-width: 300px;
+}
+
+.processing-text {
+    color: var(--primary-color);
+    font-size: 1.25rem;
+    font-weight: 500;
+    margin-top: 1rem;
+}
+
+.processing-overlay.active {
+    display: flex;
+}
+
+/* Ensure Lottie animation is visible */
+lottie-player {
+    display: block;
+    margin: 0 auto;
+}

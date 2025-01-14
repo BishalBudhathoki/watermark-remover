@@ -57,6 +57,9 @@ def uploaded_file(filename):
 
 @app.route('/processed/<filename>')
 def processed_file(filename):
+    file_path = os.path.join(app.config['PROCESSED_FOLDER'], filename)
+    print(f"Attempting to serve processed file: {file_path}")
+    print(f"File exists: {os.path.exists(file_path)}")
     return send_from_directory(app.config['PROCESSED_FOLDER'], filename)
 
 @app.route('/remove/<filename>', methods=['GET', 'POST'])
@@ -184,6 +187,9 @@ def serve_processed_video(filename):
 
 @app.route('/preview/<filename>')
 def preview(filename):
+    file_path = os.path.join(app.config['PROCESSED_FOLDER'], filename)
+    print(f"Preview route - Processed file path: {file_path}")
+    print(f"Preview route - File exists: {os.path.exists(file_path)}")
     return render_template('preview.html', filename=filename)
 
 if __name__ == '__main__':
