@@ -1,6 +1,11 @@
 # app.py
 import os
 import tempfile
+import sys
+
+# Add the moviepy path to system path
+sys.path.append(os.path.join(os.path.dirname(__file__), '.venv/lib/python3.11/site-packages'))
+
 # Import imageio-ffmpeg first
 import imageio_ffmpeg
 # Set environment variable for ffmpeg
@@ -10,7 +15,6 @@ from flask import Flask, request, render_template, redirect, url_for, send_file,
 from werkzeug.utils import secure_filename
 import cv2
 import numpy as np
-# Now import moviepy
 from moviepy.editor import VideoFileClip
 
 app = Flask(__name__)
