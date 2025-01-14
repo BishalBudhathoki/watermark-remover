@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remove Watermark</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Select Watermark Areas</h1>
+        
+        <div class="instructions">
+            <h2>Instructions</h2>
+            <ol>
+                <li>Click and drag to select watermark areas</li>
+                <li>Use the Undo button to remove the last selection</li>
+                <li>Use Clear All to start over</li>
+                <li>Click Remove Watermark when ready</li>
+            </ol>
+        </div>
+
+        <form id="watermarkForm" action="{{ url_for('remove_watermark', filename=filename) }}" method="post">
+            <input type="hidden" id="regions" name="regions" value="">
+            <div class="video-container">
+                <video id="video" controls>
+                    <source src="{{ url_for('uploaded_file', filename=filename) }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <canvas id="canvas"></canvas>
+            </div>
+            <div class="controls">
+                <button type="button" id="undoButton" class="secondary-btn">Undo Last Selection</button>
+                <button type="button" id="clearButton" class="secondary-btn">Clear All</button>
+                <button type="submit" class="primary-btn">Remove Watermark</button>
+            </div>
+        </form>
+
+        <div id="spinner">
+            <div class="spinner-circle"></div>
+            <p>Processing video... Please wait.</p>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WatermarkAway - Professional Watermark Removal Tool</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header class="hero">
+        <nav class="navbar">
+            <div class="logo">
+                <i class="fas fa-magic"></i>
+                WatermarkAway
+            </div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How It Works</a>
+                <a href="#start" class="nav-cta">Start for free</a>
+            </div>
+        </nav>
+        
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1>Remove Watermarks<br>in 60 seconds</h1>
+                <p class="hero-subtitle">Ditch manual editing & boost your video quality instantly</p>
+                <div class="hero-buttons">
+                    <a href="#start" class="cta-button">Start for free</a>
+                    <a href="#features" class="secondary-link">Explore features →</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="https://img.freepik.com/free-vector/video-upload-concept-illustration_114360-4744.jpg" 
+                     alt="Video Editing Illustration">
+            </div>
+        </div>
+    </header>
+
+    <section class="trusted-by">
+        <p class="trusted-text">Trusted by video creators worldwide</p>
+        <div class="logo-grid">
+            <img src="https://www.svgrepo.com/show/13671/youtube.svg" alt="Youtube" class="platform-logo">
+            <img src="https://www.svgrepo.com/show/452229/instagram-1.svg" alt="Instagram" class="platform-logo">
+            <img src="https://www.svgrepo.com/show/303260/tiktok-logo-logo.svg" alt="TikTok" class="platform-logo">
+            <img src="https://www.svgrepo.com/show/452115/telegram.svg" alt="Telegram" class="platform-logo">
+        </div>
+    </section>
+
+    <section id="features" class="features">
+        <h2>Why Choose WatermarkAway</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <i class="fas fa-bullseye feature-icon"></i>
+                <h3>Precise Selection</h3>
+                <p>Accurately select watermark areas with our intuitive tools</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-bolt feature-icon"></i>
+                <h3>Fast Processing</h3>
+                <p>Advanced algorithms ensure quick watermark removal</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-magic feature-icon"></i>
+                <h3>Natural Results</h3>
+                <p>Seamless removal without visible artifacts</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="how-it-works">
+        <h2>How It Works</h2>
+        <div class="steps">
+            <div class="step">
+                <i class="fas fa-cloud-upload-alt step-icon"></i>
+                <div class="step-number">1</div>
+                <h3>Upload Your Video</h3>
+                <p>Support for MP4, MOV, M4V, and 3GP formats</p>
+            </div>
+            <div class="step">
+                <i class="fas fa-crop step-icon"></i>
+                <div class="step-number">2</div>
+                <h3>Select Watermark</h3>
+                <p>Use our precise selection tool to mark watermark areas</p>
+            </div>
+            <div class="step">
+                <i class="fas fa-download step-icon"></i>
+                <div class="step-number">3</div>
+                <h3>Process & Download</h3>
+                <p>Get your watermark-free video in minutes</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="start" class="upload-section">
+        <div class="upload-container">
+            <form action="{{ url_for('index') }}" method="post" enctype="multipart/form-data" id="upload-form">
+                <div class="upload-area">
+                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                    <p>Drop your video here or click to browse</p>
+                    <label for="file-input" class="file-input-label">
+                        Choose Video
+                    </label>
+                    <input type="file" name="file" id="file-input" accept="video/mp4,video/x-m4v,video/mov,video/3gpp" required>
+                </div>
+            </form>
+        </div>
+        <div class="supported-formats">
+            <p>Supported formats: MP4, MOV, M4V, 3GP</p>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>&copy; 2024 WatermarkAway. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const dropZone = document.querySelector('.upload-container');
+        const fileInput = document.getElementById('file-input');
+        const uploadForm = document.getElementById('upload-form');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            dropZone.classList.add('highlight');
+        }
+
+        function unhighlight(e) {
+            dropZone.classList.remove('highlight');
+        }
+
+        dropZone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+            uploadForm.submit();
+        }
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                uploadForm.submit();
+            }
+        });
+    </script>
+</body>
+</html>
