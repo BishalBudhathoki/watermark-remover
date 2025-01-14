@@ -41,3 +41,9 @@ static/processed/*
 # OS
 .DS_Store
 Thumbs.db 
+
+#docker
+.dockerignore
+dockerfile
+docker build -t watermarkaway .
+docker run -d -p 5000:5000 watermarkaway
