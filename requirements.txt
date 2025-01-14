@@ -1,4 +1,11 @@
-flask
-opencv-python
-numpy
-moviepy
+Flask==2.0.1
+opencv-python==4.5.3.56
+moviepy==1.0.3
+numpy==1.21.2
+Werkzeug==2.0.1
+imageio-ffmpeg==0.4.5
+
+# flask
+# opencv-python
+# numpy
+# moviepy
