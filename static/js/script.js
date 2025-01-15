@@ -136,143 +136,15 @@ document.getElementById('clearButton')?.addEventListener('click', () => {
 video.addEventListener('loadedmetadata', initializeCanvas);
 window.addEventListener('resize', initializeCanvas);
 
-// Form submission and processing overlay
-document.addEventListener('DOMContentLoaded', () => {
-    const watermarkForm = document.getElementById('watermarkForm');
-    const processingOverlay = document.getElementById('processing-overlay');
-
-    if (watermarkForm && processingOverlay) {
-        watermarkForm.addEventListener('submit', (e) => {
-            if (regions.length === 0) {
-                e.preventDefault();
-                alert('Please select at least one watermark area');
-                return;
-            }
-            
-            // Show processing overlay
-            processingOverlay.style.display = 'flex';
-            
-            // Ensure Lottie animation is playing
-            const lottiePlayer = processingOverlay.querySelector('lottie-player');
-            if (lottiePlayer) {
-                lottiePlayer.play();
-            }
-        });
-    }
-});
-
-document.getElementById('download-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const videoUrl = document.getElementById('video-url').value;
-    const quality = document.getElementById('quality').value;
-    const mediaType = document.getElementById('media-type').value;
-    const format = document.getElementById('format').value;
-
-    const downloadStatus = document.getElementById('download-status');
-    const progressBar = document.getElementById('progress-bar');
-    const statusMessage = document.getElementById('status-message');
-    const speedMessage = document.getElementById('speed-message');
-    const etaMessage = document.getElementById('eta-message');
-    
-    downloadStatus.style.display = 'block';
-    progressBar.style.width = '0%';
-    statusMessage.textContent = 'Starting download...';
-
-    fetch('/download-video', {
-        method: 'POST',
-        body: JSON.stringify({ url: videoUrl, quality, mediaType, format }),
-        headers: {
-            'Content-Type': 'application/json'
+// Form submission
+const watermarkForm = document.getElementById('watermarkForm');
+if (watermarkForm) {
+    watermarkForm.addEventListener('submit', (e) => {
+        if (regions.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one watermark area');
+            return;
         }
-    })
-    .then(response => {
-        const contentLength = response.headers.get('Content-Length');
-        const total = parseInt(contentLength, 10);
-        let loaded = 0;
-        let startTime = Date.now();
-
-        const reader = response.body.getReader();
-        const pump = () => reader.read().then(({ done, value }) => {
-            if (done) {
-                statusMessage.textContent = 'Download complete!';
-                return;
-            }
-
-            loaded += value.length;
-            const percent = (loaded / total) * 100;
-            progressBar.style.width = `${percent}%`;
-            statusMessage.textContent = `Downloaded ${loaded} of ${total} bytes (${percent.toFixed(2)}%)`;
-
-            // Calculate speed and ETA
-            const elapsedTime = (Date.now() - startTime) / 1000; // in seconds
-            const speed = loaded / elapsedTime; // bytes per second
-            const eta = (total - loaded) / speed; // seconds remaining
-
-            speedMessage.textContent = `Speed: ${(speed / 1024).toFixed(2)} KB/s`;
-            etaMessage.textContent = `ETA: ${Math.ceil(eta)} seconds`;
-
-            // Continue reading
-            pump();
-        });
-
-        pump();
-    })
-    .catch(error => {
-        console.error('Download error:', error);
-        statusMessage.textContent = 'Error downloading file.';
+        document.getElementById('spinner').style.display = 'block';
     });
-});
-// document.getElementById('download-form').addEventListener('submit', function(e) {
-//     e.preventDefault();
-    
-//     const videoUrl = document.getElementById('video-url').value;
-//     const quality = document.getElementById('quality').value;
-//     const mediaType = document.getElementById('media-type').value;
-//     const format = document.getElementById('format').value;
-
-//     // Show download status
-//     const downloadStatus = document.getElementById('download-status');
-//     const progressBar = document.getElementById('progress-bar');
-//     const statusMessage = document.getElementById('status-message');
-    
-//     downloadStatus.style.display = 'block';
-//     progressBar.style.width = '0%';
-//     statusMessage.textContent = 'Starting download...';
-
-//     // Simulate download (replace with actual download logic)
-//     fetch('/download-video', {
-//         method: 'POST',
-//         body: JSON.stringify({ url: videoUrl, quality, mediaType, format }),
-//         headers: {
-//             'Content-Type': 'application/json'
-//         }
-//     })
-//     .then(response => {
-//         const contentLength = response.headers.get('Content-Length');
-//         const total = parseInt(contentLength, 10);
-//         let loaded = 0;
-
-//         const reader = response.body.getReader();
-//         const pump = () => reader.read().then(({ done, value }) => {
-//             if (done) {
-//                 statusMessage.textContent = 'Download complete!';
-//                 return;
-//             }
-
-//             loaded += value.length;
-//             const percent = (loaded / total) * 100;
-//             progressBar.style.width = `${percent}%`;
-//             statusMessage.textContent = `Downloaded ${loaded} of ${total} bytes (${percent.toFixed(2)}%)`;
-
-//             // Continue reading
-//             pump();
-//         });
-
-//         pump();
-//     })
-//     .catch(error => {
-//         console.error('Download error:', error);
-//         statusMessage.textContent = 'Error downloading file.';
-//     });
-// });
+}

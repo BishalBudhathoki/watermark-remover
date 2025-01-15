@@ -23,7 +23,10 @@
         <form id="watermarkForm" action="{{ url_for('remove_watermark', filename=filename) }}" method="post">
             <input type="hidden" id="regions" name="regions" value="">
             <div class="video-container">
-                <video id="video" src="{{ url_for('static', filename='uploads/' + filename) }}" controls></video>
+                <video id="video" controls>
+                    <source src="{{ url_for('uploaded_file', filename=filename) }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
                 <canvas id="canvas"></canvas>
             </div>
             <div class="controls">

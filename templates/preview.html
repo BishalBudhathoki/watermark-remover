@@ -15,9 +15,9 @@
         </div>
 
         <div class="video-container">
-            <video controls width="100%">
+            <video controls>
                 <source src="{{ url_for('processed_file', filename=filename) }}" type="video/mp4">
-                <p class="error-message">Error: Your browser cannot play this video. You can still <a href="{{ url_for('download', filename=filename) }}">download it</a>.</p>
+                Your browser does not support the video tag.
             </video>
         </div>
 
