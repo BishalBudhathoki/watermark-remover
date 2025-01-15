@@ -2,6 +2,7 @@
 import os
 import tempfile
 import sys
+import yt_dlp
 
 # Add the moviepy path to system path
 sys.path.append(os.path.join(os.path.dirname(__file__), '.venv/lib/python3.11/site-packages'))
@@ -11,7 +12,7 @@ import imageio_ffmpeg
 # Set environment variable for ffmpeg
 os.environ['IMAGEIO_FFMPEG_EXE'] = imageio_ffmpeg.get_ffmpeg_exe()
 
-from flask import Flask, request, render_template, redirect, url_for, send_file, send_from_directory
+from flask import Flask, request, render_template, redirect, url_for, send_file, send_from_directory, flash
 from werkzeug.utils import secure_filename
 import cv2
 import numpy as np
@@ -191,6 +192,103 @@ def preview(filename):
     print(f"Preview route - Processed file path: {file_path}")
     print(f"Preview route - File exists: {os.path.exists(file_path)}")
     return render_template('preview.html', filename=filename)
+
+@app.route('/download-video', methods=['POST'])
+def download_video():
+    video_url = request.form.get('url')
+    format_type = request.form.get('format', 'video')
+    video_quality = request.form.get('video_quality', 'highest')
+    audio_quality = request.form.get('audio_quality', 'best')
+    output_format = request.form.get('output_format', 'mp4')
+
+    if not video_url:
+        flash('Please provide a valid video URL')
+        return redirect(url_for('index'))
+
+    try:
+        # Create a temporary directory for downloads
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Base options
+            ydl_opts = {
+                'outtmpl': os.path.join(temp_dir, '%(title)s.%(ext)s'),
+                'quiet': True,
+                'no_warnings': True,
+            }
+
+            # Configure format based on user selection
+            if format_type == 'audio':
+                # Audio-only options
+                audio_formats = {
+                    'best': 'bestaudio/best',
+                    'good': 'bestaudio[abr<=128]/best',
+                    'medium': 'bestaudio[abr<=96]/best',
+                    'low': 'bestaudio[abr<=64]/best'
+                }
+                
+                # For audio downloads, we need to extract audio
+                ydl_opts.update({
+                    'format': audio_formats.get(audio_quality, 'bestaudio/best'),
+                    'postprocessors': [{
+                        'key': 'FFmpegExtractAudio',
+                        'preferredcodec': output_format,
+                        'preferredquality': '192' if audio_quality == 'best' else '128',
+                    }],
+                    # Force the extension for audio files
+                    'force_overwrites': True,
+                    'writethumbnail': False,
+                })
+            else:
+                # Video options
+                video_formats = {
+                    'highest': 'bestvideo+bestaudio/best',
+                    '4k': 'bestvideo[height<=2160]+bestaudio/best[height<=2160]',
+                    '1080p': 'bestvideo[height<=1080]+bestaudio/best[height<=1080]',
+                    '720p': 'bestvideo[height<=720]+bestaudio/best[height<=720]',
+                    '480p': 'bestvideo[height<=480]+bestaudio/best[height<=480]',
+                    '360p': 'bestvideo[height<=360]+bestaudio/best[height<=360]'
+                }
+                
+                # For video downloads
+                ydl_opts.update({
+                    'format': video_formats.get(video_quality, 'bestvideo+bestaudio/best'),
+                    'merge_output_format': output_format,
+                    'force_overwrites': True,
+                })
+
+            # Download the video/audio
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                # Extract info first to get the title
+                info = ydl.extract_info(video_url, download=False)
+                title = ydl.sanitize_info(info)['title']
+                
+                # Download the file
+                ydl.download([video_url])
+                
+                # Construct the expected filename
+                if format_type == 'audio':
+                    downloaded_file = os.path.join(temp_dir, f"{title}.{output_format}")
+                else:
+                    # For videos, the extension is handled by merge_output_format
+                    downloaded_file = os.path.join(temp_dir, f"{title}.{output_format}")
+                
+                # Check if file exists
+                if not os.path.exists(downloaded_file):
+                    # Try to find the file with any extension
+                    files = os.listdir(temp_dir)
+                    if files:
+                        downloaded_file = os.path.join(temp_dir, files[0])
+
+            # Send the file to the user with proper filename
+            return send_file(
+                downloaded_file,
+                as_attachment=True,
+                download_name=f"{title}.{output_format}"
+            )
+
+    except Exception as e:
+        print(f"Download error: {str(e)}")  # Add logging for debugging
+        flash(f'Error downloading: {str(e)}')
+        return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=os.getenv('PORT', '5000'), debug=True)
