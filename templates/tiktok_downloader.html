@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Profile Downloader</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/downloader.css') }}">
+</head>
+<body>
+    <div class="downloader-container">
+        <div class="downloader-card">
+            <h1>TikTok Profile Downloader</h1>
+            <p class="subtitle">Download videos from any TikTok profile</p>
+            
+            <form action="{{ url_for('tiktok_download') }}" method="POST" class="download-form">
+                <div class="input-group">
+                    <input 
+                        type="url" 
+                        id="profile_url" 
+                        name="profile_url"
+                        placeholder="https://www.tiktok.com/@username" 
+                        required
+                    >
+                </div>
+                <button type="submit" class="download-btn">Download Profile Content</button>
+            </form>
+
+            <div id="downloadStatus" class="download-status hidden">
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <p class="status-text">Downloading: 0%</p>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/tiktok_downloader.js') }}"></script>
+</body>
+</html> 
