@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Results - {{ content.username }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/downloader.css') }}">
+    <style>
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        .video-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .video-item video {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            background: #000;
+        }
+        .video-info {
+            padding: 1rem;
+        }
+        .video-info h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.1rem;
+        }
+        .description {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+        .download-btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+        .download-btn:hover {
+            background: #0056b3;
+        }
+        .back-btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="downloader-container">
+        <div class="downloader-card">
+            <h1>Profile: @{{ content.username }}</h1>
+            <p class="subtitle">Downloaded {{ content.videos|length }} videos</p>
+            
+            <div class="video-grid">
+                {% for video in content.videos %}
+                <div class="video-item">
+                    <video controls>
+                        <source src="{{ url_for('serve_download', filename=video.url.split('/')[-1]) }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <div class="video-info">
+                        <h3>{{ video.title }}</h3>
+                        {% if video.description %}
+                        <p class="description">{{ video.description }}</p>
+                        {% endif %}
+                        <a href="{{ url_for('serve_download', filename=video.url.split('/')[-1]) }}" 
+                           class="download-btn" 
+                           download="tiktok_{{ content.username }}_{{ video.id }}.mp4">
+                            Download Video
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="actions">
+                <a href="{{ url_for('tiktok_downloader') }}" class="back-btn">Download Another Profile</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

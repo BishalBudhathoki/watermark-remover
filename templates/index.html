@@ -18,6 +18,8 @@
             <div class="nav-links">
                 <a href="#features">Features</a>
                 <a href="#how-it-works">How It Works</a>
+                <a href="{{ url_for('download_audio_video') }}" class="nav-cta">Video Downloader</a>
+                <a href="{{ url_for('tiktok_downloader') }}" class="nav-cta">TikTok Downloader</a>
                 <a href="#start" class="nav-cta">Start for free</a>
             </div>
         </nav>
@@ -111,6 +113,76 @@
         </div>
     </section>
 
+    <section id="video-downloader" class="video-downloader">
+        <div class="section-container">
+            <h2>Download Videos</h2>
+            <p class="section-description">Download videos from YouTube, Instagram, TikTok, and more!</p>
+            
+            <form method="POST" action="{{ url_for('download_video') }}" class="download-form">
+                <div class="input-group">
+                    <input type="url" id="video-url" name="url" class="url-input" 
+                           required placeholder="Paste video URL here">
+                </div>
+                
+                <div class="download-options">
+                    <div class="option-group">
+                        <label for="format">Format:</label>
+                        <select name="format" id="format" class="format-select">
+                            <option value="video">Video</option>
+                            <option value="audio">Audio Only</option>
+                        </select>
+                    </div>
+                    
+                    <div class="option-group video-options">
+                        <label for="video-quality">Video Quality:</label>
+                        <select name="video_quality" id="video-quality" class="quality-select">
+                            <option value="highest">Best Quality</option>
+                            <option value="1080p">1080p</option>
+                            <option value="720p">720p</option>
+                            <option value="480p">480p</option>
+                            <option value="360p">360p</option>
+                        </select>
+                    </div>
+                    
+                    <div class="option-group audio-options" style="display: none;">
+                        <label for="audio-quality">Audio Quality:</label>
+                        <select name="audio_quality" id="audio-quality" class="quality-select">
+                            <option value="best">Best Quality</option>
+                            <option value="good">Good (128kbps)</option>
+                            <option value="medium">Medium (96kbps)</option>
+                            <option value="low">Low (64kbps)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="option-group">
+                        <label for="output-format">Output Format:</label>
+                        <select name="output_format" id="output-format" class="format-select">
+                            <option value="mp4">MP4</option>
+                            <option value="mkv">MKV</option>
+                            <option value="webm">WebM</option>
+                            <option value="mp3">MP3</option>
+                            <option value="m4a">M4A</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button type="submit" class="download-btn">
+                    <i class="fas fa-download"></i> Download
+                </button>
+            </form>
+            
+            <div class="supported-platforms">
+                <p>Supported platforms:</p>
+                <div class="platform-icons">
+                    <i class="fab fa-youtube" title="YouTube"></i>
+                    <i class="fab fa-instagram" title="Instagram"></i>
+                    <i class="fab fa-tiktok" title="TikTok"></i>
+                    <i class="fab fa-facebook" title="Facebook"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <footer class="footer">
         <p>&copy; 2024 WatermarkAway. All rights reserved.</p>
     </footer>
@@ -158,6 +230,50 @@
             if (fileInput.files.length > 0) {
                 uploadForm.submit();
             }
+        });
+
+        // Video downloader format selection
+        const formatSelect = document.getElementById('format');
+        const videoOptions = document.querySelector('.video-options');
+        const audioOptions = document.querySelector('.audio-options');
+        const outputFormatSelect = document.getElementById('output-format');
+        
+        // Function to update output format options
+        function updateOutputFormats(isAudio) {
+            const currentValue = outputFormatSelect.value;
+            const videoFormats = [
+                { value: 'mp4', label: 'MP4' },
+                { value: 'mkv', label: 'MKV' },
+                { value: 'webm', label: 'WebM' },
+                { value: 'mov', label: 'MOV' }
+            ];
+            const audioFormats = [
+                { value: 'mp3', label: 'MP3' },
+                { value: 'm4a', label: 'M4A' },
+                { value: 'wav', label: 'WAV' },
+                { value: 'aac', label: 'AAC' }
+            ];
+            
+            const formats = isAudio ? audioFormats : videoFormats;
+            outputFormatSelect.innerHTML = formats
+                .map(format => `<option value="${format.value}"${currentValue === format.value ? ' selected' : ''}>${format.label}</option>`)
+                .join('');
+        }
+
+        // Initialize the correct state on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const isAudio = formatSelect.value === 'audio';
+            videoOptions.style.display = isAudio ? 'none' : 'block';
+            audioOptions.style.display = isAudio ? 'block' : 'none';
+            updateOutputFormats(isAudio);
+        });
+
+        // Handle format changes
+        formatSelect.addEventListener('change', function() {
+            const isAudio = this.value === 'audio';
+            videoOptions.style.display = isAudio ? 'none' : 'block';
+            audioOptions.style.display = isAudio ? 'block' : 'none';
+            updateOutputFormats(isAudio);
         });
     </script>
 </body>

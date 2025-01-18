@@ -148,3 +148,43 @@ if (watermarkForm) {
         document.getElementById('spinner').style.display = 'block';
     });
 }
+
+function fetchFormats() {
+    const url = document.getElementById('url').value;
+    if (!url) {
+        alert('Please enter a valid URL');
+        return;
+    }
+
+    fetch('{{ url_for("get_formats") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({ url: url }),
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.error) {
+            alert('Error fetching formats: ' + data.error);
+        } else {
+            const formatSelect = document.getElementById('format_id');
+            formatSelect.innerHTML = '';
+            data.formats.forEach(format => {
+                const option = document.createElement('option');
+                option.value = format.format_id;
+                option.text = `${format.format_id} - ${format.ext} - ${format.resolution} - ${format.filesize || 'unknown size'}`;
+                formatSelect.appendChild(option);
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to fetch formats. Please check your network connection and try again.');
+    });
+}
