@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remove Watermark</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-4xl font-bold text-center mb-8">Select Watermark Areas</h1>
+        
+        <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="instructions mb-6">
+                <h2 class="text-2xl font-semibold mb-4">Instructions</h2>
+                <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                    <li>Click and drag to select watermark areas</li>
+                    <li>Use the Undo button to remove the last selection</li>
+                    <li>Use Clear All to start over</li>
+                    <li>Click Remove Watermark when ready</li>
+                </ol>
+            </div>
+
+            <form id="watermarkForm" action="/api/download/remove/{{ filename }}" method="post">
+                <input type="hidden" id="regions" name="regions" value="">
+                <div class="video-container bg-black rounded-lg overflow-hidden mb-6">
+                    <video id="video" controls class="w-full">
+                        <source src="/api/download/uploads/{{ filename }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <canvas id="canvas" class="absolute top-0 left-0 pointer-events-none"></canvas>
+                </div>
+                <div class="controls flex space-x-4 justify-center">
+                    <button type="button" id="undoButton" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors">
+                        Undo Last Selection
+                    </button>
+                    <button type="button" id="clearButton" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors">
+                        Clear All
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                        Remove Watermark
+                    </button>
+                </div>
+            </form>
+
+            <div id="spinner" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                <div class="bg-white p-8 rounded-lg text-center">
+                    <div class="spinner-circle mb-4"></div>
+                    <p class="text-gray-800">Processing video... Please wait.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Files Section -->
+        <div id="fileList" class="max-w-4xl mx-auto mt-8">
+            <h2 class="text-2xl font-semibold mb-4">Your Files</h2>
+            <div id="files" class="space-y-2">
+                <!-- Files will be listed here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/script.js"></script>
+    <script>
+        async function loadFiles() {
+            try {
+                const response = await fetch('/api/download/files');
+                const files = await response.json();
+                
+                const fileList = document.getElementById('files');
+                fileList.innerHTML = files.map(file => `
+                    <div class="bg-white p-4 rounded-lg shadow flex justify-between items-center">
+                        <div>
+                            <p class="font-semibold">${file.name}</p>
+                            <p class="text-sm text-gray-600">${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                        </div>
+                        <span class="px-2 py-1 text-sm ${file.type === 'processed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'} rounded">
+                            ${file.type}
+                        </span>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading files:', error);
+            }
+        }
+
+        // Load files on page load
+        loadFiles();
+    </script>
+</body>
+</html>

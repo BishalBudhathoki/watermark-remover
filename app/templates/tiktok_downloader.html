@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Profile Downloader</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/downloader.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+    <style>
+        .options-group {
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            color: #475569;
+            font-size: 0.875rem;
+            padding: 0.5rem;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            width: 1rem;
+            height: 1rem;
+            border-radius: 4px;
+            border: 2px solid #e2e8f0;
+            cursor: pointer;
+        }
+
+        .quality-info {
+            text-align: center;
+            color: #64748b;
+            font-size: 0.875rem;
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background: #f1f5f9;
+            border-radius: 6px;
+        }
+        .loading-overlay {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loading-container {
+            text-align: center;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .loading-text {
+            margin-top: 1rem;
+            font-size: 1.2rem;
+            color: #333;
+        }
+
+        .cache-info {
+            background: #e0f2fe;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #bae6fd;
+        }
+
+        .cache-info span {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #0369a1;
+        }
+
+        .force-download-option {
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .force-download-option input[type="checkbox"] {
+            width: 1rem;
+            height: 1rem;
+        }
+
+        .force-download-option label {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .cache-count {
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="downloader-container">
+        <div class="downloader-card">
+            <h1>TikTok Profile Downloader</h1>
+            <p class="subtitle">Download videos from any TikTok profile</p>
+            
+            <div id="cacheInfo" class="cache-info" style="display: none;">
+                <span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+                    </svg>
+                    <span>You have <span class="cache-count">0</span> cached videos</span>
+                </span>
+            </div>
+
+            <form action="/api/download/profile" method="POST" class="download-form">
+                <div class="input-group">
+                    <input 
+                        type="url" 
+                        id="profile_url" 
+                        name="profile_url"
+                        placeholder="https://www.tiktok.com/@username" 
+                        required
+                    >
+                </div>
+                
+                <div class="options-group">
+                    <label class="checkbox-container">
+                        <input type="checkbox" name="force_download" value="true">
+                        Force re-download (ignore cache)
+                    </label>
+                    <div class="quality-info">
+                        <i class="fas fa-info-circle"></i>
+                        Videos will be downloaded in highest available quality
+                    </div>
+                </div>
+
+                <div class="force-download-option">
+                    <input type="checkbox" id="force_download" name="force_download">
+                    <label for="force_download">Force re-download (ignore cache)</label>
+                </div>
+
+                <button type="submit" class="download-btn">
+                    <i class="fas fa-download"></i> Download Profile Content
+                </button>
+            </form>
+ 
+            <div id="downloadStatus" class="download-status hidden">
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <p class="status-text">Downloading: 0%</p>
+            </div>
+        </div>
+    </div>
+    <script src="/static/js/tiktok_downloader.js"></script>
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-container">
+            <lottie-player
+                id="lottieContainer"
+                src="/static/assets/loading.json"
+                background="transparent"
+                speed="1"
+                style="width: 300px; height: 300px;"
+                loop
+                autoplay>
+            </lottie-player>
+            <p class="loading-text">Downloading profile content...</p>
+            <div class="download-status" id="downloadStatus"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check cache status on page load
+            checkCacheStatus();
+
+            const form = document.querySelector('.download-form');
+            const progressContainer = document.getElementById('downloadStatus');
+            const progressBar = document.querySelector('.progress-fill');
+            const progressText = document.querySelector('.status-text');
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                progressContainer.style.display = 'block';
+                progressBar.style.width = '0%';
+                progressText.textContent = 'Starting download...';
+
+                const formData = new FormData(form);
+                
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    document.open();
+                    document.write(html);
+                    document.close();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    progressText.textContent = 'Error: ' + error.message;
+                    progressContainer.style.display = 'none';
+                });
+            });
+        });
+
+        function checkCacheStatus() {
+            fetch('/api/download/cache-status')
+                .then(response => response.json())
+                .then(data => {
+                    const cacheInfo = document.getElementById('cacheInfo');
+                    const cacheCount = document.querySelector('.cache-count');
+                    
+                    if (data.cached_videos > 0) {
+                        cacheCount.textContent = data.cached_videos;
+                        cacheInfo.style.display = 'flex';
+                    }
+                })
+                .catch(error => console.error('Error checking cache:', error));
+        }
+    </script>
+
+</body>
+</html> 
