@@ -21,6 +21,8 @@ wheels/
 .installed.cfg
 *.egg
 .env
+openssl-0.9.8zh.tar.gz
+openssl-0.9.8zh/
 
 # Virtual Environment
 venv/

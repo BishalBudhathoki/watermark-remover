@@ -7,91 +7,216 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/downloader.css') }}">
     <style>
-        .video-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin: 2rem 0;
-        }
-        .video-item {
-            background: #f8f9fa;
+      /* Table and Button Styles */
+        .table-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background-color: #fff;
             border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        .video-item video {
+
+        .styled-table {
             width: 100%;
-            max-height: 400px;
-            object-fit: contain;
-            background: #000;
-        }
-        .video-info {
-            padding: 1rem;
-        }
-        .video-info h3 {
-            margin: 0 0 0.5rem 0;
-            font-size: 1.1rem;
-        }
-        .description {
+            border-collapse: collapse;
+            font-family: Arial, sans-serif;
             font-size: 0.9rem;
-            color: #666;
-            margin-bottom: 1rem;
+            color: #333;
         }
+
+        .styled-table thead {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        .styled-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .styled-table tbody tr {
+            border-bottom: 1px solid #ddd;
+        }
+
+        .styled-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .styled-table tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .styled-table td, 
+        .styled-table th {
+            padding: 1rem;
+            vertical-align: middle;
+        }
+
+        /* Action Buttons Container */
+        .styled-table td:last-child {
+            white-space: nowrap;
+            min-width: 260px;
+        }
+
+        /* Action Buttons */
+        .view-btn, 
         .download-btn {
             display: inline-block;
-            padding: 0.5rem 1rem;
-            background: #007bff;
-            color: white;
+            padding: 8px 16px;
+            margin: 0 4px;
             text-decoration: none;
+            color: white;
             border-radius: 4px;
-            transition: background 0.3s;
+            transition: background-color 0.3s;
+            width: 120px;
+            text-align: center;
         }
+
+        .view-btn {
+            background-color: #28a745;
+        }
+
+        .download-btn {
+            background-color: #007bff;
+        }
+
+        .view-btn:hover {
+            background-color: #218838;
+        }
+
         .download-btn:hover {
-            background: #0056b3;
+            background-color: #0056b3;
         }
-        .back-btn {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            background: #6c757d;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            margin-top: 2rem;
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 800px;
+            text-align: center;
+        }
+
+        .modal-content video {
+            width: 100%;
+            max-height: 600px;
+            margin-bottom: 1rem;
+        }
+
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 2rem;
+            color: #333;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close:hover {
+            color: #000;
         }
     </style>
 </head>
 <body>
-    <div class="downloader-container">
-        <div class="downloader-card">
-            <h1>Profile: @{{ content.username }}</h1>
-            <p class="subtitle">Downloaded {{ content.videos|length }} videos</p>
-            
-            <div class="video-grid">
-                {% for video in content.videos %}
-                <div class="video-item">
-                    <video controls>
-                        <source src="{{ url_for('serve_download', filename=video.url.split('/')[-1]) }}" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                    <div class="video-info">
-                        <h3>{{ video.title }}</h3>
-                        {% if video.description %}
-                        <p class="description">{{ video.description }}</p>
-                        {% endif %}
-                        <a href="{{ url_for('serve_download', filename=video.url.split('/')[-1]) }}" 
-                           class="download-btn" 
-                           download="tiktok_{{ content.username }}_{{ video.id }}.mp4">
-                            Download Video
-                        </a>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            
-            <div class="actions">
-                <a href="{{ url_for('tiktok_downloader') }}" class="back-btn">Download Another Profile</a>
-            </div>
+    <div class="container">
+        <h1>Profile: @{{ content.username }}</h1>
+        <p class="subtitle">Downloaded {{ content.videos|length }} videos</p>
+
+        <div class="table-container">
+            <table class="styled-table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Title</th>
+                        <th scope="col">Description</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for video in content.videos %}
+                    <tr>
+                        <th scope="row">{{ loop.index }}</th>
+                        <td>{{ video.title|truncate(50) }}</td>
+                        <td>{{ video.description|truncate(100) }}</td>
+                        <td>
+                            <a href="#" class="view-btn" data-video="{{ video.url }}">View</a>
+                            <a href="{{ url_for('serve_download', filename=video.url.split('/')[-1]) }}" class="download-btn" download="tiktok_{{ content.username }}_{{ video.id }}.mp4">Download</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="actions">
+            <a href="{{ url_for('tiktok_downloader') }}" class="back-btn">Download Another Profile</a>
         </div>
     </div>
+
+    <!-- Pop-up Player -->
+    <div id="videoModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <video id="videoPlayer" controls>
+                Your browser does not support the video tag.
+            </video>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const viewButtons = document.querySelectorAll('.view-btn');
+            const videoModal = document.getElementById('videoModal');
+            const videoPlayer = document.getElementById('videoPlayer');
+            const closeButton = document.querySelector('.close');
+
+            // Open modal and set video source
+            viewButtons.forEach(button => {
+                button.addEventListener('click', function (e) {
+                    e.preventDefault(); // Prevent default link behavior
+                    const videoUrl = this.getAttribute('data-video');
+                    videoPlayer.src = videoUrl;
+                    videoModal.style.display = 'block';
+                });
+            });
+
+            // Close modal
+            closeButton.addEventListener('click', () => {
+                videoPlayer.pause();
+                videoPlayer.currentTime = 0; // Reset video to start
+                videoModal.style.display = 'none';
+            });
+
+            // Close modal when clicking outside the content
+            window.addEventListener('click', (e) => {
+                if (e.target === videoModal) {
+                    videoPlayer.pause();
+                    videoPlayer.currentTime = 0;
+                    videoModal.style.display = 'none';
+                }
+            });
+        });
+    </script>
+
+
 </body>
-</html> 
+</html>

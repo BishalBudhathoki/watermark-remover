@@ -3,7 +3,7 @@ import os
 import tempfile
 import sys
 import yt_dlp
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 from flask import Flask, request, render_template, redirect, url_for, send_file, send_from_directory, jsonify
 from werkzeug.utils import secure_filename
 import cv2
@@ -15,6 +15,11 @@ from functools import wraps
 import json
 from dotenv import load_dotenv
 import requests
+import logging  # Import logging module
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
@@ -463,7 +468,7 @@ def tiktok_download():
         username = get_username_from_url(profile_url)
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         
-        # Configure yt-dlp options
+        # Configure yt-dlp options with improved settings
         ydl_opts = {
             'outtmpl': os.path.join(
                 app.config['DOWNLOAD_FOLDER'],
@@ -473,7 +478,12 @@ def tiktok_download():
             'playlistend': 10,  # Limit to 10 videos
             'quiet': True,
             'no_warnings': True,
-            'extract_flat': False
+            'extract_flat': False,
+            'cookiesfrombrowser': ('chrome',),  # Try to use browser cookies
+            'extractor_retries': 3,  # Retry 3 times
+            'socket_timeout': 30,  # Increase timeout
+            'nocheckcertificate': True,  # Skip HTTPS certificate validation
+            'verify': False  # Disable SSL certificate verification
         }
         
         processed_videos = []
@@ -509,7 +519,11 @@ def tiktok_download():
         })
             
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        logger.error(f"Download error: {str(e)}")
+        return jsonify({
+            'error': str(e),
+            'message': 'Failed to download TikTok videos. Please check the URL and try again.'
+        }), 500
 
 def is_valid_tiktok_url(url):
     try:
@@ -541,4 +555,4 @@ def get_username_from_url(url):
         raise ValueError(f'Failed to extract username from URL: {str(e)}')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=os.getenv('PORT', '5000'), debug=True)
+    app.run(host='0.0.0.0', port=os.getenv('PORT', '5001'), debug=True)
