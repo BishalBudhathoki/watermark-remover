@@ -16,6 +16,8 @@ import json
 from dotenv import load_dotenv
 import requests
 import logging  # Import logging module
+import redis
+import glob
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -63,7 +65,7 @@ DOWNLOAD_FOLDER.mkdir(exist_ok=True)
 PROCESSED_FOLDER.mkdir(exist_ok=True)
 
 # Configure Flask app
-app.config['DOWNLOAD_FOLDER'] = str(DOWNLOAD_FOLDER)
+app.config['DOWNLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'downloads')
 app.config['PROCESSED_FOLDER'] = str(PROCESSED_FOLDER)
 
 # Load environment variables
@@ -464,26 +466,24 @@ def tiktok_download():
     if not is_valid_tiktok_url(profile_url):
         return jsonify({'error': 'Invalid TikTok profile URL'}), 400
     
+    download_type = request.form.get('downloadType', 'video')  # Determine download type (video or audio)
+    file_extension = 'mp4' if download_type == 'video' else 'mp3'  # Set file extension based on download type
+    
     try:
         username = get_username_from_url(profile_url)
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         
-        # Configure yt-dlp options with improved settings
+        # Configure yt-dlp options
         ydl_opts = {
             'outtmpl': os.path.join(
                 app.config['DOWNLOAD_FOLDER'],
-                f'tiktok_{timestamp}_%(id)s.%(ext)s'  # Using video ID instead of title
+                f'tiktok_{timestamp}_%(id)s.{file_extension}'  # Use the determined file extension
             ),
             'format': 'best',
             'playlistend': 10,  # Limit to 10 videos
             'quiet': True,
             'no_warnings': True,
             'extract_flat': False,
-            'cookiesfrombrowser': ('chrome',),  # Try to use browser cookies
-            'extractor_retries': 3,  # Retry 3 times
-            'socket_timeout': 30,  # Increase timeout
-            'nocheckcertificate': True,  # Skip HTTPS certificate validation
-            'verify': False  # Disable SSL certificate verification
         }
         
         processed_videos = []
@@ -494,7 +494,27 @@ def tiktok_download():
             
             # Process only the first 10 videos
             for entry in playlist_info['entries'][:10]:
-                video_url = f"https://www.tiktok.com/@{username}/video/{entry['id']}"
+                video_id = entry['id']
+                video_url = f"https://www.tiktok.com/@{username}/video/{video_id}"
+                
+                # Check Redis for existing downloads
+                if redis_client.exists(video_id):
+                    logger.info(f"Video {video_id} already downloaded. Skipping.")
+                    # Retrieve video info from Redis
+                    video_data = redis_client.hgetall(video_id)
+                    processed_videos.append({
+                        'id': video_id,
+                        'title': entry.get('title', 'Unknown Title'),
+                        'description': entry.get('description', ''),
+                        'duration_string': entry.get('duration_string', 'N/A'),
+                        'view_count': entry.get('view_count', 0),
+                        'like_count': entry.get('like_count', 0),
+                        'comment_count': entry.get('comment_count', 0),
+                        'uploader': entry.get('uploader', 'Unknown Uploader'),
+                        'uploader_url': entry.get('uploader_url', '#'),
+                        'url': video_data.get('url', '')
+                    })
+                    continue
                 
                 # Download individual video
                 video_info = ydl.extract_info(video_url, download=True)
@@ -502,13 +522,34 @@ def tiktok_download():
                 
                 # Clean filename and ensure it exists
                 clean_filename = os.path.basename(filename)
-                if os.path.exists(os.path.join(app.config['DOWNLOAD_FOLDER'], clean_filename)):
-                    processed_videos.append({
-                        'id': video_info['id'],
-                        'title': video_info.get('title', '').split('#')[0][:50],  # Truncate title and remove hashtags
-                        'description': video_info.get('description', '')[:100],  # Truncate description
-                        'url': url_for('serve_download', filename=clean_filename)
-                    })
+                
+                # Store metadata in Redis
+                redis_client.hset(video_id, mapping={
+                    'id': video_id,
+                    'title': entry.get('title', 'Unknown Title'),
+                    'description': entry.get('description', ''),
+                    'duration_string': entry.get('duration_string', 'N/A'),
+                    'view_count': entry.get('view_count', 0),
+                    'like_count': entry.get('like_count', 0),
+                    'comment_count': entry.get('comment_count', 0),
+                    'uploader': entry.get('uploader', 'Unknown Uploader'),
+                    'uploader_url': entry.get('uploader_url', '#'),
+                    'url': url_for('serve_download', filename=clean_filename)
+                })
+                
+                processed_videos.append({
+                    'id': video_info['id'],
+                    'title': video_info.get('title', '').split('#')[0][:50],  # Truncate title and remove hashtags
+                    'description': video_info.get('description', '')[:100],  # Truncate description
+                    'description': entry.get('description', ''),
+                    'duration_string': entry.get('duration_string', 'N/A'),
+                    'view_count': entry.get('view_count', 0),
+                    'like_count': entry.get('like_count', 0),
+                    'comment_count': entry.get('comment_count', 0),
+                    'uploader': entry.get('uploader', 'Unknown Uploader'),
+                    'uploader_url': entry.get('uploader_url', '#'),
+                    'url': url_for('serve_download', filename=clean_filename)
+                })
         
         if not processed_videos:
             raise Exception('No videos were downloaded successfully')
@@ -516,7 +557,7 @@ def tiktok_download():
         return render_template('tiktok_results.html', content={
             'username': username,
             'videos': processed_videos
-        })
+        }, playlist_info=playlist_info)
             
     except Exception as e:
         logger.error(f"Download error: {str(e)}")
@@ -553,6 +594,9 @@ def get_username_from_url(url):
         return username[1:]
     except Exception as e:
         raise ValueError(f'Failed to extract username from URL: {str(e)}')
+
+# Initialize Redis
+redis_client = redis.StrictRedis(host='localhost', port=6379, db=0, decode_responses=True)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=os.getenv('PORT', '5001'), debug=True)

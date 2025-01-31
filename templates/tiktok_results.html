@@ -134,6 +134,25 @@
         .close:hover {
             color: #000;
         }
+        /* added  */
+        .video-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .video-card {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 10px;
+            width: 300px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .video-thumbnail {
+            width: 100%;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
@@ -148,6 +167,11 @@
                         <th scope="col">#</th>
                         <th scope="col">Title</th>
                         <th scope="col">Description</th>
+                        <th scope="col">Duration</th>
+                        <th scope="col">Views</th>
+                        <th scope="col">Likes</th>
+                        <th scope="col">Comments</th>
+                        <th scope="col">Uploader</th>
                         <th scope="col">Actions</th>
                     </tr>
                 </thead>
@@ -157,8 +181,13 @@
                         <th scope="row">{{ loop.index }}</th>
                         <td>{{ video.title|truncate(50) }}</td>
                         <td>{{ video.description|truncate(100) }}</td>
+                        <td>{{ video.duration_string }} seconds</td>
+                        <td>{{ video.view_count }}</td>
+                        <td>{{ video.like_count }}</td>
+                        <td>{{ video.comment_count }}</td>
+                        <td><a href="{{ video.uploader_url }}">{{ video.uploader }}</a></td>
                         <td>
-                            <a href="#" class="view-btn" data-video="{{ video.url }}">View</a>
+                            <a href="#" class="view-btn" data-video="{{ url_for('serve_download', filename=video.url.split('/')[-1]) }}">View</a>
                             <a href="{{ url_for('serve_download', filename=video.url.split('/')[-1]) }}" class="download-btn" download="tiktok_{{ content.username }}_{{ video.id }}.mp4">Download</a>
                         </td>
                     </tr>
@@ -171,7 +200,6 @@
             <a href="{{ url_for('tiktok_downloader') }}" class="back-btn">Download Another Profile</a>
         </div>
     </div>
-
     <!-- Pop-up Player -->
     <div id="videoModal" class="modal">
         <div class="modal-content">
