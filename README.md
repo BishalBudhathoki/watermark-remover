@@ -18,13 +18,14 @@ WatermarkAway is a web application designed to remove watermarks from videos and
 9. [License](#license)
 
 ## Technologies Used
-- **Python**: Primary programming language for the backend.
-- **Flask**: Lightweight WSGI web application framework for Python.
-- **yt-dlp**: Command-line program to download videos from YouTube and other sites.
-- **OpenCV**: Library for computer vision tasks, used for video processing.
-- **MoviePy**: Python library for video editing.
-- **Redis**: In-memory data structure store used for caching and tracking downloads.
-- **HTML/CSS**: For the frontend user interface.
+
+- ![Python](https://img.icons8.com/color/48/000000/python.png) **Python**: Primary programming language for the backend.
+- ![Flask](https://img.icons8.com/color/48/000000/flask.png) **Flask**: Lightweight WSGI web application framework for Python.
+- ![YouTube](https://img.icons8.com/color/48/000000/youtube-play.png) **yt-dlp**: Command-line program to download videos from YouTube and other sites.
+- ![OpenCV](https://img.icons8.com/color/48/000000/opencv.png) **OpenCV**: Library for computer vision tasks, used for video processing.
+- ![Movie](https://img.icons8.com/color/48/000000/movie.png) **MoviePy**: Python library for video editing.
+- ![Redis](https://img.icons8.com/color/48/000000/redis.png) **Redis**: In-memory data structure store used for caching and tracking downloads.
+- ![HTML](https://img.icons8.com/color/48/000000/html-5.png) **HTML/CSS**: For the frontend user interface.
 
 ## Installation
 
