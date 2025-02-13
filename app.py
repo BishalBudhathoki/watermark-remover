@@ -16,8 +16,8 @@ import json
 from dotenv import load_dotenv
 import requests
 import logging  # Import logging module
+import threading
 import redis
-import glob
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -44,16 +44,32 @@ class ProgressTracker:
     def __init__(self):
         self.progress = 0
         self.status = 'starting'
+        self._lock = threading.Lock()
 
     def update_progress(self, d):
-        if d['status'] == 'downloading':
-            self.progress = (d.get('downloaded_bytes', 0) / d.get('total_bytes', 1)) * 100
-            self.status = f'Downloading: {self.progress:.1f}%'
-        elif d['status'] == 'finished':
-            self.progress = 100
-            self.status = 'Download complete'
-        elif d['status'] == 'error':
-            self.status = f'Error: {d.get("error")}'
+        global download_progress
+        with self._lock:
+            if d['status'] == 'downloading':
+                total_bytes = d.get('total_bytes') or d.get('total_bytes_estimate', 0)
+                if total_bytes > 0:
+                    self.progress = (d.get('downloaded_bytes', 0) / total_bytes) * 100
+                    speed = d.get('speed', 0)
+                    if speed:
+                        speed_mb = speed / 1024 / 1024  # Convert to MB/s
+                        self.status = f'Downloading: {self.progress:.1f}% ({speed_mb:.1f} MB/s)'
+                    else:
+                        self.status = f'Downloading: {self.progress:.1f}%'
+                    # Update global download_progress
+                    download_progress['progress'] = self.progress
+                    download_progress['status'] = self.status
+            elif d['status'] == 'finished':
+                self.progress = 100
+                self.status = 'Processing...'
+                download_progress['progress'] = self.progress
+                download_progress['status'] = self.status
+            elif d['status'] == 'error':
+                self.status = f'Error: {d.get("error", "Unknown error")}'
+                download_progress['status'] = self.status
 
 # Define download and processed folders
 BASE_DIR = Path(__file__).resolve().parent
@@ -473,6 +489,8 @@ def tiktok_download():
         username = get_username_from_url(profile_url)
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         
+        progress_tracker = ProgressTracker()
+        
         # Configure yt-dlp options
         ydl_opts = {
             'outtmpl': os.path.join(
@@ -484,6 +502,7 @@ def tiktok_download():
             'quiet': True,
             'no_warnings': True,
             'extract_flat': False,
+            'progress_hooks': [progress_tracker.update_progress],
         }
         
         processed_videos = []

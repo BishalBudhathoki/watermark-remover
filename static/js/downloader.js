@@ -125,11 +125,20 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (data.progress !== undefined) {
                 progressFill.style.width = `${data.progress}%`;
-                statusText.textContent = `Downloading: ${Math.round(data.progress)}%`;
+                statusText.textContent = data.status || `Downloading: ${Math.round(data.progress)}%`;
                 
-                if (data.progress >= 100 || data.status === 'complete') {
-                    clearInterval(progressCheckInterval);
-                    downloadInProgress = false;
+                if (data.progress >= 100 || data.status === 'Processing...' || data.status.startsWith('Error')) {
+                    if (data.status === 'Processing...') {
+                        statusText.textContent = 'Processing video, please wait...';
+                    } else if (data.status.startsWith('Error')) {
+                        clearInterval(progressCheckInterval);
+                        downloadInProgress = false;
+                        alert('Download failed: ' + data.status);
+                    } else if (data.progress >= 100) {
+                        clearInterval(progressCheckInterval);
+                        downloadInProgress = false;
+                        statusText.textContent = 'Download complete!';
+                    }
                 }
             }
         } catch (error) {
