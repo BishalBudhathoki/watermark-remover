@@ -27,6 +27,11 @@ openssl-0.9.8zh/
 # Virtual Environment
 venv/
 ENV/
+myenv/
+flask_session/
+venv/
+dump.rdb
+phase1.md
 
 # Uploaded and processed videos
 static/uploads/*
