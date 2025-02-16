@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Authorization Success</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        .success-container {
+            text-align: center;
+            padding: 2rem;
+            max-width: 600px;
+            margin: 2rem auto;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .success-icon {
+            color: #4CAF50;
+            font-size: 48px;
+            margin-bottom: 1rem;
+        }
+        .success-message {
+            color: #333;
+            margin-bottom: 1.5rem;
+        }
+        .close-button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .close-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="success-container">
+        <div class="success-icon">✓</div>
+        <h2>Authorization Successful!</h2>
+        <p class="success-message">You have successfully authorized the application to upload videos to YouTube.</p>
+        <button class="close-button" onclick="window.close()">Close Window</button>
+    </div>
+    <script>
+        // Send message to parent window
+        window.opener.postMessage('youtube-auth-success', '*');
+        // Close this window after a short delay
+        setTimeout(() => window.close(), 3000);
+    </script>
+</body>
+</html> 
