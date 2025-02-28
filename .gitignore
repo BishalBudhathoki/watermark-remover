@@ -46,6 +46,19 @@ venv.bak/
 dump.rdb
 phase1.md
 
+# Flask Session Files
+flask_session/
+*.session
+session/
+.flask_session/
+.sessions/
+*.sess
+flask_*/session/
+*_flask_session/
+*.session.lock
+*.session.db
+instance/
+
 # Media and Uploads
 static/uploads/*
 static/processed/*
