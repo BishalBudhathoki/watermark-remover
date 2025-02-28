@@ -1,41 +1,105 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TikTok Profile Downloader</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/downloader.css') }}">
-    <script src="https://apis.google.com/js/platform.js" async defer></script>
-    <meta name="google-signin-client_id" content="{{ google_client_id }}">
-</head>
-<body>
-    <div class="downloader-container">
-        <div class="downloader-card">
-            <h1>TikTok Profile Downloader</h1>
-            <p class="subtitle">Download videos from any TikTok profile</p>
+{% extends "base.html" %}
+
+{% block title %}TikTok Downloader - VideoVault{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <!-- Single Video Download -->
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+            <h1 class="text-2xl font-bold text-gray-800 mb-6">
+                <i class="fab fa-tiktok text-black mr-2"></i>
+                TikTok Video Downloader
+            </h1>
+            <p class="text-gray-600 mb-8">Download any TikTok video</p>
             
-            <form action="{{ url_for('tiktok_download') }}" method="POST" class="download-form">
+            <form action="{{ url_for('tiktok.tiktok_single_download') }}" method="POST" class="space-y-6">
                 <div class="input-group">
-                    <input 
-                        type="url" 
-                        id="profile_url" 
-                        name="profile_url"
-                        placeholder="https://www.tiktok.com/@username" 
+                    <input type="url" 
+                        id="video_url" 
+                        name="video_url"
+                        placeholder="https://vt.tiktok.com/..." 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-400 focus:border-transparent outline-none"
                         required
                     >
                 </div>
-                <button type="submit" class="download-btn">Download Profile Content</button>
+                <button type="submit" 
+                        class="w-full bg-black text-white py-3 px-6 rounded-xl hover:bg-gray-800 transition-colors duration-200 flex items-center justify-center">
+                    <i class="fas fa-download mr-2"></i>
+                    Download Video
+                </button>
             </form>
+        </div>
 
-            <div id="downloadStatus" class="download-status hidden">
-                <div class="progress-bar">
-                    <div class="progress-fill"></div>
+        <!-- Profile Download -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h1 class="text-2xl font-bold text-gray-800 mb-6">
+                <i class="fab fa-tiktok text-black mr-2"></i>
+                TikTok Profile Downloader
+            </h1>
+            <p class="text-gray-600 mb-8">Download videos from any TikTok profile</p>
+            
+            <form action="{{ url_for('tiktok.tiktok_profile_download') }}" method="POST" class="space-y-6">
+                <div class="input-group">
+                    <input type="url" 
+                        id="profile_url" 
+                        name="profile_url"
+                        placeholder="https://www.tiktok.com/@username" 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-400 focus:border-transparent outline-none"
+                        required
+                    >
                 </div>
-                <p class="status-text">Downloading: 0%</p>
+                <button type="submit" 
+                        class="w-full bg-black text-white py-3 px-6 rounded-xl hover:bg-gray-800 transition-colors duration-200 flex items-center justify-center">
+                    <i class="fas fa-download mr-2"></i>
+                    Download Profile Content
+                </button>
+            </form>
+        </div>
+
+        <!-- Instructions -->
+        <div class="mt-8 bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">How to Download TikTok Content</h2>
+            <div class="space-y-6">
+                <div>
+                    <h3 class="font-medium text-gray-700 mb-2">Single Video Download:</h3>
+                    <ol class="list-decimal list-inside space-y-2 text-gray-600 ml-4">
+                        <li>Open the TikTok video you want to download</li>
+                        <li>Click the "Share" button and copy the video link</li>
+                        <li>Paste the link in the video URL field above</li>
+                        <li>Click "Download Video"</li>
+                    </ol>
+                </div>
+                <div>
+                    <h3 class="font-medium text-gray-700 mb-2">Profile Download:</h3>
+                    <ol class="list-decimal list-inside space-y-2 text-gray-600 ml-4">
+                        <li>Visit the TikTok profile you want to download from</li>
+                        <li>Copy the profile URL from your browser's address bar</li>
+                        <li>Paste the URL in the profile URL field above</li>
+                        <li>Click "Download Profile Content"</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="mt-4 text-sm text-gray-500">
+                <p><i class="fas fa-info-circle mr-1"></i> Downloads up to 10 most recent videos from profiles</p>
             </div>
         </div>
     </div>
-    <script src="{{ url_for('static', filename='js/tiktok_downloader.js') }}"></script>
-</body>
-</html> 
+</div>
+
+{% block extra_scripts %}
+<script>
+document.querySelector('form').addEventListener('submit', function() {
+    const statusDiv = document.getElementById('downloadStatus');
+    const progressBar = statusDiv.querySelector('.progress-bar');
+    
+    statusDiv.classList.remove('hidden');
+    
+    // Disable submit button
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+});
+</script>
+{% endblock %}
+{% endblock %} 

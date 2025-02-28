@@ -1,78 +1,413 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Downloader</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/downloader.css') }}">
-</head>
-<body>
-    <div class="downloader-container">
-        <div class="downloader-card">
-            <h1>Video Downloader</h1>
-            <p class="subtitle">Download videos from YouTube, TikTok, Facebook, and more</p>
+{% extends "base.html" %}
+
+{% block title %}YouTube Video Downloader - VideoVault{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h1 class="text-2xl font-bold text-gray-800 mb-6">
+                <i class="fab fa-youtube text-red-600 mr-2"></i>
+                YouTube Video Downloader
+            </h1>
             
-            <form id="downloadForm" class="download-form">
+            <form id="downloadForm" class="space-y-6">
                 <div class="input-group">
-                    <input 
-                        type="url" 
+                    <input type="url" 
                         id="videoUrl" 
-                        placeholder="Paste video URL here..." 
+                        placeholder="Paste YouTube video URL here..." 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-400 focus:border-transparent outline-none"
                         required
                     >
-                    <button type="submit" id="fetchBtn" class="fetch-btn">Fetch Video Info</button>
                 </div>
 
-                <div id="videoInfo" class="video-info hidden">
+                <div id="videoInfo" class="bg-gray-50 rounded-xl p-4 space-y-4 hidden">
                     <!-- Video info will be displayed here -->
                 </div>
 
-                <div id="optionsPanel" class="options-panel hidden">
-                    <div class="option-group">
-                        <label for="downloadType">Download Type</label>
-                        <select id="downloadType" required>
-                            <option value="video">Video</option>
-                            <option value="audio">Audio Only</option>
-                        </select>
+                <div id="optionsPanel" class="space-y-4 hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="option-group">
+                            <label for="downloadType" class="block text-sm font-medium text-gray-700 mb-1">Download Type</label>
+                            <select id="downloadType" 
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-transparent outline-none"
+                                    required>
+                                <option value="video">Video</option>
+                                <option value="audio">Audio Only</option>
+                            </select>
+                        </div>
+
+                        <div class="option-group">
+                            <label for="quality" class="block text-sm font-medium text-gray-700 mb-1">Quality</label>
+                            <select id="quality" 
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-transparent outline-none"
+                                    required>
+                                <option value="best">Best</option>
+                                <option value="2160">4K (2160p)</option>
+                                <option value="1440">2K (1440p)</option>
+                                <option value="1080">1080p</option>
+                                <option value="720">720p</option>
+                                <option value="480">480p</option>
+                                <option value="360">360p</option>
+                            </select>
+                        </div>
+
+                        <div class="option-group">
+                            <label for="format" class="block text-sm font-medium text-gray-700 mb-1">Format</label>
+                            <select id="format" 
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-transparent outline-none"
+                                    required>
+                                <option value="mp4">MP4</option>
+                                <option value="mkv">MKV</option>
+                                <option value="webm">WebM</option>
+                                <option value="mp3">MP3 (Audio)</option>
+                                <option value="m4a">M4A (Audio)</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <div class="option-group">
-                        <label for="quality">Quality</label>
-                        <select id="quality" required>
-                            <option value="best">Best</option>
-                            <option value="2160">4K (2160p)</option>
-                            <option value="1440">2K (1440p)</option>
-                            <option value="1080">1080p</option>
-                            <option value="720">720p</option>
-                            <option value="480">480p</option>
-                            <option value="360">360p</option>
-                        </select>
-                    </div>
-
-                    <div class="option-group">
-                        <label for="format">Format</label>
-                        <select id="format" required>
-                            <option value="mp4">MP4</option>
-                            <option value="mkv">MKV</option>
-                            <option value="webm">WebM</option>
-                            <option value="mp3">MP3 (Audio)</option>
-                            <option value="m4a">M4A (Audio)</option>
-                        </select>
-                    </div>
-
-                    <button type="button" id="downloadBtn" class="download-btn">Download</button>
+                    <button type="button" 
+                            id="downloadBtn" 
+                            class="w-full bg-red-600 text-white py-3 px-6 rounded-xl hover:bg-red-700 transition-colors duration-200 flex items-center justify-center">
+                        <i class="fas fa-download mr-2"></i>
+                        Download
+                    </button>
                 </div>
             </form>
 
-            <div id="downloadStatus" class="download-status hidden">
-                <div class="progress-bar">
-                    <div class="progress-fill"></div>
+            <div id="downloadStatus" class="hidden mt-6">
+                <div class="flex items-center justify-center space-x-3">
+                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-red-600"></div>
+                    <span class="text-gray-600">Processing download...</span>
                 </div>
-                <p class="status-text">Downloading: 0%</p>
+                <div class="mt-4 bg-gray-100 rounded-full overflow-hidden">
+                    <div class="progress-bar h-2 bg-red-600 transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="mt-8 bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">How to Download YouTube Videos</h2>
+            <ol class="list-decimal list-inside space-y-3 text-gray-600">
+                <li>Copy the YouTube video URL from your browser's address bar</li>
+                <li>Paste the URL in the input field above</li>
+                <li>Select your preferred download type (video or audio)</li>
+                <li>Choose the quality and format you want</li>
+                <li>Click the "Download" button and wait for processing</li>
+            </ol>
+            <div class="mt-4 text-sm text-gray-500">
+                <p><i class="fas fa-info-circle mr-1"></i> Supports regular YouTube videos, shorts, and playlists</p>
             </div>
         </div>
     </div>
-    <script src="{{ url_for('static', filename='js/downloader.js') }}"></script>
-</body>
-</html>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('downloadForm');
+    const videoUrlInput = document.getElementById('videoUrl');
+    const videoInfo = document.getElementById('videoInfo');
+    const optionsPanel = document.getElementById('optionsPanel');
+    const downloadStatus = document.getElementById('downloadStatus');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const downloadTypeSelect = document.getElementById('downloadType');
+    const formatSelect = document.getElementById('format');
+    const qualitySelect = document.getElementById('quality');
+    const progressBar = document.querySelector('.progress-bar');
+
+    // Handle format options based on download type
+    downloadTypeSelect.addEventListener('change', function() {
+        const isAudio = this.value === 'audio';
+        formatSelect.innerHTML = isAudio 
+            ? `<option value="mp3">MP3</option>
+               <option value="m4a">M4A</option>`
+            : `<option value="mp4">MP4</option>
+               <option value="mkv">MKV</option>
+               <option value="webm">WebM</option>`;
+    });
+
+    // Function to validate YouTube URL
+    function isValidYouTubeUrl(url) {
+        try {
+            const urlObj = new URL(url);
+            const hostname = urlObj.hostname;
+            const pathname = urlObj.pathname;
+            
+            // Valid YouTube domains
+            const validDomains = ['youtube.com', 'www.youtube.com', 'youtu.be', 'm.youtube.com', 'youtube.com'];
+            
+            // Debug info
+            console.log('URL Debug:', {
+                fullUrl: url,
+                hostname: hostname,
+                pathname: pathname,
+                isValidDomain: validDomains.some(d => hostname.endsWith(d))
+            });
+            
+            // More permissive domain check
+            if (!validDomains.some(d => hostname.endsWith(d))) {
+                console.log('Invalid domain:', hostname);
+                return false;
+            }
+            
+            // For shorts URLs
+            if (pathname.includes('/shorts/')) {
+                const videoId = pathname.split('/shorts/')[1];
+                console.log('Shorts video ID:', videoId);
+                return videoId && videoId.length > 0;
+            }
+            
+            // For youtu.be URLs
+            if (hostname.includes('youtu.be')) {
+                const videoId = pathname.slice(1); // Remove leading slash
+                console.log('Youtu.be video ID:', videoId);
+                return videoId && videoId.length > 0;
+            }
+            
+            // For regular youtube.com URLs
+            const videoId = urlObj.searchParams.get('v');
+            if (videoId) {
+                console.log('Regular video ID:', videoId);
+                return true;
+            }
+            
+            // For live streams
+            if (pathname.includes('/live/')) {
+                const liveId = pathname.split('/live/')[1];
+                console.log('Live video ID:', liveId);
+                return liveId && liveId.length > 0;
+            }
+            
+            console.log('No valid video ID found');
+            return false;
+        } catch (e) {
+            console.error('URL validation error:', e);
+            return false;
+        }
+    }
+
+    // Function to show error message
+    function showError(message) {
+        videoInfo.innerHTML = `
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-circle text-red-400"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-red-700">${message}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        videoInfo.classList.remove('hidden');
+        optionsPanel.classList.add('hidden');
+    }
+
+    // Debounce function to limit API calls
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    // Fetch video info when URL is pasted
+    const fetchVideoInfo = debounce(async function(url) {
+        if (!url) {
+            videoInfo.classList.add('hidden');
+            optionsPanel.classList.add('hidden');
+            return;
+        }
+
+        if (!isValidYouTubeUrl(url)) {
+            showError('Please enter a valid YouTube video URL');
+            return;
+        }
+
+        try {
+            videoInfo.innerHTML = `
+                <div class="flex items-center justify-center space-x-3">
+                    <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600"></div>
+                    <span class="text-gray-600">Fetching video information...</span>
+                </div>
+            `;
+            videoInfo.classList.remove('hidden');
+
+            const response = await fetch('/fetch-video-info', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ url })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to fetch video information');
+            }
+
+            if (data.success && data.video_info) {
+                // Display video info with fallbacks for all fields
+                videoInfo.innerHTML = `
+                    <div class="flex items-start space-x-4">
+                        <img src="${data.video_info.thumbnail || '/static/images/twitter_placeholder.jpg'}" 
+                             alt="Video thumbnail" 
+                             class="w-32 rounded-lg"
+                             onerror="this.src='/static/images/twitter_placeholder.jpg'">
+                        <div>
+                            <h3 class="font-semibold text-gray-900">${data.video_info.title || 'Untitled Video'}</h3>
+                            <p class="text-sm text-gray-600">${data.video_info.uploader || 'Unknown Uploader'}</p>
+                            <p class="text-sm text-gray-600">Duration: ${formatDuration(data.video_info.duration || 0)}</p>
+                            <p class="text-sm text-gray-600">Views: ${formatNumber(data.video_info.view_count || 0)}</p>
+                        </div>
+                    </div>
+                `;
+                videoInfo.classList.remove('hidden');
+                optionsPanel.classList.remove('hidden');
+
+                // Update quality options based on available formats
+                if (data.video_info.available_qualities && data.video_info.available_qualities.length > 0) {
+                    qualitySelect.innerHTML = `
+                        <option value="best">Best</option>
+                        ${data.video_info.available_qualities.map(q => `<option value="${q}">${q}p</option>`).join('')}
+                    `;
+                }
+            } else {
+                throw new Error(data.error || 'Failed to fetch video information');
+            }
+        } catch (error) {
+            console.error('Error fetching video info:', error);
+            showError(error.message || 'Failed to fetch video information. Please try again.');
+        }
+    }, 500);  // 500ms debounce
+
+    // Listen for URL input changes
+    videoUrlInput.addEventListener('input', function() {
+        const url = this.value.trim();
+        fetchVideoInfo(url);
+    });
+
+    // Handle download
+    downloadBtn.addEventListener('click', async function() {
+        const url = videoUrlInput.value.trim();
+        if (!url) return;
+
+        // Store selected options for display later
+        const selectedType = downloadTypeSelect.value;
+        const selectedQuality = qualitySelect.options[qualitySelect.selectedIndex].text;
+        const selectedFormat = formatSelect.value;
+
+        downloadStatus.classList.remove('hidden');
+        optionsPanel.classList.add('hidden');
+
+        try {
+            const response = await fetch('/download-video', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    url,
+                    downloadType: selectedType,
+                    format: selectedFormat,
+                    quality: qualitySelect.value
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Show success message with download details and dashboard link
+                downloadStatus.innerHTML = `
+                    <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+                        <p class="font-medium">Download completed successfully!</p>
+                        <p class="mt-2">${data.title}</p>
+                        <p class="text-sm">By: ${data.uploader}</p>
+                        
+                        <div class="mt-3 p-3 bg-green-100 rounded-lg">
+                            <h4 class="font-medium text-green-800 mb-2">Download Details:</h4>
+                            <ul class="text-sm space-y-1">
+                                <li><span class="font-medium">Type:</span> ${selectedType === 'video' ? 'Video' : 'Audio Only'}</li>
+                                <li><span class="font-medium">Quality:</span> ${selectedQuality}</li>
+                                <li><span class="font-medium">Format:</span> ${selectedFormat.toUpperCase()}</li>
+                                ${data.file_size_mb ? `<li><span class="font-medium">Size:</span> ${data.file_size_mb} MB</li>` : ''}
+                                ${data.actual_resolution && data.actual_resolution !== 'N/A' ? `<li><span class="font-medium">Resolution:</span> ${data.actual_resolution}</li>` : ''}
+                            </ul>
+                        </div>
+                        
+                        <div class="mt-4 flex flex-col sm:flex-row gap-3">
+                            <a href="${data.download_url}" class="flex-1 inline-flex justify-center items-center bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700">
+                                <i class="fas fa-download mr-2"></i> Download File
+                            </a>
+                            <a href="/dashboard" class="flex-1 inline-flex justify-center items-center bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700">
+                                <i class="fas fa-photo-video mr-2"></i> View in Media Dashboard
+                            </a>
+                        </div>
+                    </div>
+                `;
+                
+                // Don't reset the form yet to allow the user to download
+            } else {
+                throw new Error(data.error || 'Download failed');
+            }
+        } catch (error) {
+            downloadStatus.innerHTML = `
+                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                    <p class="font-medium">Error downloading video</p>
+                    <p class="mt-1">${error.message}</p>
+                </div>
+            `;
+            optionsPanel.classList.remove('hidden');
+        }
+    });
+
+    // Helper functions
+    function formatDuration(seconds) {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+        return `${hours ? hours + ':' : ''}${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function formatNumber(num) {
+        return new Intl.NumberFormat().format(num);
+    }
+
+    // Poll download progress
+    let progressInterval;
+    function startProgressPolling() {
+        progressInterval = setInterval(async () => {
+            try {
+                const response = await fetch('/download-progress');
+                const data = await response.json();
+                
+                // Update progress bar
+                progressBar.style.width = `${data.progress}%`;
+                
+                // Check for completion or error
+                if (data.status === 'completed' || data.progress >= 100) {
+                    clearInterval(progressInterval);
+                    progressBar.style.width = '100%';
+                } else if (data.status === 'error') {
+                    clearInterval(progressInterval);
+                    showError('Error during download: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error polling progress:', error);
+                clearInterval(progressInterval);
+            }
+        }, 1000);
+    }
+});
+</script>
+{% endblock %}

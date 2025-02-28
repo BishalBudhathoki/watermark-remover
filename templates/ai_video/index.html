@@ -1,0 +1,711 @@
+{% extends "base.html" %}
+
+{% block title %}AI Video Processing - VideoVault{% endblock %}
+
+{% block extra_head %}
+<style>
+    .face-thumbnail {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 3px solid transparent;
+    }
+    
+    .face-thumbnail:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .face-thumbnail.selected {
+        border-color: #2563EB;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
+    }
+    
+    .upload-zone {
+        border: 2px dashed #CBD5E1;
+        border-radius: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .upload-zone:hover, .upload-zone.dragover {
+        border-color: #2563EB;
+        background-color: rgba(37, 99, 235, 0.05);
+    }
+    
+    .progress-bar {
+        height: 6px;
+        border-radius: 3px;
+        background: linear-gradient(90deg, #2563EB, #818CF8);
+        transition: width 0.3s ease;
+    }
+    
+    .video-container {
+        position: relative;
+        width: 100%;
+        padding-top: 56.25%; /* 16:9 Aspect Ratio */
+        background: #F8FAFC;
+        border-radius: 1rem;
+        overflow: hidden;
+    }
+    
+    .video-container video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    
+    .face-card {
+        transition: all 0.3s ease;
+    }
+    
+    .face-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .loading-overlay {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(4px);
+    }
+    
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(37, 99, 235, 0.1);
+        border-left-color: #2563EB;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="py-12 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header Section -->
+        <div class="text-center mb-12">
+            <h1 class="text-3xl font-bold text-gray-900 mb-4">AI Video Processing</h1>
+            <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+                Upload your videos, detect faces, and create highlight reels focused on specific people.
+            </p>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+            <!-- Step 1: Upload Video -->
+            <div id="upload-section" class="mb-8">
+                <h2 class="text-xl font-semibold mb-4 flex items-center">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 mr-3 text-sm font-bold">1</span>
+                    Upload Video
+                </h2>
+                
+                <div class="upload-zone p-8 text-center" id="dropzone">
+                    <input type="file" id="video-upload" class="hidden" accept="video/*">
+                    <div class="mb-4">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-blue-500 mb-3"></i>
+                        <h3 class="text-lg font-medium text-gray-700">Drag and drop your video here</h3>
+                        <p class="text-gray-500 text-sm mt-1">or</p>
+                    </div>
+                    <button id="browse-button" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        Browse Files
+                    </button>
+                    <p class="text-xs text-gray-500 mt-3">Supported formats: MP4, MOV, AVI (Max 500MB)</p>
+                </div>
+                
+                <!-- Upload Progress -->
+                <div id="upload-progress-container" class="mt-4 hidden">
+                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                        <span>Uploading...</span>
+                        <span id="upload-percentage">0%</span>
+                    </div>
+                    <div class="bg-gray-200 rounded-full overflow-hidden">
+                        <div id="upload-progress-bar" class="progress-bar w-0"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 2: Face Detection (Initially Hidden) -->
+            <div id="detection-section" class="mb-8 hidden">
+                <h2 class="text-xl font-semibold mb-4 flex items-center">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 mr-3 text-sm font-bold">2</span>
+                    Face Detection
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Video Preview -->
+                    <div>
+                        <div class="video-container mb-3 bg-gray-100 border border-gray-200 rounded-xl">
+                            <video id="video-preview" controls class="w-full h-full"></video>
+                        </div>
+                        <p class="text-sm text-gray-500 text-center">Original video</p>
+                    </div>
+                    
+                    <!-- Face Detection Controls -->
+                    <div class="flex flex-col justify-center">
+                        <div class="mb-6">
+                            <h3 class="text-lg font-medium text-gray-800 mb-2">Detect Faces in Video</h3>
+                            <p class="text-gray-600 mb-4">Our AI will analyze your video and identify all faces present.</p>
+                            <button id="detect-faces-btn" class="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center">
+                                <i class="fas fa-face-viewfinder mr-2"></i>
+                                Start Face Detection
+                            </button>
+                        </div>
+                        
+                        <!-- Detection Progress (Initially Hidden) -->
+                        <div id="detection-progress" class="hidden">
+                            <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                <span>Processing video...</span>
+                                <span id="detection-percentage">0%</span>
+                            </div>
+                            <div class="bg-gray-200 rounded-full overflow-hidden">
+                                <div id="detection-progress-bar" class="progress-bar w-0"></div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">This may take a few minutes depending on video length</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 3: Select Face (Initially Hidden) -->
+            <div id="face-selection-section" class="mb-8 hidden">
+                <h2 class="text-xl font-semibold mb-4 flex items-center">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 mr-3 text-sm font-bold">3</span>
+                    Select Face
+                </h2>
+                
+                <p class="text-gray-600 mb-4">Select a face to create a highlight video focused on this person:</p>
+                
+                <!-- Faces Grid -->
+                <div id="faces-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <!-- Face cards will be inserted here by JavaScript -->
+                </div>
+                
+                <div class="mt-6 text-center" id="no-faces-message" style="display: none;">
+                    <p class="text-gray-500">No faces were detected in this video. Try uploading a different video.</p>
+                </div>
+            </div>
+            
+            <!-- Step 4: Generate Highlight (Initially Hidden) -->
+            <div id="highlight-section" class="mb-8 hidden">
+                <h2 class="text-xl font-semibold mb-4 flex items-center">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 mr-3 text-sm font-bold">4</span>
+                    Generate Highlight
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Selected Face Preview -->
+                    <div class="flex flex-col items-center">
+                        <div class="w-32 h-32 rounded-xl overflow-hidden mb-3 border-4 border-blue-100">
+                            <img id="selected-face-img" class="w-full h-full object-cover" src="" alt="Selected face">
+                        </div>
+                        <p class="text-sm font-medium text-gray-700">Selected Face</p>
+                    </div>
+                    
+                    <!-- Highlight Generation Controls -->
+                    <div class="flex flex-col justify-center">
+                        <div class="mb-6">
+                            <h3 class="text-lg font-medium text-gray-800 mb-2">Create Highlight Video</h3>
+                            <p class="text-gray-600 mb-4">Generate a highlight reel focusing on the selected person.</p>
+                            <button id="generate-highlight-btn" class="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center">
+                                <i class="fas fa-film mr-2"></i>
+                                Generate Highlight Video
+                            </button>
+                        </div>
+                        
+                        <!-- Generation Progress (Initially Hidden) -->
+                        <div id="highlight-progress" class="hidden">
+                            <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                <span>Creating highlight video...</span>
+                                <span id="highlight-percentage">0%</span>
+                            </div>
+                            <div class="bg-gray-200 rounded-full overflow-hidden">
+                                <div id="highlight-progress-bar" class="progress-bar w-0"></div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">This may take a few minutes</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 5: Result (Initially Hidden) -->
+            <div id="result-section" class="hidden">
+                <h2 class="text-xl font-semibold mb-4 flex items-center">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 mr-3 text-sm font-bold">5</span>
+                    Your Highlight Video
+                </h2>
+                
+                <div class="grid grid-cols-1 gap-6">
+                    <!-- Highlight Video -->
+                    <div>
+                        <div class="video-container mb-3 bg-gray-100 border border-gray-200 rounded-xl">
+                            <video id="highlight-video" controls class="w-full h-full"></video>
+                        </div>
+                        <div class="flex justify-center mt-4 space-x-4">
+                            <a id="download-highlight" href="#" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center">
+                                <i class="fas fa-download mr-2"></i>
+                                Download
+                            </a>
+                            <a href="{{ url_for('media.dashboard') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center">
+                                <i class="fas fa-photo-video mr-2"></i>
+                                Go to Media Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Start Over Button (Initially Hidden) -->
+        <div class="text-center mt-8 hidden" id="start-over-container">
+            <button id="start-over-btn" class="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                <i class="fas fa-redo mr-2"></i>
+                Process Another Video
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay" class="fixed inset-0 flex items-center justify-center z-50 hidden loading-overlay">
+    <div class="text-center">
+        <div class="spinner mx-auto mb-4"></div>
+        <p id="loading-message" class="text-gray-800 font-medium">Processing...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Variables
+        let currentVideoId = null;
+        let selectedFaceId = null;
+        let videoFile = null;
+        
+        // DOM Elements
+        const dropzone = document.getElementById('dropzone');
+        const videoUpload = document.getElementById('video-upload');
+        const browseButton = document.getElementById('browse-button');
+        const videoPreview = document.getElementById('video-preview');
+        const detectFacesBtn = document.getElementById('detect-faces-btn');
+        const uploadSection = document.getElementById('upload-section');
+        const detectionSection = document.getElementById('detection-section');
+        const faceSelectionSection = document.getElementById('face-selection-section');
+        const highlightSection = document.getElementById('highlight-section');
+        const resultSection = document.getElementById('result-section');
+        const facesContainer = document.getElementById('faces-container');
+        const noFacesMessage = document.getElementById('no-faces-message');
+        const selectedFaceImg = document.getElementById('selected-face-img');
+        const generateHighlightBtn = document.getElementById('generate-highlight-btn');
+        const highlightVideo = document.getElementById('highlight-video');
+        const downloadHighlight = document.getElementById('download-highlight');
+        const startOverBtn = document.getElementById('start-over-btn');
+        const startOverContainer = document.getElementById('start-over-container');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingMessage = document.getElementById('loading-message');
+        
+        // Progress elements
+        const uploadProgressContainer = document.getElementById('upload-progress-container');
+        const uploadProgressBar = document.getElementById('upload-progress-bar');
+        const uploadPercentage = document.getElementById('upload-percentage');
+        const detectionProgress = document.getElementById('detection-progress');
+        const detectionProgressBar = document.getElementById('detection-progress-bar');
+        const detectionPercentage = document.getElementById('detection-percentage');
+        const highlightProgress = document.getElementById('highlight-progress');
+        const highlightProgressBar = document.getElementById('highlight-progress-bar');
+        const highlightPercentage = document.getElementById('highlight-percentage');
+        
+        // Event Listeners
+        browseButton.addEventListener('click', () => {
+            videoUpload.click();
+        });
+        
+        // File Upload via Input
+        videoUpload.addEventListener('change', handleFileSelect);
+        
+        // Drag and Drop
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('dragover');
+        });
+        
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('dragover');
+        });
+        
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
+            
+            if (e.dataTransfer.files.length) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+        
+        // Face Detection Button
+        detectFacesBtn.addEventListener('click', startFaceDetection);
+        
+        // Generate Highlight Button
+        generateHighlightBtn.addEventListener('click', generateHighlightVideo);
+        
+        // Start Over Button
+        startOverBtn.addEventListener('click', resetProcess);
+        
+        // Functions
+        function handleFileSelect(e) {
+            handleFiles(e.target.files);
+        }
+        
+        function handleFiles(files) {
+            if (files.length === 0) return;
+            
+            const file = files[0];
+            
+            // Validate file type
+            if (!file.type.startsWith('video/')) {
+                alert('Please select a valid video file.');
+                return;
+            }
+            
+            // Validate file size (max 500MB)
+            if (file.size > 500 * 1024 * 1024) {
+                alert('File size exceeds 500MB limit.');
+                return;
+            }
+            
+            videoFile = file;
+            
+            // Show video preview
+            const videoURL = URL.createObjectURL(file);
+            videoPreview.src = videoURL;
+            
+            // Show detection section
+            uploadSection.classList.add('opacity-50');
+            detectionSection.classList.remove('hidden');
+            
+            // Scroll to detection section
+            detectionSection.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function startFaceDetection() {
+            if (!videoFile) {
+                alert('Please upload a video first.');
+                return;
+            }
+            
+            // Show loading state
+            detectFacesBtn.disabled = true;
+            detectFacesBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processing...';
+            detectionProgress.classList.remove('hidden');
+            
+            // Simulate progress (actual progress would come from server)
+            simulateProgress(detectionProgressBar, detectionPercentage, 90);
+            
+            // Create form data
+            const formData = new FormData();
+            formData.append('video', videoFile);
+            
+            // Show loading overlay
+            loadingOverlay.classList.remove('hidden');
+            loadingMessage.textContent = 'Detecting faces in video...';
+            
+            // Send to server
+            fetch('/ai-video/detect-faces', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'Error detecting faces');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Complete progress
+                detectionProgressBar.style.width = '100%';
+                detectionPercentage.textContent = '100%';
+                
+                // Store video ID
+                currentVideoId = data.video_id;
+                
+                // Display faces
+                displayFaces(data.unique_faces);
+                
+                // Show face selection section
+                faceSelectionSection.classList.remove('hidden');
+                
+                // Scroll to face selection section
+                faceSelectionSection.scrollIntoView({ behavior: 'smooth' });
+                
+                // Hide loading overlay
+                loadingOverlay.classList.add('hidden');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error detecting faces: ' + error.message);
+                
+                // Reset button
+                detectFacesBtn.disabled = false;
+                detectFacesBtn.innerHTML = '<i class="fas fa-face-viewfinder mr-2"></i> Start Face Detection';
+                
+                // Hide loading overlay
+                loadingOverlay.classList.add('hidden');
+            });
+        }
+        
+        function displayFaces(faces) {
+            // Clear container
+            facesContainer.innerHTML = '';
+            
+            if (faces.length === 0) {
+                noFacesMessage.style.display = 'block';
+                return;
+            }
+            
+            noFacesMessage.style.display = 'none';
+            
+            // Sort faces by occurrences (most frequent first)
+            faces.sort((a, b) => b.occurrences - a.occurrences);
+            
+            // Create face cards
+            faces.forEach(face => {
+                const faceCard = document.createElement('div');
+                faceCard.className = 'face-card bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center';
+                
+                // Display confidence score if available
+                const confidenceHtml = face.confidence ? 
+                    `<div class="flex items-center mb-1">
+                        <div class="w-full bg-gray-200 rounded-full h-1.5 mr-1">
+                            <div class="bg-${face.confidence > 0.8 ? 'green' : face.confidence > 0.7 ? 'blue' : 'yellow'}-500 h-1.5 rounded-full" 
+                                 style="width: ${Math.round(face.confidence * 100)}%"></div>
+                        </div>
+                        <span class="text-xs font-medium text-gray-500">${Math.round(face.confidence * 100)}%</span>
+                    </div>` : '';
+                
+                faceCard.innerHTML = `
+                    <div class="mb-2">
+                        <img src="${face.thumbnail}" alt="Face" class="face-thumbnail">
+                    </div>
+                    ${confidenceHtml}
+                    <p class="text-xs text-gray-500">Appears ${face.occurrences} times</p>
+                `;
+                
+                // Add click event
+                faceCard.addEventListener('click', () => {
+                    // Remove selected class from all thumbnails
+                    document.querySelectorAll('.face-thumbnail').forEach(thumb => {
+                        thumb.classList.remove('selected');
+                    });
+                    
+                    // Add selected class to this thumbnail
+                    faceCard.querySelector('.face-thumbnail').classList.add('selected');
+                    
+                    // Store selected face ID
+                    selectedFaceId = face.id;
+                    
+                    // Update selected face image
+                    selectedFaceImg.src = face.thumbnail;
+                    
+                    // Show highlight section
+                    highlightSection.classList.remove('hidden');
+                    
+                    // Scroll to highlight section
+                    highlightSection.scrollIntoView({ behavior: 'smooth' });
+                });
+                
+                facesContainer.appendChild(faceCard);
+            });
+        }
+        
+        function generateHighlightVideo() {
+            if (!currentVideoId || !selectedFaceId) {
+                alert('Please select a face first.');
+                return;
+            }
+            
+            // Show loading state
+            generateHighlightBtn.disabled = true;
+            generateHighlightBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processing...';
+            highlightProgress.classList.remove('hidden');
+            
+            // Set initial progress
+            highlightProgressBar.style.width = '0%';
+            highlightPercentage.textContent = '0%';
+            
+            // Start progress animation that reaches 85% and then pulses
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                if (progress < 85) {
+                    progress += 1;
+                    highlightProgressBar.style.width = `${progress}%`;
+                    highlightPercentage.textContent = `${progress}%`;
+                } else {
+                    // Start pulsing animation between 85% and 95%
+                    const pulseInterval = setInterval(() => {
+                        highlightProgressBar.style.width = `${Math.floor(85 + Math.random() * 10)}%`;
+                    }, 1000);
+                    highlightProgressBar.dataset.pulseInterval = pulseInterval;
+                    clearInterval(progressInterval);
+                }
+            }, 50);
+            
+            // Show loading overlay
+            loadingOverlay.classList.remove('hidden');
+            loadingMessage.textContent = 'Generating highlight video...';
+            
+            // Send to server
+            fetch('/ai-video/generate-highlight', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    video_id: currentVideoId,
+                    face_id: selectedFaceId
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'Error generating highlight');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Complete progress and clear any pulse animations
+                if (highlightProgressBar.dataset.pulseInterval) {
+                    clearInterval(parseInt(highlightProgressBar.dataset.pulseInterval));
+                    delete highlightProgressBar.dataset.pulseInterval;
+                }
+                highlightProgressBar.style.width = '100%';
+                highlightPercentage.textContent = '100%';
+                
+                // Display highlight video
+                highlightVideo.src = data.highlight_path;
+                downloadHighlight.href = data.highlight_path;
+                
+                // Show result section
+                resultSection.classList.remove('hidden');
+                
+                // Show start over button
+                startOverContainer.classList.remove('hidden');
+                
+                // Scroll to result section
+                resultSection.scrollIntoView({ behavior: 'smooth' });
+                
+                // Hide loading overlay
+                loadingOverlay.classList.add('hidden');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error generating highlight: ' + error.message);
+                
+                // Reset button
+                generateHighlightBtn.disabled = false;
+                generateHighlightBtn.innerHTML = '<i class="fas fa-film mr-2"></i> Generate Highlight Video';
+                
+                // Clean up any pulse animations
+                if (highlightProgressBar.dataset.pulseInterval) {
+                    clearInterval(parseInt(highlightProgressBar.dataset.pulseInterval));
+                    delete highlightProgressBar.dataset.pulseInterval;
+                }
+                
+                // Hide loading overlay
+                loadingOverlay.classList.add('hidden');
+            });
+        }
+        
+        function simulateProgress(progressBar, percentageElement, targetPercent) {
+            let width = 0;
+            const interval = setInterval(() => {
+                if (width >= targetPercent) {
+                    clearInterval(interval);
+                    
+                    // Continue showing animation after reaching target percent
+                    if (targetPercent >= 90) {
+                        const pulseInterval = setInterval(() => {
+                            const currentWidth = parseFloat(progressBar.style.width);
+                            const newWidth = currentWidth < 95 ? 95 : 90;
+                            progressBar.style.width = newWidth + '%';
+                            // Keep percentage text stable at target to avoid confusion
+                            percentageElement.textContent = Math.round(targetPercent) + '%';
+                        }, 800);
+                        
+                        // Store the interval ID in the progress bar element for later cleanup
+                        progressBar.dataset.pulseInterval = pulseInterval;
+                    }
+                } else {
+                    width += Math.random() * 5;
+                    if (width > targetPercent) width = targetPercent;
+                    progressBar.style.width = width + '%';
+                    percentageElement.textContent = Math.round(width) + '%';
+                }
+            }, 200);
+        }
+        
+        function resetProcess() {
+            // Reset variables
+            currentVideoId = null;
+            selectedFaceId = null;
+            videoFile = null;
+            
+            // Reset UI
+            videoUpload.value = '';
+            videoPreview.src = '';
+            facesContainer.innerHTML = '';
+            selectedFaceImg.src = '';
+            highlightVideo.src = '';
+            
+            // Clean up any pulse animations
+            if (highlightProgressBar.dataset.pulseInterval) {
+                clearInterval(parseInt(highlightProgressBar.dataset.pulseInterval));
+                delete highlightProgressBar.dataset.pulseInterval;
+            }
+            if (detectionProgressBar.dataset.pulseInterval) {
+                clearInterval(parseInt(detectionProgressBar.dataset.pulseInterval));
+                delete detectionProgressBar.dataset.pulseInterval;
+            }
+            
+            // Reset progress bars
+            uploadProgressBar.style.width = '0%';
+            uploadPercentage.textContent = '0%';
+            detectionProgressBar.style.width = '0%';
+            detectionPercentage.textContent = '0%';
+            highlightProgressBar.style.width = '0%';
+            highlightPercentage.textContent = '0%';
+            
+            // Reset buttons
+            detectFacesBtn.disabled = false;
+            detectFacesBtn.innerHTML = '<i class="fas fa-face-viewfinder mr-2"></i> Start Face Detection';
+            generateHighlightBtn.disabled = false;
+            generateHighlightBtn.innerHTML = '<i class="fas fa-film mr-2"></i> Generate Highlight Video';
+            
+            // Show/hide sections
+            uploadSection.classList.remove('opacity-50');
+            detectionSection.classList.add('hidden');
+            faceSelectionSection.classList.add('hidden');
+            highlightSection.classList.add('hidden');
+            resultSection.classList.add('hidden');
+            startOverContainer.classList.add('hidden');
+            uploadProgressContainer.classList.add('hidden');
+            detectionProgress.classList.add('hidden');
+            highlightProgress.classList.add('hidden');
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Confirmed - VideoVault</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-blue: #2563EB;
+            --accent-pink: #FF85C0;
+            --accent-yellow: #FFD600;
+            --bg-blue: #EEF2FF;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #2563EB, #FF85C0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .blob-shape {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: #FF85C0;
+            filter: blur(100px);
+            opacity: 0.1;
+            border-radius: 50%;
+            z-index: 0;
+        }
+
+        .logo-gradient {
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            display: inline-block;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+
+        @keyframes checkmark {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .animate-checkmark {
+            animation: checkmark 0.5s ease-in-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-blue-50 min-h-screen relative">
+    <div class="blob-shape top-0 left-0"></div>
+    <div class="blob-shape bottom-0 right-0"></div>
+    
+    <div class="min-h-screen flex flex-col items-center justify-center px-4 relative">
+        <!-- Logo and Branding -->
+        <div class="mb-8 text-center">
+            <a href="{{ url_for('index') }}" class="flex items-center justify-center text-3xl font-bold">
+                <i class="fas fa-cloud-download-alt mr-2 logo-icon"></i>
+                <span class="logo-gradient">VideoVault</span>
+            </a>
+        </div>
+
+        <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-lg border-2 border-gray-100">
+            <div class="text-center">
+                <div class="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center animate-checkmark">
+                    <i class="fas fa-check text-4xl text-green-500"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Email Confirmed!</h2>
+                <p class="text-gray-600 mb-6">
+                    Your email has been successfully verified.<br>
+                    You can now log in to your account.
+                </p>
+                <div class="bg-green-50 p-4 rounded-xl text-sm text-green-700 mb-6">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Welcome to VideoVault! You now have full access to all features.
+                </div>
+                <div class="space-y-4">
+                    <a href="{{ url_for('login') }}" class="block w-full py-3 px-4 text-center text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition duration-200">
+                        <i class="fas fa-sign-in-alt mr-2"></i>
+                        Log In Now
+                    </a>
+                    <a href="{{ url_for('index') }}" class="block w-full py-3 px-4 text-center text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition duration-200">
+                        <i class="fas fa-home mr-2"></i>
+                        Back to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 text-center text-sm text-gray-600">
+            <p class="text-gray-600 text-sm">
+                © 2024 VideoVault. All rights reserved.
+            </p>
+            <div class="mt-2">
+                <a href="#" class="text-gray-600 hover:text-blue-600 mx-2 transition-colors duration-200">Need Help?</a>
+                <a href="#" class="text-gray-600 hover:text-blue-600 mx-2 transition-colors duration-200">Contact Support</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

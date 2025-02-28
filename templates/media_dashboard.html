@@ -1,0 +1,1620 @@
+{% extends "base.html" %}
+
+{% block title %}Media Dashboard - VideoVault{% endblock %}
+
+{% block content %}
+<style>
+    /* Modal styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.95);
+        backdrop-filter: blur(8px);
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .modal.show {
+        opacity: 1;
+    }
+
+    .modal-content {
+        position: relative;
+        background-color: transparent;
+        margin: 2rem auto;
+        padding: 0;
+        width: 95%;
+        max-width: 1400px;
+        border-radius: 1.5rem;
+        overflow: visible;
+        transform: translateY(20px) scale(0.98);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .modal.show .modal-content {
+        transform: translateY(0) scale(1);
+    }
+
+    .modal-content video,
+    .modal-content img {
+        width: 100%;
+        max-height: 85vh;
+        object-fit: contain;
+        border-radius: 1.5rem;
+        background: black;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    .close {
+        position: absolute;
+        right: 1.5rem;
+        top: 1.5rem;
+        width: 3rem;
+        height: 3rem;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(8px);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1010;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .close:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.1) rotate(90deg);
+    }
+
+    .media-title-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 2rem;
+        background: linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.7) 50%, transparent);
+        color: white;
+        z-index: 1005;
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-bottom-left-radius: 1.5rem;
+        border-bottom-right-radius: 1.5rem;
+    }
+
+    .modal.show .media-title-bar {
+        transform: translateY(0);
+    }
+
+    .media-title-bar h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        line-height: 1.3;
+    }
+
+    .media-title-bar .meta {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    /* Media Card Redesign */
+    .media-card {
+        @apply bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 border border-gray-100;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        transform: translateY(0);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .media-card:hover {
+        @apply shadow-lg;
+        transform: translateY(-4px);
+    }
+
+    .media-thumbnail {
+        position: relative;
+        padding-top: 56.25%;
+        background: linear-gradient(135deg, #1e293b, #0f172a);
+        overflow: hidden;
+        cursor: pointer;
+    }
+    
+    .media-thumbnail img, 
+    .media-thumbnail video {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .media-thumbnail:hover img,
+    .media-thumbnail:hover video {
+        transform: scale(1.05);
+    }
+
+    .media-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .media-thumbnail:hover .media-overlay {
+        opacity: 1;
+    }
+
+    .play-button {
+        width: 64px;
+        height: 64px;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(8px);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        transform: scale(0.9);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .media-thumbnail:hover .play-button {
+        transform: scale(1);
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .play-button:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.1);
+        border-color: rgba(255, 255, 255, 0.8);
+    }
+
+    .video-controls {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 1rem;
+        background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: 15;
+    }
+
+    .media-thumbnail:hover .video-controls {
+        opacity: 1;
+    }
+
+    .video-progress {
+        flex-grow: 1;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+        cursor: pointer;
+    }
+
+    .video-progress-bar {
+        height: 100%;
+        background: #3b82f6;
+        border-radius: 2px;
+        width: 0%;
+    }
+
+    .video-time {
+        color: white;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .media-info {
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+    }
+
+    .media-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.75rem;
+    }
+
+    .platform-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 2rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        line-height: 1;
+    }
+
+    .twitter-badge {
+        background-color: #e8f5fd;
+        color: #1da1f2;
+    }
+
+    .instagram-badge {
+        background-color: #fce7f3;
+        color: #d53f8c;
+    }
+
+    .youtube-badge {
+        background-color: #fef2f2;
+        color: #dc2626;
+    }
+
+    .tiktok-badge {
+        background-color: #f3f4f6;
+        color: #000000;
+    }
+
+    .media-title {
+        font-weight: 500;
+        color: #1a202c;
+        margin-bottom: 0.5rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .media-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-bottom: 0.5rem;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .media-specs {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 0.5rem;
+        margin: 0.75rem 0;
+        padding: 0.75rem 0;
+        border-top: 1px solid #f1f5f9;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .spec-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .spec-label {
+        font-size: 0.7rem;
+        color: #94a3b8;
+        margin-bottom: 0.15rem;
+    }
+
+    .spec-value {
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: #334155;
+    }
+
+    .media-description {
+        font-size: 0.875rem;
+        color: #64748b;
+        margin-bottom: 1rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .media-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: auto;
+        padding-top: 0.75rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.25rem;
+    }
+
+    .action-btn {
+        padding: 0.5rem;
+        border-radius: 0.375rem;
+        color: #64748b;
+        transition: all 0.2s;
+    }
+
+    .action-btn:hover {
+        background-color: #f1f5f9;
+    }
+
+    .action-btn.edit:hover {
+        color: #0ea5e9;
+    }
+
+    .action-btn.share:hover {
+        color: #10b981;
+    }
+
+    .action-btn.delete:hover {
+        color: #ef4444;
+    }
+
+    .primary-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+        border-radius: 0.375rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+    }
+
+    /* Stats Cards */
+    .stats-card {
+        display: flex;
+        align-items: center;
+        background-color: white;
+        padding: 1.25rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+
+    .stats-card:hover {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transform: translateY(-2px);
+    }
+
+    .stats-icon {
+        width: 3rem;
+        height: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.75rem;
+        margin-right: 1rem;
+    }
+
+    .stats-label {
+        font-size: 0.875rem;
+        color: #64748b;
+        margin-bottom: 0.25rem;
+    }
+
+    .stats-value {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #0f172a;
+    }
+
+    /* Search Bar */
+    .search-filters {
+        background-color: white;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        margin-bottom: 1.5rem;
+    }
+
+    .search-input {
+        position: relative;
+        flex: 1;
+    }
+
+    .search-input input {
+        width: 100%;
+        padding: 0.625rem 0.625rem 0.625rem 2.5rem;
+        border-radius: 0.5rem;
+        border: 1px solid #e2e8f0;
+        font-size: 0.875rem;
+        transition: all 0.15s ease;
+    }
+
+    .search-input input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+    }
+
+    .filter-dropdown {
+        padding: 0.625rem;
+        border-radius: 0.5rem;
+        border: 1px solid #e2e8f0;
+        font-size: 0.875rem;
+        background-color: white;
+        min-width: 140px;
+    }
+
+    .filter-dropdown:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    .sort-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.625rem 1rem;
+        border-radius: 0.5rem;
+        border: 1px solid #e2e8f0;
+        background-color: white;
+        font-size: 0.875rem;
+        color: #1e293b;
+        font-weight: 500;
+        transition: all 0.15s ease;
+    }
+
+    .sort-button:hover {
+        background-color: #f8fafc;
+        border-color: #cbd5e1;
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background-color: white;
+        border-radius: 0.75rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .empty-icon {
+        width: 5rem;
+        height: 5rem;
+        background-color: #f8fafc;
+        border-radius: 9999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+    }
+
+    .empty-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #0f172a;
+        margin-bottom: 0.75rem;
+    }
+
+    .empty-message {
+        font-size: 1rem;
+        color: #64748b;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Update platform badge styling */
+    .modal-platform-badge {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1010;
+        padding: 1rem 2rem;
+        border-radius: 3rem;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .modal-platform-badge:hover {
+        transform: translate(-50%, -50%) scale(1.05);
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .modal-platform-badge .platform-badge {
+        background: transparent !important;
+        color: white !important;
+        padding: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-platform-badge .platform-badge i {
+        font-size: 1.75rem;
+    }
+
+    /* Video duration display */
+    .video-duration {
+        position: absolute;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        background: rgba(0, 0, 0, 0.75);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        z-index: 1006;
+    }
+</style>
+
+<div class="min-h-screen bg-gray-50">
+    {% if not session.get('user') %}
+    <div class="min-h-[60vh] flex items-center justify-center">
+        <div class="text-center max-w-lg">
+            <div class="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-lock text-red-500 text-4xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Authentication Required</h2>
+            <p class="text-gray-600 mb-8">
+                Please log in to access your media dashboard. All your downloaded content will be securely stored and organized here.
+            </p>
+            <div class="flex justify-center space-x-4">
+                <a href="{{ url_for('login') }}" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    Login
+                </a>
+                <a href="{{ url_for('register') }}" class="btn btn-secondary">
+                    <i class="fas fa-user-plus mr-2"></i>
+                    Register
+                </a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Page Header -->
+        <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-8">
+            <h1 class="text-2xl font-bold text-gray-900 mb-4 md:mb-0">Media Dashboard</h1>
+            <div class="flex items-center space-x-3">
+                <button id="toggleFilters" class="inline-flex items-center justify-center px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none">
+                    <i class="fas fa-filter mr-2 text-gray-500"></i>
+                    Filters
+                </button>
+                <button id="downloadNewBtn" class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none">
+                    <i class="fas fa-plus mr-2"></i>
+                    Download New
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="stats-card">
+                <div class="stats-icon bg-blue-50">
+                    <i class="fas fa-photo-video text-blue-500 text-xl"></i>
+                </div>
+                <div>
+                    <div class="stats-label">Total Media</div>
+                    <div class="stats-value">{{ stats.total_media }}</div>
+                </div>
+            </div>
+            
+            <div class="stats-card">
+                <div class="stats-icon bg-pink-50">
+                    <i class="fas fa-video text-pink-500 text-xl"></i>
+                </div>
+                <div>
+                    <div class="stats-label">Videos</div>
+                    <div class="stats-value">{{ stats.videos }}</div>
+                </div>
+            </div>
+            
+            <div class="stats-card">
+                <div class="stats-icon bg-purple-50">
+                    <i class="fas fa-image text-purple-500 text-xl"></i>
+                </div>
+                <div>
+                    <div class="stats-label">Images</div>
+                    <div class="stats-value">{{ stats.images }}</div>
+                </div>
+            </div>
+            
+            <div class="stats-card">
+                <div class="stats-icon bg-green-50">
+                    <i class="fas fa-cloud-upload-alt text-green-500 text-xl"></i>
+                </div>
+                <div>
+                    <div class="stats-label">Uploaded</div>
+                    <div class="stats-value">{{ stats.uploaded }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filters -->
+        <div id="searchFilters" class="search-filters mb-8" style="display: none;">
+            <div class="flex flex-col md:flex-row gap-4">
+                <div class="search-input md:w-1/2 lg:w-2/5">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" placeholder="Search media..." class="search-input">
+                </div>
+                <div class="flex flex-wrap gap-3 md:ml-auto">
+                    <select class="filter-dropdown">
+                        <option value="">All Platforms</option>
+                        <option value="youtube">YouTube</option>
+                        <option value="twitter">Twitter</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="tiktok">TikTok</option>
+                    </select>
+                    <select class="filter-dropdown">
+                        <option value="">All Types</option>
+                        <option value="video">Videos</option>
+                        <option value="image">Images</option>
+                    </select>
+                    <button class="sort-button">
+                        <i class="fas fa-sort-amount-down"></i>
+                        Sort
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Media Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {% if media_items %}
+                {% for item in media_items %}
+                {% if item.platform == 'ai_video' %}
+                    {% set video_url = url_for('ai_video.serve_ai_video', filename=item.local_path.replace('/static/processed/', '')) %}
+                {% else %}
+                    {% set video_url = url_for('media.serve_download', filename=item.local_path) %}
+                {% endif %}
+
+                <div class="media-card" data-media-id="{{ item.id }}" data-media-type="{{ item.media_type }}">
+                    <!-- Thumbnail / Preview -->
+                    <div class="media-thumbnail" data-video-url="{{ video_url }}">
+                        {% if item.media_type in ['video', 'highlight'] %}
+                            <video preload="metadata" poster="{{ video_url }}?poster=true">
+                                <source src="{{ video_url }}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        {% else %}
+                            <img class="preview-media"
+                                 src="{{ video_url }}"
+                                 alt="{{ item.title }}"
+                                 loading="lazy">
+                        {% endif %}
+                        
+                        <div class="media-overlay">
+                            <div class="play-button">
+                                <i class="fas fa-{% if item.media_type in ['video', 'highlight'] %}play{% else %}search-plus{% endif %}"></i>
+                            </div>
+                        </div>
+                        
+                        {% if item.media_type in ['video', 'highlight'] %}
+                        <div class="video-controls">
+                            <div class="video-progress">
+                                <div class="video-progress-bar"></div>
+                            </div>
+                            <div class="video-time">0:00</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="media-info">
+                        <!-- Platform Badge -->
+                        <div class="media-header">
+                            <span class="platform-badge {% if item.platform == 'youtube' %}bg-red-50 text-red-600
+                                      {% elif item.platform == 'twitter' %}bg-blue-50 text-blue-400
+                                      {% elif item.platform == 'instagram' %}bg-pink-50 text-pink-500
+                                      {% elif item.platform == 'tiktok' %}bg-gray-50 text-gray-900
+                                      {% elif item.platform == 'ai_video' %}bg-purple-50 text-purple-600{% endif %}">
+                                <i class="{% if item.platform == 'youtube' %}fab fa-youtube
+                                          {% elif item.platform == 'twitter' %}fab fa-twitter
+                                          {% elif item.platform == 'instagram' %}fab fa-instagram
+                                          {% elif item.platform == 'tiktok' %}fab fa-tiktok
+                                          {% elif item.platform == 'ai_video' %}fas fa-robot{% endif %} mr-1"></i>
+                                {{ item.platform|replace('_', ' ')|title }}
+                            </span>
+                        </div>
+
+                        <!-- Title -->
+                        <h3 class="media-title">{{ item.title }}</h3>
+                        
+                        <!-- Meta Info -->
+                        <div class="media-meta">
+                            {% if item.metadata.uploader %}
+                                <div class="meta-item">
+                                    <i class="fas fa-user text-xs"></i>
+                                    <span>{{ item.metadata.uploader }}</span>
+                                </div>
+                            {% endif %}
+                            
+                            {% if item.metadata.like_count is defined %}
+                                <div class="meta-item">
+                                    <i class="fas fa-heart text-xs text-pink-500"></i>
+                                    <span>{{ '{:,}'.format(item.metadata.like_count) }}</span>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="meta-item ml-auto">
+                                <i class="fas fa-calendar text-xs"></i>
+                                <span>{{ item.created_at.strftime('%b %d, %Y') }}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Technical Specs -->
+                        {% if item.platform == 'youtube' and item.metadata %}
+                            <div class="media-specs">
+                                {% if item.metadata.download_type %}
+                                    <div class="spec-item">
+                                        <span class="spec-label">Type</span>
+                                        <span class="spec-value">{{ item.metadata.download_type|title }}</span>
+                                    </div>
+                                {% endif %}
+                                
+                                {% if item.metadata.format %}
+                                    <div class="spec-item">
+                                        <span class="spec-label">Format</span>
+                                        <span class="spec-value">{{ item.metadata.format|upper }}</span>
+                                    </div>
+                                {% endif %}
+                                
+                                {% if item.metadata.actual_resolution %}
+                                    <div class="spec-item">
+                                        <span class="spec-label">Resolution</span>
+                                        <span class="spec-value">{{ item.metadata.actual_resolution }}</span>
+                                    </div>
+                                {% endif %}
+                                
+                                {% if item.metadata.file_size_mb %}
+                                    <div class="spec-item">
+                                        <span class="spec-label">Size</span>
+                                        <span class="spec-value">{{ item.metadata.file_size_mb }} MB</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Description -->
+                        {% if item.metadata.description %}
+                            <p class="media-description">{{ item.metadata.description }}</p>
+                        {% endif %}
+                        
+                        <!-- Actions -->
+                        <div class="media-actions">
+                            <div class="action-buttons">
+                                <button class="action-btn edit" title="Edit" onclick="handleEdit('{{ item.id }}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="action-btn share" title="Share" onclick="handleShare('{{ item.id }}')">
+                                    <i class="fas fa-share-alt"></i>
+                                </button>
+                                <button class="action-btn delete" title="Delete" onclick="handleDelete('{{ item.id }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="primary-actions">
+                                {% if item.media_type == 'video' or item.platform == 'ai_video' %}
+                                <button class="btn-sm bg-blue-600 text-white hover:bg-blue-700 view-media-btn"
+                                        data-media-url="{{ video_url }}"
+                                        data-media-type="video"
+                                        data-media-title="{{ item.title }}"
+                                        data-media-uploader="{{ item.metadata.uploader if item.metadata and item.metadata.uploader else '' }}"
+                                        data-media-date="{{ item.created_at.strftime('%b %d, %Y') }}">
+                                    <i class="fas fa-play"></i> View
+                                </button>
+                                {% elif item.media_type == 'image' %}
+                                <button class="btn-sm bg-blue-600 text-white hover:bg-blue-700 view-media-btn"
+                                        data-media-url="{{ video_url }}"
+                                        data-media-type="image"
+                                        data-media-title="{{ item.title }}"
+                                        data-media-uploader="{{ item.metadata.uploader if item.metadata and item.metadata.uploader else '' }}"
+                                        data-media-date="{{ item.created_at.strftime('%b %d, %Y') }}">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                {% endif %}
+                                
+                                <a href="{{ video_url }}"
+                                   class="btn-sm bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                   download="{{ item.title }}">
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-span-full">
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-photo-video text-3xl text-gray-400"></i>
+                        </div>
+                        <h3 class="empty-title">No Media Found</h3>
+                        <p class="empty-message">Start downloading media from your favorite platforms</p>
+                        <a href="{{ url_for('twitter.twitter_downloader') }}" class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none">
+                            <i class="fas fa-download mr-2"></i>
+                            Download Media
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Media View Modal -->
+<div id="mediaModal" class="modal">
+    <button class="close">&times;</button>
+    <div class="modal-content">
+        <div id="mediaContainer" class="relative">
+            <!-- Move platform badge inside mediaContainer -->
+            <div class="modal-platform-badge"></div>
+            <!-- Media content will be inserted here -->
+            <div class="video-duration absolute bottom-4 right-4 bg-black bg-opacity-75 text-white px-2 py-1 rounded text-sm" style="display: none;"></div>
+        </div>
+        <div class="media-title-bar">
+            <h3 id="modalTitle"></h3>
+            <div class="meta">
+                <span id="modalUploader">
+                    <i class="fas fa-user mr-1"></i>
+                    <span></span>
+                </span>
+                <span id="modalDate">
+                    <i class="fas fa-calendar mr-1"></i>
+                    <span></span>
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const mediaModal = document.getElementById('mediaModal');
+    const mediaContainer = document.getElementById('mediaContainer');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalUploader = document.getElementById('modalUploader').querySelector('span');
+    const modalDate = document.getElementById('modalDate').querySelector('span');
+    const closeBtn = document.querySelector('.close');
+
+    // Search and filter functionality
+    const searchInput = document.querySelector('.search-input input');
+    const platformFilter = document.querySelector('select:nth-of-type(1)');
+    const typeFilter = document.querySelector('select:nth-of-type(2)');
+    const sortButton = document.querySelector('.sort-button');
+    let sortAscending = true;
+
+    // Store original cards for reference
+    const mediaGrid = document.querySelector('.grid.grid-cols-1.sm\\:grid-cols-2.lg\\:grid-cols-3.xl\\:grid-cols-4.gap-6');
+    const originalCards = Array.from(document.querySelectorAll('.media-card'));
+
+    // Debounce function for search
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    // Function to filter and sort media cards
+    function filterAndSortMedia() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedPlatform = platformFilter.value.toLowerCase();
+        const selectedType = typeFilter.value.toLowerCase();
+
+        // Create a copy of original cards to work with
+        const mediaCards = originalCards.map(card => card.cloneNode(true));
+
+        // Filter cards based on search term and filters
+        const filteredCards = mediaCards.filter(card => {
+            const title = card.querySelector('.media-title').textContent.toLowerCase();
+            const platform = card.querySelector('.platform-badge').textContent.trim().toLowerCase();
+            const type = card.getAttribute('data-media-type').toLowerCase();
+            const uploader = card.querySelector('.meta-item span')?.textContent.toLowerCase() || '';
+            const description = card.querySelector('.media-description')?.textContent.toLowerCase() || '';
+
+            const matchesSearch = !searchTerm || 
+                                title.includes(searchTerm) || 
+                                uploader.includes(searchTerm) || 
+                                description.includes(searchTerm);
+                                
+            const matchesPlatform = !selectedPlatform || platform.includes(selectedPlatform);
+            const matchesType = !selectedType || type === selectedType;
+
+            return matchesSearch && matchesPlatform && matchesType;
+        });
+
+        // Sort filtered cards
+        filteredCards.sort((a, b) => {
+            const dateA = new Date(a.querySelector('.media-meta .ml-auto span').textContent);
+            const dateB = new Date(b.querySelector('.media-meta .ml-auto span').textContent);
+            return sortAscending ? dateA - dateB : dateB - dateA;
+        });
+
+        // Clear the grid
+        mediaGrid.innerHTML = '';
+
+        // Show empty state or filtered results
+        if (filteredCards.length === 0) {
+            const searchEmptyState = document.createElement('div');
+            searchEmptyState.className = 'col-span-full search-empty-state';
+            searchEmptyState.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-search text-3xl text-gray-400"></i>
+                    </div>
+                    <h3 class="empty-title">No Results Found</h3>
+                    <p class="empty-message">Try adjusting your search or filters</p>
+                </div>
+            `;
+            mediaGrid.appendChild(searchEmptyState);
+        } else {
+            // Append filtered and sorted cards
+            filteredCards.forEach(card => {
+                // Reattach event listeners
+                const thumbnail = card.querySelector('.media-thumbnail');
+                const mediaType = card.getAttribute('data-media-type');
+                if (thumbnail) {
+                    thumbnail.onclick = () => handleThumbnailClick(thumbnail, mediaType);
+                }
+
+                const viewBtn = card.querySelector('.view-media-btn');
+                if (viewBtn) {
+                    viewBtn.onclick = () => {
+                        const mediaUrl = viewBtn.getAttribute('data-media-url');
+                        const mediaType = viewBtn.getAttribute('data-media-type');
+                        const title = viewBtn.getAttribute('data-media-title');
+                        const uploader = viewBtn.getAttribute('data-media-uploader');
+                        const date = viewBtn.getAttribute('data-media-date');
+                        handleView(mediaUrl, mediaType, title, uploader, date);
+                    };
+                }
+
+                const editBtn = card.querySelector('.action-btn.edit');
+                if (editBtn) {
+                    const mediaId = card.getAttribute('data-media-id');
+                    editBtn.onclick = () => handleEdit(mediaId);
+                }
+
+                const shareBtn = card.querySelector('.action-btn.share');
+                if (shareBtn) {
+                    const mediaId = card.getAttribute('data-media-id');
+                    shareBtn.onclick = () => handleShare(mediaId);
+                }
+
+                const deleteBtn = card.querySelector('.action-btn.delete');
+                if (deleteBtn) {
+                    const mediaId = card.getAttribute('data-media-id');
+                    deleteBtn.onclick = () => handleDelete(mediaId);
+                }
+
+                mediaGrid.appendChild(card);
+            });
+        }
+
+        // Ensure the grid container remains visible with proper display
+        mediaGrid.style.display = 'grid';
+    }
+
+    // Add event listeners
+    searchInput.addEventListener('input', debounce(() => filterAndSortMedia(), 300));
+    platformFilter.addEventListener('change', filterAndSortMedia);
+    typeFilter.addEventListener('change', filterAndSortMedia);
+    
+    sortButton.addEventListener('click', () => {
+        sortAscending = !sortAscending;
+        const icon = sortButton.querySelector('i');
+        icon.className = sortAscending ? 'fas fa-sort-amount-down' : 'fas fa-sort-amount-up';
+        filterAndSortMedia();
+    });
+
+    // Add event listeners to all view buttons
+    document.querySelectorAll('.view-media-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const mediaUrl = this.getAttribute('data-media-url');
+            const mediaType = this.getAttribute('data-media-type');
+            const title = this.getAttribute('data-media-title');
+            const uploader = this.getAttribute('data-media-uploader');
+            const date = this.getAttribute('data-media-date');
+            
+            handleView(mediaUrl, mediaType, title, uploader, date);
+        });
+    });
+
+    function handleView(mediaUrl, mediaType, title, uploader, date) {
+        try {
+            mediaContainer.innerHTML = `
+                <div class="modal-platform-badge"></div>
+                <div class="video-duration absolute bottom-4 right-4 bg-black bg-opacity-75 text-white px-2 py-1 rounded text-sm" style="display: none;"></div>
+            `;
+            
+            // Get platform from the media card
+            const mediaCard = document.querySelector(`[data-video-url="${mediaUrl}"]`)?.closest('.media-card');
+            const platformBadge = mediaCard?.querySelector('.platform-badge')?.cloneNode(true);
+            
+            // Update platform badge in modal with enhanced styling
+            const modalPlatformBadge = mediaContainer.querySelector('.modal-platform-badge');
+            modalPlatformBadge.innerHTML = '';
+            if (platformBadge) {
+                modalPlatformBadge.appendChild(platformBadge);
+            }
+            
+            if (mediaType === 'video') {
+                const video = document.createElement('video');
+                video.src = mediaUrl;
+                video.controls = true;
+                video.autoplay = false; // Disable autoplay
+                video.className = 'w-full';
+                
+                // Set poster image from the thumbnail
+                const thumbnailVideo = mediaCard?.querySelector('video');
+                if (thumbnailVideo) {
+                    video.poster = thumbnailVideo.poster || `${mediaUrl}?poster=true`;
+                } else {
+                    video.poster = `${mediaUrl}?poster=true`;
+                }
+
+                // Add duration display
+                const durationDisplay = mediaContainer.querySelector('.video-duration');
+                video.addEventListener('loadedmetadata', () => {
+                    const duration = formatTime(video.duration);
+                    durationDisplay.textContent = duration;
+                    durationDisplay.style.display = 'block';
+                });
+                
+                video.onerror = function(e) {
+                    console.error('Video load error:', e);
+                    showNotification('Error loading video. Please try again.', 'error');
+                };
+                
+                mediaContainer.insertBefore(video, mediaContainer.firstChild);
+            } else {
+                const img = document.createElement('img');
+                img.src = mediaUrl;
+                img.className = 'w-full';
+                img.onerror = function(e) {
+                    console.error('Image load error:', e);
+                    showNotification('Error loading image. Please try again.', 'error');
+                };
+                mediaContainer.insertBefore(img, mediaContainer.firstChild);
+            }
+            
+            // Update modal info
+            modalTitle.textContent = title || 'Untitled';
+            modalUploader.textContent = uploader || 'Unknown';
+            modalDate.textContent = date || '';
+            
+            // Show modal with animation
+            mediaModal.style.display = 'block';
+            requestAnimationFrame(() => {
+                mediaModal.classList.add('show');
+            });
+        } catch (error) {
+            console.error('Error in handleView:', error);
+            showNotification('Error displaying media. Please try again.', 'error');
+        }
+    }
+
+    // Keep the handleView function available globally for any legacy code
+    window.handleView = handleView;
+
+    function closeModal() {
+        const video = mediaContainer.querySelector('video');
+        if (video) {
+            video.pause();
+        }
+        mediaModal.classList.remove('show');
+        setTimeout(() => {
+            mediaModal.style.display = 'none';
+            mediaContainer.innerHTML = '';
+        }, 300);
+    }
+
+    // Close modal when clicking close button
+    closeBtn.onclick = closeModal;
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        if (event.target === mediaModal) {
+            closeModal();
+        }
+    };
+
+    // Add keyboard support for closing modal
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && mediaModal.style.display === 'block') {
+            closeModal();
+        }
+    });
+
+    async function handleDelete(mediaId) {
+        if (confirm('Are you sure you want to delete this media?')) {
+            fetch(`/media/delete/${mediaId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const mediaElement = document.querySelector(`[data-media-id="${mediaId}"]`);
+                    if (mediaElement) {
+                        const mediaType = mediaElement.dataset.mediaType;
+                        updateStats(-1, mediaType);
+                        mediaElement.remove();
+                    }
+                    showNotification('Media deleted successfully', 'success');
+                } else {
+                    throw new Error(data.message || 'Failed to delete media');
+                }
+            })
+            .catch(error => {
+                console.error('Delete error:', error);
+                showNotification(error.message || 'Error deleting media', 'error');
+            });
+        }
+    }
+
+    window.handleDelete = handleDelete;
+
+    async function handleEdit(mediaId) {
+        const mediaCard = document.querySelector(`[data-media-id="${mediaId}"]`);
+        const titleElement = mediaCard.querySelector('.media-title');
+        const currentTitle = titleElement.textContent;
+        
+        const newTitle = prompt('Enter new title:', currentTitle);
+        if (!newTitle || newTitle === currentTitle) return;
+        
+        try {
+            const response = await fetch(`/api/media/edit/${mediaId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ title: newTitle })
+            });
+            
+            if (response.ok) {
+                titleElement.textContent = newTitle;
+                showNotification('Title updated successfully', 'success');
+            } else {
+                const data = await response.json();
+                showNotification(data.error || 'Failed to update title', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('An error occurred while updating the title', 'error');
+        }
+    }
+
+    window.handleEdit = handleEdit;
+
+    async function handleShare(mediaId) {
+        try {
+            const response = await fetch(`/api/media/share/${mediaId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            if (response.ok) {
+                // Copy share link to clipboard
+                await navigator.clipboard.writeText(data.share_url);
+                showNotification('Share link copied to clipboard!', 'success');
+            } else {
+                showNotification(data.error || 'Failed to generate share link', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('An error occurred while sharing the media', 'error');
+        }
+    }
+
+    window.handleShare = handleShare;
+
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${type === 'error' ? 'bg-red-500' : 'bg-green-500'} text-white transform transition-all duration-300 translate-y-[-100%]`;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        // Animate in
+        requestAnimationFrame(() => {
+            notification.style.transform = 'translateY(0)';
+        });
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            notification.style.transform = 'translateY(-100%)';
+            notification.style.opacity = '0';
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 3000);
+    }
+
+    // Update stats function
+    function updateStats(change, mediaType) {
+        const totalMediaElement = document.querySelector('.stats-grid .total-media');
+        const videosElement = document.querySelector('.stats-grid .videos');
+        const imagesElement = document.querySelector('.stats-grid .images');
+        
+        if (totalMediaElement) {
+            const currentTotal = parseInt(totalMediaElement.textContent) || 0;
+            totalMediaElement.textContent = currentTotal + change;
+        }
+        
+        if (mediaType === 'video' && videosElement) {
+            const currentVideos = parseInt(videosElement.textContent) || 0;
+            videosElement.textContent = currentVideos + change;
+        } else if (mediaType === 'image' && imagesElement) {
+            const currentImages = parseInt(imagesElement.textContent) || 0;
+            imagesElement.textContent = currentImages + change;
+        }
+    }
+
+    // Add click handlers for thumbnails
+    document.querySelectorAll('.media-thumbnail').forEach(thumbnail => {
+        const mediaType = thumbnail.closest('.media-card').getAttribute('data-media-type');
+        thumbnail.addEventListener('click', () => handleThumbnailClick(thumbnail, mediaType));
+    });
+
+    function handleThumbnailClick(thumbnailElement, mediaType) {
+        const video = thumbnailElement.querySelector('video');
+        const playButton = thumbnailElement.querySelector('.play-button');
+        const progressBar = thumbnailElement.querySelector('.video-progress-bar');
+        const timeDisplay = thumbnailElement.querySelector('.video-time');
+        const videoProgress = thumbnailElement.querySelector('.video-progress');
+        const mediaUrl = thumbnailElement.getAttribute('data-video-url');
+
+        if (mediaType === 'video' || thumbnailElement.closest('.media-card').querySelector('.platform-badge').textContent.toLowerCase().includes('ai_video')) {
+            if (!video.src) {
+                video.src = mediaUrl;
+            }
+
+            // Load video if not loaded
+            if (video.readyState === 0) {
+                video.load();
+            }
+
+            if (video.paused) {
+                // Stop all other playing videos
+                document.querySelectorAll('.media-thumbnail video').forEach(v => {
+                    if (v !== video && !v.paused) {
+                        v.pause();
+                        const otherThumbnail = v.closest('.media-thumbnail');
+                        if (otherThumbnail) {
+                            otherThumbnail.classList.remove('playing');
+                            const otherPlayButton = otherThumbnail.querySelector('.play-button i');
+                            if (otherPlayButton) {
+                                otherPlayButton.className = 'fas fa-play';
+                            }
+                        }
+                    }
+                });
+
+                // Play current video
+                video.play().then(() => {
+                    thumbnailElement.classList.add('playing');
+                    playButton.querySelector('i').className = 'fas fa-pause';
+                    
+                    // Show video controls
+                    const videoControls = thumbnailElement.querySelector('.video-controls');
+                    if (videoControls) {
+                        videoControls.style.opacity = '1';
+                    }
+                }).catch(error => {
+                    console.error('Error playing video:', error);
+                    showNotification('Error playing video. Please try again.', 'error');
+                });
+            } else {
+                video.pause();
+                thumbnailElement.classList.remove('playing');
+                playButton.querySelector('i').className = 'fas fa-play';
+                
+                // Hide video controls
+                const videoControls = thumbnailElement.querySelector('.video-controls');
+                if (videoControls) {
+                    videoControls.style.opacity = '0';
+                }
+            }
+
+            // Update progress bar and time
+            function updateProgress() {
+                if (video.duration) {
+                    const progress = (video.currentTime / video.duration) * 100;
+                    progressBar.style.width = `${progress}%`;
+                    timeDisplay.textContent = formatTime(video.currentTime);
+                }
+            }
+
+            // Remove existing listeners before adding new ones
+            video.removeEventListener('timeupdate', updateProgress);
+            video.addEventListener('timeupdate', updateProgress);
+
+            // Allow clicking on progress bar to seek
+            videoProgress.onclick = function(e) {
+                const rect = videoProgress.getBoundingClientRect();
+                const pos = (e.clientX - rect.left) / rect.width;
+                video.currentTime = pos * video.duration;
+            };
+
+            // Handle video end
+            video.onended = () => {
+                thumbnailElement.classList.remove('playing');
+                playButton.querySelector('i').className = 'fas fa-play';
+                progressBar.style.width = '0%';
+                timeDisplay.textContent = formatTime(0);
+                video.currentTime = 0;
+                
+                // Hide video controls
+                const videoControls = thumbnailElement.querySelector('.video-controls');
+                if (videoControls) {
+                    videoControls.style.opacity = '0';
+                }
+            };
+
+            // Handle video loaded
+            video.onloadedmetadata = () => {
+                timeDisplay.textContent = formatTime(video.duration);
+            };
+
+        } else if (mediaType === 'image') {
+            // Handle image preview in modal
+            const img = thumbnailElement.querySelector('img');
+            if (img) {
+                handleView(img.src, 'image', 
+                          thumbnailElement.closest('.media-card').querySelector('.media-title').textContent,
+                          thumbnailElement.closest('.media-card').querySelector('.meta-item span')?.textContent || '',
+                          thumbnailElement.closest('.media-card').querySelector('.media-meta .ml-auto span')?.textContent || '');
+            }
+        }
+    }
+
+    function formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        seconds = Math.floor(seconds % 60);
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    // Pause all videos when scrolling
+    let scrollTimeout;
+    window.addEventListener('scroll', () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            document.querySelectorAll('.media-thumbnail').forEach(thumbnail => {
+                const video = thumbnail.querySelector('video');
+                if (video && !video.paused) {
+                    video.pause();
+                    thumbnail.classList.remove('playing');
+                    const playButton = thumbnail.querySelector('.play-button i');
+                    if (playButton) {
+                        playButton.className = 'fas fa-play';
+                    }
+                }
+            });
+        }, 150);
+    });
+
+    // Filter toggle functionality
+    const toggleFiltersBtn = document.getElementById('toggleFilters');
+    const searchFilters = document.getElementById('searchFilters');
+    let filtersVisible = false;
+
+    toggleFiltersBtn.addEventListener('click', () => {
+        filtersVisible = !filtersVisible;
+        searchFilters.style.display = filtersVisible ? 'block' : 'none';
+        
+        // Update button appearance
+        toggleFiltersBtn.classList.toggle('bg-gray-100');
+        const filterIcon = toggleFiltersBtn.querySelector('i');
+        filterIcon.classList.toggle('text-blue-500');
+    });
+
+    // Initialize filters as visible if there are active filters
+    if (searchInput.value || platformFilter.value || typeFilter.value) {
+        filtersVisible = true;
+        searchFilters.style.display = 'block';
+        toggleFiltersBtn.classList.add('bg-gray-100');
+        toggleFiltersBtn.querySelector('i').classList.add('text-blue-500');
+    }
+
+    // Add dropdown menu for Download New button
+    const downloadNewBtn = document.getElementById('downloadNewBtn');
+    downloadNewBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        showDownloadOptions(this);
+    });
+
+    function showDownloadOptions(button) {
+        // Remove any existing dropdown
+        const existingDropdown = document.querySelector('.download-dropdown');
+        if (existingDropdown) {
+            existingDropdown.remove();
+        }
+
+        // Create dropdown menu
+        const dropdown = document.createElement('div');
+        dropdown.className = 'download-dropdown absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 overflow-hidden';
+        dropdown.style.top = '100%';
+
+        // Add download options
+        const options = [
+            { text: 'YouTube Video', icon: 'fab fa-youtube', url: '{{ url_for("youtube.youtube_downloader") }}', color: 'text-red-600' },
+            { text: 'Twitter Media', icon: 'fab fa-twitter', url: '{{ url_for("twitter.twitter_downloader") }}', color: 'text-blue-400' },
+            { text: 'Instagram Media', icon: 'fab fa-instagram', url: '{{ url_for("instagram.instagram_downloader") }}', color: 'text-pink-500' },
+            { text: 'TikTok Video', icon: 'fab fa-tiktok', url: '{{ url_for("tiktok.tiktok_downloader") }}', color: 'text-gray-900' }
+        ];
+
+        const ul = document.createElement('ul');
+        ul.className = 'py-2 divide-y divide-gray-100';
+        ul.setAttribute('role', 'menu');
+        ul.setAttribute('aria-orientation', 'vertical');
+        ul.setAttribute('aria-labelledby', 'download-menu');
+
+        options.forEach(option => {
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.href = option.url;
+            a.className = `flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150 ease-in-out group`;
+            a.setAttribute('role', 'menuitem');
+            
+            const iconSpan = document.createElement('span');
+            iconSpan.className = `inline-flex items-center justify-center w-8 h-8 rounded-lg ${option.color} bg-opacity-10 mr-3 group-hover:bg-opacity-20 transition-all duration-150 ease-in-out`;
+            iconSpan.innerHTML = `<i class="${option.icon} text-lg"></i>`;
+            
+            const textSpan = document.createElement('span');
+            textSpan.className = 'flex-1';
+            textSpan.textContent = option.text;
+            
+            const arrowSpan = document.createElement('span');
+            arrowSpan.className = 'ml-2 text-gray-400 group-hover:text-gray-500';
+            arrowSpan.innerHTML = '<i class="fas fa-chevron-right text-sm"></i>';
+            
+            a.appendChild(iconSpan);
+            a.appendChild(textSpan);
+            a.appendChild(arrowSpan);
+            li.appendChild(a);
+            ul.appendChild(li);
+        });
+
+        dropdown.appendChild(ul);
+
+        // Position the dropdown relative to the button
+        const buttonRect = button.getBoundingClientRect();
+        const buttonParent = button.parentElement;
+        buttonParent.style.position = 'relative';
+        buttonParent.appendChild(dropdown);
+
+        // Add click event listeners to dropdown items
+        dropdown.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.href = link.href;
+            });
+        });
+
+        // Close dropdown when clicking outside
+        function closeDropdown(e) {
+            if (!dropdown.contains(e.target) && e.target !== button) {
+                dropdown.classList.add('closing');
+                setTimeout(() => {
+                    dropdown.remove();
+                }, 200);
+                document.removeEventListener('click', closeDropdown);
+            }
+        }
+
+        // Delay adding the click listener to prevent immediate closure
+        setTimeout(() => {
+            document.addEventListener('click', closeDropdown);
+        }, 0);
+    }
+
+    // Add styles for dropdown
+    const style = document.createElement('style');
+    style.textContent = `
+        .download-dropdown {
+            transform-origin: top right;
+            animation: dropdown-appear 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .download-dropdown.closing {
+            animation: dropdown-disappear 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+        }
+
+        @keyframes dropdown-appear {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        @keyframes dropdown-disappear {
+            from {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.95) translateY(-10px);
+            }
+        }
+
+        .download-dropdown a {
+            transition: all 0.15s ease-in-out;
+        }
+
+        .download-dropdown a:hover {
+            background-color: #f8fafc;
+        }
+
+        .download-dropdown a:active {
+            background-color: #f1f5f9;
+        }
+    `;
+    document.head.appendChild(style);
+});
+</script>
+{% endblock %}

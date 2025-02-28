@@ -1,269 +1,312 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Download Results - {{ content.username }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/downloader.css') }}">
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <meta name="google-signin-client_id" content="{{ google_client_id }}">
-    <meta name="youtube-client-id" content="{{ youtube_client_id }}">
-    <style>
-      /* Table and Button Styles */
-        .table-container {
-            width: 100%; /* Make table container full width */
-            margin: 0 auto;
-            padding: 2rem;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding-left: 2rem; /* Add left padding */
-            padding-right: 2rem; /* Add right padding to match left */
-        }
+{% extends "base.html" %}
 
-        .styled-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-family: Arial, sans-serif;
-            font-size: 0.9rem;
-            color: #333;
-        }
+{% block title %}TikTok Download Results - @{{ content.username }} - VideoVault{% endblock %}
 
-        .styled-table thead {
-            background-color: #007bff;
-            color: #fff;
-        }
+{% block extra_head %}
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<meta name="google-signin-client_id" content="{{ google_client_id }}">
+<meta name="youtube-client-id" content="{{ youtube_client_id }}">
+<style>
+    /* Keep all the existing styles */
+    .table-container {
+        width: 100%;
+        margin: 0 auto;
+        padding: 2rem;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
 
-        .styled-table th {
-            padding: 1rem;
-            text-align: left; /* Default to left align for other headers */
-            font-weight: bold;
-        }
+    .styled-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: Arial, sans-serif;
+        font-size: 0.9rem;
+        color: #333;
+    }
 
-        .styled-table tbody tr {
-            border-bottom: 1px solid #ddd;
-        }
+    .styled-table thead {
+        background-color: #007bff;
+        color: #fff;
+    }
 
-        .styled-table tbody tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
+    .styled-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: bold;
+    }
 
-        .styled-table tbody tr:hover {
-            background-color: #f1f1f1;
-        }
+    .styled-table tbody tr {
+        border-bottom: 1px solid #ddd;
+    }
 
-        .styled-table td,
-        .styled-table th {
-            padding: 1rem;
-            vertical-align: middle;
-        }
+    .styled-table tbody tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
 
-        /* Action Buttons Container */
-        .styled-table td:nth-child(9) {
-            white-space: nowrap;
-            min-width: 260px;
-            padding: 0.5rem 1rem;
-        }
+    .styled-table tbody tr:hover {
+        background-color: #f1f1f1;
+    }
 
-        /* Action Buttons Container Div */
-        .styled-table td:nth-child(9) > div {
-            display: flex;
-            gap: 8px;
-            justify-content: flex-end;
-            align-items: center;
-            height: 100%;
-        }
+    .styled-table td,
+    .styled-table th {
+        padding: 1rem;
+        vertical-align: middle;
+    }
 
-        /* Action Buttons */
-        .view-btn,
-        .download-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 8px 16px;
-            text-decoration: none;
-            color: white;
-            border-radius: 4px;
-            transition: background-color 0.3s;
-            width: 120px;
-            height: 36px;
-            margin: 0;
-        }
+    .styled-table td:nth-child(9) {
+        white-space: nowrap;
+        min-width: 260px;
+        padding: 0.5rem 1rem;
+    }
 
-        .view-btn {
-            background-color: #28a745;
-        }
+    .styled-table td:nth-child(9) > div {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        align-items: center;
+        height: 100%;
+    }
 
-        .download-btn {
-            background-color: #007bff;
-        }
+    .view-btn,
+    .download-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 16px;
+        text-decoration: none;
+        color: white;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+        width: 120px;
+        height: 36px;
+        margin: 0;
+    }
 
-        .view-btn:hover {
-            background-color: #218838;
-        }
+    .view-btn {
+        background-color: #28a745;
+    }
 
-        .download-btn:hover {
-            background-color: #0056b3;
-        }
+    .download-btn {
+        background-color: #007bff;
+    }
 
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-        }
+    .view-btn:hover {
+        background-color: #218838;
+    }
 
-        .modal-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #fff;
-            padding: 2rem;
-            border-radius: 8px;
-            width: 80%;
-            max-width: 800px;
-            text-align: center;
-        }
+    .download-btn:hover {
+        background-color: #0056b3;
+    }
 
-        .modal-content video {
-            width: 100%;
-            max-height: 600px;
-            margin-bottom: 1rem;
-        }
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+    }
 
-        .close {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            font-size: 2rem;
-            color: #333;
-            cursor: pointer;
-            transition: color 0.3s;
-        }
+    .modal-content {
+        position: relative;
+        background-color: #fefefe;
+        margin: 5vh auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 90%;
+        max-width: 800px;
+        border-radius: 8px;
+        max-height: 90vh;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+    }
 
-        .close:hover {
-            color: #000;
-        }
-        /* added  */
-        .video-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
+    #videoContainer {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 16/9;
+        margin-bottom: 20px;
+        position: relative;
+        background: black;
+        border-radius: 8px;
+        overflow: hidden;
+    }
 
-        .video-card {
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            padding: 10px;
-            width: 300px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
+    #videoContainer video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
 
-        .video-thumbnail {
-            width: 100%;
-            border-radius: 8px;
-        }
-        /* added  for check box and upload btn */
-        .checkbox-input {
-            margin-left: 10px;
-            width: 20px;
-            height: 20px;
-            vertical-align: middle;
-            cursor: pointer;
-        }
+    .video-info {
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-top: auto;
+        min-height: 80px;
+    }
 
-        .upload-btn {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-left: 10px;
-            transition: background-color 0.3s, opacity 0.3s;
-            vertical-align: middle;
-        }
+    #videoTitle {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+        line-height: 1.4;
+    }
 
-        .upload-btn:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
+    #videoUploader {
+        font-size: 0.9rem;
+        color: #666;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
 
-        .upload-btn:hover:not(:disabled) {
-            background-color: #45a049;
-        }
+    #videoUploader i {
+        font-size: 14px;
+        color: #888;
+    }
 
-        .actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 20px;
-            padding: 0 20px;
-        }
+    .close {
+        position: fixed;
+        right: calc(5% + 15px);
+        top: 6vh;
+        font-size: 24px;
+        font-weight: bold;
+        cursor: pointer;
+        color: #fff;
+        z-index: 1010;
+        width: 36px;
+        height: 36px;
+        background: rgba(0, 0, 0, 0.6);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+    }
 
-        /* Google Sign In Button Container */
-        #googleSignInWrapper {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            display: none;
-            z-index: 1000;
-        }
+    .close:hover {
+        background: rgba(0, 0, 0, 0.8);
+        transform: scale(1.1);
+        border-color: rgba(255, 255, 255, 0.4);
+    }
 
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            z-index: 999;
-        }
+    .video-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
 
-       /* Style adjustments for Actions column header and checkboxes */
-       .styled-table th:nth-child(9) { /* Target the Actions header */
-            text-align: center; /* Center align header text */
-            display: flex; /* Enable flexbox for header */
-            justify-content: center; /* Center content horizontally */
-            align-items: center; /* Center content vertically */
-            vertical-align: middle; /* Vertically align header content - ADDED */
-        }
+    .video-card {
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 10px;
+        width: 300px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
 
-        
-        /* Ensure checkbox column is centered */
-        .styled-table td:last-child,
-        .styled-table th:last-child {
-            vertical-align: middle;
-            text-align: center;
-            padding: 0.5rem;
-        }
+    .video-thumbnail {
+        width: 100%;
+        border-radius: 8px;
+    }
 
-        .checkbox-input {
-            margin: 0;
-            vertical-align: middle;
-        }
+    .checkbox-input {
+        margin-left: 10px;
+        width: 20px;
+        height: 20px;
+        vertical-align: middle;
+        cursor: pointer;
+    }
 
-        
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Profile: @{{ content.username }}</h1>
-        <p class="subtitle">Downloaded {{ content.videos|length }} videos</p>
+    .upload-btn {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-left: 10px;
+        transition: background-color 0.3s, opacity 0.3s;
+        vertical-align: middle;
+    }
+
+    .upload-btn:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .upload-btn:hover:not(:disabled) {
+        background-color: #45a049;
+    }
+
+    .actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+        padding: 0 20px;
+    }
+
+    #googleSignInWrapper {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        display: none;
+        z-index: 1000;
+    }
+
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        display: none;
+        z-index: 999;
+    }
+
+    .styled-table th:nth-child(9) {
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        vertical-align: middle;
+    }
+
+    .styled-table td:last-child,
+    .styled-table th:last-child {
+        vertical-align: middle;
+        text-align: center;
+        padding: 0.5rem;
+    }
+
+    .checkbox-input {
+        margin: 0;
+        vertical-align: middle;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-900 mb-4">Profile: @{{ content.username }}</h1>
+        <p class="text-xl text-gray-600 mb-8">Downloaded {{ content.videos|length }} videos</p>
 
         <div class="table-container">
             <table class="styled-table">
@@ -287,17 +330,24 @@
                     {% for video in content.videos %}
                     <tr>
                         <th scope="row">{{ loop.index }}</th>
-                        <td>{{ video.title|truncate(50) }}</td>
-                        <td>{{ video.description|truncate(100) }}</td>
+                        <td style="max-width: 200px; white-space: pre-line; line-height: 1.2;">{{ video.title }}</td>
+                        <td style="max-width: 250px; white-space: pre-line; line-height: 1.2;">{{ video.description|truncate(100) }}</td>
                         <td>{{ video.duration_string }} seconds</td>
                         <td>{{ video.view_count }}</td>
                         <td>{{ video.like_count }}</td>
                         <td>{{ video.comment_count }}</td>
-                        <td><a href="{{ video.uploader_url }}">{{ video.uploader }}</a></td>
+                        <td><a href="https://www.tiktok.com/@{{ video.uploader }}">{{ video.uploader }}</a></td>
                         <td style="text-align: right;">
                             <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
-                                <a href="#" class="view-btn" data-video="{{ url_for('serve_download', filename=video.url.split('/')[-1]) }}">View</a>
-                                <a href="{{ url_for('serve_download', filename=video.url.split('/')[-1]) }}" class="download-btn" download="tiktok_{{ content.username }}_{{ video.id }}.mp4">Download</a>
+                                <div class="video-actions">
+                                    <button class="view-btn" onclick="handleView('{{ video.url }}', '{{ video.title }}', '{{ video.uploader }}')">
+                                        <i class="fas fa-play"></i> View
+                                    </button>
+                                    <a href="{{ video.url }}"
+                                       class="download-btn" download="{{ video.title }}.mp4">
+                                        <i class="fas fa-download"></i> Download
+                                    </a>
+                                </div>
                             </div>
                         </td>
                         <td style="width: 20px; padding-left: 0;">
@@ -310,258 +360,310 @@
         </div>
 
         <div class="actions">
-            <a href="{{ url_for('tiktok_downloader') }}" class="back-btn">Download Another Profile</a>
+            <a href="{{ url_for('tiktok.tiktok_downloader') }}" class="back-btn">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Download Another Profile
+            </a>
             <div class="upload-btn-container">
                 <button class="upload-btn" disabled>Upload to YouTube Shorts</button>
             </div>
         </div>
-
     </div>
-    <div id="videoModal" class="modal">
-        <div class="modal-content">
-            <span class="close">×</span>
-            <video id="videoPlayer" controls>
-                Your browser does not support the video tag.
-            </video>
+</div>
+
+<div id="videoModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <div id="videoContainer">
+            <!-- Video will be inserted here -->
+        </div>
+        <div class="video-info">
+            <h3 id="videoTitle" class="text-xl font-bold text-gray-900 mb-2"></h3>
+            <p id="videoUploader" class="text-gray-600"></p>
         </div>
     </div>
+</div>
 
-    <div class="overlay" id="overlay"></div>
-    <div id="googleSignInWrapper">
-        <h3>Sign in with Google to Upload</h3>
-        <div id="g_id_onload"
-             data-client_id="{{ google_client_id }}"
-             data-context="signin"
-             data-ux_mode="popup"
-             data-callback="handleCredentialResponse"
-             data-auto_prompt="false"
-             data-close_on_tap_outside="false"
-             data-scope="https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.force-ssl"
-             data-access_type="offline">
-        </div>
-
-        <div class="g_id_signin"
-             data-type="standard"
-             data-shape="rectangular"
-             data-theme="outline"
-             data-text="sign_in_with"
-             data-size="large"
-             data-logo_alignment="left">
-        </div>
+<div class="overlay" id="overlay"></div>
+<div id="googleSignInWrapper">
+    <h3>Sign in with Google to Upload</h3>
+    <div id="g_id_onload"
+         data-client_id="{{ google_client_id }}"
+         data-context="signin"
+         data-ux_mode="popup"
+         data-callback="handleCredentialResponse"
+         data-auto_prompt="false"
+         data-close_on_tap_outside="false"
+         data-scope="https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.force-ssl"
+         data-access_type="offline">
     </div>
 
-    <div id="statusMessage" style="position: fixed; top: 20px; right: 20px; padding: 15px; border-radius: 5px; display: none; z-index: 2000; max-width: 300px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); font-weight: bold;">
+    <div class="g_id_signin"
+         data-type="standard"
+         data-shape="rectangular"
+         data-theme="outline"
+         data-text="sign_in_with"
+         data-size="large"
+         data-logo_alignment="left">
     </div>
+</div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const viewButtons = document.querySelectorAll('.view-btn');
-            const videoModal = document.getElementById('videoModal');
-            const videoPlayer = document.getElementById('videoPlayer');
-            const closeButton = document.querySelector('.close');
-            const checkboxes = document.querySelectorAll('.checkbox-input:not(#selectAll)');
-            const selectAllCheckbox = document.getElementById('selectAll');
-            const uploadBtn = document.querySelector('.upload-btn');
-            const overlay = document.getElementById('overlay');
-            const googleSignInWrapper = document.getElementById('googleSignInWrapper');
-            const statusMessage = document.getElementById('statusMessage');
-            let selectedVideos = [];
+<div id="statusMessage" style="position: fixed; top: 20px; right: 20px; padding: 15px; border-radius: 5px; display: none; z-index: 2000; max-width: 300px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); font-weight: bold;">
+</div>
+{% endblock %}
 
-            function showStatus(message, type = 'info') {
-                console.log(`Status message: ${message} (${type})`);
-                const statusMessage = document.getElementById('statusMessage');
-                statusMessage.textContent = message;
-                statusMessage.style.display = 'block';
-                statusMessage.style.backgroundColor = type === 'error' ? '#ff4444' : '#4CAF50';
-                statusMessage.style.color = 'white';
+{% block extra_scripts %}
+<script>
+// Keep all the existing JavaScript
+document.addEventListener('DOMContentLoaded', () => {
+    const viewButtons = document.querySelectorAll('.view-btn');
+    const videoModal = document.getElementById('videoModal');
+    const videoPlayer = document.getElementById('videoPlayer');
+    const closeButton = document.querySelector('.close');
+    const checkboxes = document.querySelectorAll('.checkbox-input:not(#selectAll)');
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const uploadBtn = document.querySelector('.upload-btn');
+    const overlay = document.getElementById('overlay');
+    const googleSignInWrapper = document.getElementById('googleSignInWrapper');
+    const statusMessage = document.getElementById('statusMessage');
+    let selectedVideos = [];
 
-                statusMessage.style.opacity = '1';
-                statusMessage.style.transition = 'opacity 0.3s ease-in-out';
+    function showStatus(message, type = 'info') {
+        console.log(`Status message: ${message} (${type})`);
+        const statusMessage = document.getElementById('statusMessage');
+        statusMessage.textContent = message;
+        statusMessage.style.display = 'block';
+        statusMessage.style.backgroundColor = type === 'error' ? '#ff4444' : '#4CAF50';
+        statusMessage.style.color = 'white';
 
-                setTimeout(() => {
-                    statusMessage.style.opacity = '0';
-                    setTimeout(() => {
-                        statusMessage.style.display = 'none';
-                    }, 300);
-                }, 5000);
-            }
+        statusMessage.style.opacity = '1';
+        statusMessage.style.transition = 'opacity 0.3s ease-in-out';
 
-            // Store selected videos in sessionStorage before redirect
-            function storeSelectedVideos() {
-                selectedVideos = Array.from(checkboxes)
-                    .filter(checkbox => checkbox.checked)
-                    .map(checkbox => {
-                        const row = checkbox.closest('tr');
-                        return {
-                            title: row.cells[1].textContent,
-                            description: row.cells[2].textContent,
-                            video_url: row.querySelector('.download-btn').href
-                        };
-                    });
-                sessionStorage.setItem('selectedVideos', JSON.stringify(selectedVideos));
-            }
+        setTimeout(() => {
+            statusMessage.style.opacity = '0';
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, 300);
+        }, 5000);
+    }
 
-            // Add select all functionality
-            selectAllCheckbox.addEventListener('change', function() {
-                const isChecked = this.checked;
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = isChecked;
-                });
-                uploadBtn.disabled = !isChecked;
+    function storeSelectedVideos() {
+        selectedVideos = Array.from(checkboxes)
+            .filter(checkbox => checkbox.checked)
+            .map(checkbox => {
+                const row = checkbox.closest('tr');
+                return {
+                    title: row.cells[1].textContent,
+                    description: row.cells[2].textContent,
+                    video_url: row.querySelector('.download-btn').href
+                };
             });
+        sessionStorage.setItem('selectedVideos', JSON.stringify(selectedVideos));
+    }
 
-            // Update select all checkbox when individual checkboxes change
-            checkboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', () => {
-                    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-                    const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
-                    selectAllCheckbox.checked = allChecked;
-                    selectAllCheckbox.indeterminate = anyChecked && !allChecked;
-                    uploadBtn.disabled = !anyChecked;
-                });
-            });
-
-            // Video modal functionality
-            viewButtons.forEach(button => {
-                button.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const videoUrl = this.getAttribute('data-video');
-                    videoPlayer.src = videoUrl;
-                    videoModal.style.display = 'block';
-                });
-            });
-
-            closeButton.addEventListener('click', () => {
-                videoPlayer.pause();
-                videoPlayer.currentTime = 0;
-                videoModal.style.display = 'none';
-            });
-
-            window.addEventListener('click', (e) => {
-                if (e.target === videoModal) {
-                    videoPlayer.pause();
-                    videoPlayer.currentTime = 0;
-                    videoModal.style.display = 'none';
-                }
-            });
-
-            // Handle YouTube auth success message
-            window.addEventListener('message', async (event) => {
-                if (event.data === 'youtube-auth-success') {
-                    showStatus('YouTube authorization successful! Starting upload...');
-                    const storedVideos = JSON.parse(sessionStorage.getItem('selectedVideos') || '[]');
-                    await uploadVideosToYouTube(storedVideos);
-                }
-            });
-
-            // Handle upload button click
-            uploadBtn.addEventListener('click', async () => {
-                if (Array.from(checkboxes).some(checkbox => checkbox.checked)) {
-                    storeSelectedVideos();
-                    showStatus('Initiating YouTube authorization...');
-
-                    try {
-                        const response = await fetch('/get-youtube-auth-url');
-                        const data = await response.json();
-
-                        if (data.auth_url) {
-                            // Open the authorization URL in a popup window
-                            const authWindow = window.open(
-                                data.auth_url,
-                                'youtube-auth',
-                                'width=600,height=800,menubar=no,toolbar=no,location=no,status=no'
-                            );
-
-                            // Check if popup was blocked
-                            if (!authWindow || authWindow.closed || typeof authWindow.closed === 'undefined') {
-                                throw new Error('Popup was blocked. Please allow popups for this site.');
-                            }
-
-                            // Monitor the popup window
-                            const checkPopup = setInterval(() => {
-                                if (authWindow.closed) {
-                                    clearInterval(checkPopup);
-                                    // The oauth2_success.html template will send a message when auth is successful
-                                }
-                            }, 500);
-                        } else {
-                            throw new Error('Failed to get authorization URL');
-                        }
-                    } catch (error) {
-                        console.error('Authorization error:', error);
-                        showStatus('Failed to initiate YouTube authorization: ' + error.message, 'error');
-                    }
-                } else {
-                    showStatus('Please select at least one video to upload', 'error');
-                }
-            });
-
-            async function uploadVideosToYouTube(videos) {
-                if (!videos || videos.length === 0) {
-                    showStatus('No videos selected for upload', 'error');
-                    return;
-                }
-
-                for (const video of videos) {
-                    try {
-                        showStatus(`Uploading ${video.title}...`);
-                        uploadBtn.textContent = `Uploading ${video.title}...`;
-                        uploadBtn.disabled = true;
-
-                        const uploadResponse = await fetch('/upload-video', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                title: video.title,
-                                description: video.description,
-                                video_url: video.video_url
-                            }),
-                            credentials: 'include'  // Important: Include credentials for session
-                        });
-
-                        if (!uploadResponse.ok) {
-                            const errorData = await uploadResponse.json();
-                            throw new Error(errorData.error || 'Upload failed');
-                        }
-
-                        const result = await uploadResponse.json();
-
-                        if (result.success) {
-                            showStatus(`Successfully uploaded "${video.title}" to YouTube Shorts!`);
-                            console.log(`Video uploaded successfully: ${result.video_id}`);
-
-                            // Open the video in a new tab
-                            const videoUrl = `https://www.youtube.com/watch?v=${result.video_id}`;
-                            window.open(videoUrl, '_blank');
-                        } else {
-                            throw new Error(result.message || 'Upload failed');
-                        }
-                    } catch (error) {
-                        console.error('Upload error:', error);
-                        showStatus(`Failed to upload "${video.title}": ${error.message}`, 'error');
-                    }
-                }
-
-                // Reset button state
-                uploadBtn.textContent = 'Upload to YouTube Shorts';
-                uploadBtn.disabled = false;
-                // Clear selected videos after upload attempts
-                sessionStorage.removeItem('selectedVideos');
-                checkboxes.forEach(checkbox => checkbox.checked = false);
-            }
-
-            // Close overlay when clicking outside
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) {
-                    overlay.style.display = 'none';
-                    googleSignInWrapper.style.display = 'none';
-                }
-            });
+    selectAllCheckbox.addEventListener('change', function() {
+        const isChecked = this.checked;
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = isChecked;
         });
-    </script>
+        uploadBtn.disabled = !isChecked;
+    });
 
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+            selectAllCheckbox.checked = allChecked;
+            selectAllCheckbox.indeterminate = anyChecked && !allChecked;
+            uploadBtn.disabled = !anyChecked;
+        });
+    });
 
-</body>
-</html>
+    viewButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const videoUrl = this.getAttribute('data-video');
+            videoPlayer.src = videoUrl;
+            videoModal.style.display = 'block';
+        });
+    });
+
+    closeButton.addEventListener('click', () => {
+        videoPlayer.pause();
+        videoPlayer.currentTime = 0;
+        videoModal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (e) => {
+        if (e.target === videoModal) {
+            videoPlayer.pause();
+            videoPlayer.currentTime = 0;
+            videoModal.style.display = 'none';
+        }
+    });
+
+    window.addEventListener('message', async (event) => {
+        if (event.data === 'youtube-auth-success') {
+            showStatus('YouTube authorization successful! Starting upload...');
+            const storedVideos = JSON.parse(sessionStorage.getItem('selectedVideos') || '[]');
+            await uploadVideosToYouTube(storedVideos);
+        }
+    });
+
+    uploadBtn.addEventListener('click', async () => {
+        if (Array.from(checkboxes).some(checkbox => checkbox.checked)) {
+            storeSelectedVideos();
+            showStatus('Initiating YouTube authorization...');
+
+            try {
+                const response = await fetch('/get-youtube-auth-url');
+                const data = await response.json();
+
+                if (data.auth_url) {
+                    const authWindow = window.open(
+                        data.auth_url,
+                        'youtube-auth',
+                        'width=600,height=800,menubar=no,toolbar=no,location=no,status=no'
+                    );
+
+                    if (!authWindow || authWindow.closed || typeof authWindow.closed === 'undefined') {
+                        throw new Error('Popup was blocked. Please allow popups for this site.');
+                    }
+
+                    const checkPopup = setInterval(() => {
+                        if (authWindow.closed) {
+                            clearInterval(checkPopup);
+                        }
+                    }, 500);
+                } else {
+                    throw new Error('Failed to get authorization URL');
+                }
+            } catch (error) {
+                console.error('Authorization error:', error);
+                showStatus('Failed to initiate YouTube authorization: ' + error.message, 'error');
+            }
+        } else {
+            showStatus('Please select at least one video to upload', 'error');
+        }
+    });
+
+    async function uploadVideosToYouTube(videos) {
+        if (!videos || videos.length === 0) {
+            showStatus('No videos selected for upload', 'error');
+            return;
+        }
+
+        for (const video of videos) {
+            try {
+                showStatus(`Uploading ${video.title}...`);
+                uploadBtn.textContent = `Uploading ${video.title}...`;
+                uploadBtn.disabled = true;
+
+                const uploadResponse = await fetch('/upload-video', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: video.title,
+                        description: video.description,
+                        video_url: video.video_url
+                    }),
+                    credentials: 'include'
+                });
+
+                if (!uploadResponse.ok) {
+                    const errorData = await uploadResponse.json();
+                    throw new Error(errorData.error || 'Upload failed');
+                }
+
+                const result = await uploadResponse.json();
+
+                if (result.success) {
+                    showStatus(`Successfully uploaded "${video.title}" to YouTube Shorts!`);
+                    console.log(`Video uploaded successfully: ${result.video_id}`);
+
+                    const videoUrl = `https://www.youtube.com/watch?v=${result.video_id}`;
+                    window.open(videoUrl, '_blank');
+                } else {
+                    throw new Error(result.message || 'Upload failed');
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                showStatus(`Failed to upload "${video.title}": ${error.message}`, 'error');
+            }
+        }
+
+        uploadBtn.textContent = 'Upload to YouTube Shorts';
+        uploadBtn.disabled = false;
+        sessionStorage.removeItem('selectedVideos');
+        checkboxes.forEach(checkbox => checkbox.checked = false);
+    }
+
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            overlay.style.display = 'none';
+            googleSignInWrapper.style.display = 'none';
+        }
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('videoModal');
+    const videoContainer = document.getElementById('videoContainer');
+    const videoTitle = document.getElementById('videoTitle');
+    const videoUploader = document.getElementById('videoUploader');
+    const closeBtn = document.querySelector('.close');
+
+    window.handleView = function(videoUrl, title, uploader) {
+        videoContainer.innerHTML = '';
+        const video = document.createElement('video');
+        video.src = videoUrl;
+        video.controls = true;
+        video.autoplay = true;
+        video.className = 'w-full h-full';
+        videoContainer.appendChild(video);
+
+        videoTitle.textContent = title;
+        videoUploader.textContent = `@${uploader}`;
+        modal.style.display = 'block';
+
+        video.onerror = function() {
+            alert('Error loading video. Please try again.');
+            modal.style.display = 'none';
+        };
+    };
+
+    closeBtn.onclick = function() {
+        const video = videoContainer.querySelector('video');
+        if (video) {
+            video.pause();
+        }
+        modal.style.display = 'none';
+        videoContainer.innerHTML = '';
+    };
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            const video = videoContainer.querySelector('video');
+            if (video) {
+                video.pause();
+            }
+            modal.style.display = 'none';
+            videoContainer.innerHTML = '';
+        }
+    };
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && modal.style.display === 'block') {
+            const video = videoContainer.querySelector('video');
+            if (video) {
+                video.pause();
+            }
+            modal.style.display = 'none';
+            videoContainer.innerHTML = '';
+        }
+    });
+});
+</script>
+{% endblock %}

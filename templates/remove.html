@@ -3,44 +3,415 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Remove Watermark</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>Remove Watermark - WatermarkAway</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-blue: #2563EB;
+            --accent-pink: #FF85C0;
+            --accent-yellow: #FFD600;
+            --bg-blue: #EEF2FF;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #2563EB, #FF85C0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .blob-shape {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: #FF85C0;
+            filter: blur(100px);
+            opacity: 0.1;
+            border-radius: 50%;
+            z-index: 0;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+            background: #F8FAFC;
+            border-radius: 1rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .video-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .action-button {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .action-button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: translateX(-100%);
+        }
+
+        .action-button:hover::after {
+            transform: translateX(100%);
+            transition: transform 0.5s ease;
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .instruction-step {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .instruction-step:hover {
+            transform: translateY(-5px);
+            border-color: #FF85C0;
+        }
+
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip::before {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.5rem 1rem;
+            background: #1F2937;
+            color: white;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .tooltip:hover::before {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-0.5rem);
+        }
+
+        /* Add logo gradient styles */
+        .logo-gradient {
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            display: inline-block;
+        }
+
+        .logo-gradient::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(255, 133, 192, 0.1));
+            filter: blur(10px);
+            z-index: -1;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+    </style>
 </head>
-<body>
-    <div class="container">
-        <h1>Select Watermark Areas</h1>
-        
-        <div class="instructions">
-            <h2>Instructions</h2>
-            <ol>
-                <li>Click and drag to select watermark areas</li>
-                <li>Use the Undo button to remove the last selection</li>
-                <li>Use Clear All to start over</li>
-                <li>Click Remove Watermark when ready</li>
-            </ol>
+<body class="bg-blue-50 min-h-screen relative">
+    <div class="blob-shape top-0 left-0"></div>
+    <div class="blob-shape bottom-0 right-0"></div>
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm fixed w-full z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{{ url_for('index') }}" class="flex items-center text-2xl font-bold">
+                        <i class="fas fa-magic mr-2 logo-icon"></i>
+                        <span class="logo-gradient">WatermarkAway</span>
+                    </a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('index') }}" class="text-gray-600 hover:text-blue-600 transition-colors duration-200 font-medium">
+                        <i class="fas fa-home mr-1"></i>
+                        Home
+                    </a>
+                </div>
+            </div>
         </div>
+    </nav>
 
-        <form id="watermarkForm" action="{{ url_for('remove_watermark', filename=filename) }}" method="post">
-            <input type="hidden" id="regions" name="regions" value="">
-            <div class="video-container">
-                <video id="video" controls>
-                    <source src="{{ url_for('uploaded_file', filename=filename) }}" type="video/mp4">
-                    Your browser does not support the video tag.
-                </video>
-                <canvas id="canvas"></canvas>
-            </div>
-            <div class="controls">
-                <button type="button" id="undoButton" class="secondary-btn">Undo Last Selection</button>
-                <button type="button" id="clearButton" class="secondary-btn">Clear All</button>
-                <button type="submit" class="primary-btn">Remove Watermark</button>
-            </div>
-        </form>
+    <div class="pt-24 pb-16 px-4 relative">
+        <div class="max-w-4xl mx-auto">
+            <div class="bg-white p-8 rounded-2xl shadow-lg border-2 border-gray-100">
+                <div class="text-center mb-8">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-4">Remove Watermark</h1>
+                    <p class="text-gray-600 max-w-2xl mx-auto">
+                        Select the areas containing watermarks in your video. Our AI will automatically remove them while preserving video quality.
+                    </p>
+                </div>
 
-        <div id="spinner">
-            <div class="spinner-circle"></div>
-            <p>Processing video... Please wait.</p>
+                <!-- Video Preview -->
+                <div class="video-container mb-8">
+                    <video id="video" controls>
+                        <source src="{{ url_for('uploaded_file', filename=filename) }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+
+                <!-- Instructions -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div class="instruction-step bg-white p-6 rounded-xl shadow-sm">
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+                            <i class="fas fa-mouse-pointer text-blue-600 text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-bold mb-2">1. Select Watermark Areas</h3>
+                        <p class="text-gray-600">Click and drag to select areas containing watermarks. You can make multiple selections.</p>
+                    </div>
+                    <div class="instruction-step bg-white p-6 rounded-xl shadow-sm">
+                        <div class="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center mb-4">
+                            <i class="fas fa-magic text-pink-600 text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-bold mb-2">2. Process Video</h3>
+                        <p class="text-gray-600">Click "Remove Watermark" to start processing. Our AI will handle the rest.</p>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button onclick="undoLastSelection()" class="action-button flex-1 inline-flex justify-center items-center px-6 py-3 border-2 border-gray-200 text-base font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200 tooltip" data-tooltip="Undo last selection">
+                        <i class="fas fa-undo mr-2"></i>
+                        Undo Selection
+                    </button>
+                    <button onclick="clearSelections()" class="action-button flex-1 inline-flex justify-center items-center px-6 py-3 border-2 border-gray-200 text-base font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200 tooltip" data-tooltip="Clear all selections">
+                        <i class="fas fa-trash-alt mr-2"></i>
+                        Clear All
+                    </button>
+                    <button onclick="processVideo()" id="process-btn" class="action-button flex-1 inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
+                        <i class="fas fa-magic mr-2"></i>
+                        <span>Remove Watermark</span>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+    <!-- Processing Modal -->
+    <div id="processing-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full mx-4">
+            <div class="text-center">
+                <div class="w-16 h-16 mx-auto mb-4">
+                    <i class="fas fa-circle-notch text-blue-600 text-4xl spinner"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Processing Your Video</h3>
+                <p class="text-gray-600">Please wait while we remove the watermarks. This may take a few minutes.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white py-8 border-t border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center text-sm text-gray-600">
+                <p>© 2024 WatermarkAway. All rights reserved.</p>
+                <div class="mt-2">
+                    <a href="#" class="text-gray-600 hover:text-blue-600 mx-2 transition-colors duration-200">Privacy Policy</a>
+                    <a href="#" class="text-gray-600 hover:text-blue-600 mx-2 transition-colors duration-200">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let selections = [];
+        const video = document.getElementById('video');
+        let isDrawing = false;
+        let startX, startY;
+        let currentSelection;
+
+        // Initialize canvas
+        const canvas = document.createElement('canvas');
+        canvas.style.position = 'absolute';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.pointerEvents = 'none';
+        video.parentElement.appendChild(canvas);
+
+        function resizeCanvas() {
+            const rect = video.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            drawSelections();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        video.addEventListener('loadedmetadata', resizeCanvas);
+
+        video.parentElement.addEventListener('mousedown', startDrawing);
+        video.parentElement.addEventListener('mousemove', draw);
+        video.parentElement.addEventListener('mouseup', endDrawing);
+
+        function startDrawing(e) {
+            const rect = video.getBoundingClientRect();
+            startX = e.clientX - rect.left;
+            startY = e.clientY - rect.top;
+            isDrawing = true;
+            currentSelection = { x: startX, y: startY, width: 0, height: 0 };
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            const rect = video.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            currentSelection.width = x - startX;
+            currentSelection.height = y - startY;
+            
+            drawSelections();
+        }
+
+        function endDrawing() {
+            if (!isDrawing) return;
+            isDrawing = false;
+            if (Math.abs(currentSelection.width) > 10 && Math.abs(currentSelection.height) > 10) {
+                selections.push({
+                    x: currentSelection.x,
+                    y: currentSelection.y,
+                    width: currentSelection.width,
+                    height: currentSelection.height
+                });
+            }
+            currentSelection = null;
+            drawSelections();
+        }
+
+        function drawSelections() {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw existing selections
+            selections.forEach(selection => {
+                ctx.fillStyle = 'rgba(37, 99, 235, 0.2)';
+                ctx.fillRect(selection.x, selection.y, selection.width, selection.height);
+                ctx.strokeStyle = '#2563EB';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(selection.x, selection.y, selection.width, selection.height);
+            });
+            
+            // Draw current selection
+            if (currentSelection) {
+                ctx.fillStyle = 'rgba(37, 99, 235, 0.2)';
+                ctx.fillRect(currentSelection.x, currentSelection.y, currentSelection.width, currentSelection.height);
+                ctx.strokeStyle = '#2563EB';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(currentSelection.x, currentSelection.y, currentSelection.width, currentSelection.height);
+            }
+        }
+
+        function undoLastSelection() {
+            selections.pop();
+            drawSelections();
+        }
+
+        function clearSelections() {
+            selections = [];
+            drawSelections();
+        }
+
+        function processVideo() {
+            if (selections.length === 0) {
+                alert('Please select at least one area containing a watermark.');
+                return;
+            }
+
+            const processingModal = document.getElementById('processing-modal');
+            processingModal.style.display = 'flex';
+
+            // Convert selections to video coordinates
+            const videoWidth = video.videoWidth;
+            const videoHeight = video.videoHeight;
+            const rect = video.getBoundingClientRect();
+            const scaleX = videoWidth / rect.width;
+            const scaleY = videoHeight / rect.height;
+
+            const scaledSelections = selections.map(selection => ({
+                x: Math.round(selection.x * scaleX),
+                y: Math.round(selection.y * scaleY),
+                width: Math.round(selection.width * scaleX),
+                height: Math.round(selection.height * scaleY)
+            }));
+
+            // Send selections to server
+            fetch('/process', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    filename: '{{ filename }}',
+                    selections: scaledSelections
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = data.redirect;
+                } else {
+                    alert('Error processing video: ' + data.error);
+                    processingModal.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                alert('Error processing video: ' + error);
+                processingModal.style.display = 'none';
+            });
+        }
+    </script>
 </body>
 </html>

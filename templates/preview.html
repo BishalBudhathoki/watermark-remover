@@ -3,28 +3,233 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Preview Processed Video</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>Preview - WatermarkAway</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-blue: #2563EB;
+            --accent-pink: #FF85C0;
+            --accent-yellow: #FFD600;
+            --bg-blue: #EEF2FF;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #2563EB, #FF85C0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .blob-shape {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: #FF85C0;
+            filter: blur(100px);
+            opacity: 0.1;
+            border-radius: 50%;
+            z-index: 0;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+            background: #F8FAFC;
+            border-radius: 1rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .video-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .success-message {
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .action-button {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .action-button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: translateX(-100%);
+        }
+
+        .action-button:hover::after {
+            transform: translateX(100%);
+            transition: transform 0.5s ease;
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .feature-card {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: #FF85C0;
+        }
+
+        /* Add logo gradient styles */
+        .logo-gradient {
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            display: inline-block;
+        }
+
+        .logo-gradient::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(255, 133, 192, 0.1));
+            filter: blur(10px);
+            z-index: -1;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+    </style>
 </head>
-<body>
-    <div class="container">
-        <h1>Processed Video Preview</h1>
-        
-        <div class="success-message">
-            <p>✨ Video processing completed successfully!</p>
-        </div>
+<body class="bg-blue-50 min-h-screen relative">
+    <div class="blob-shape top-0 left-0"></div>
+    <div class="blob-shape bottom-0 right-0"></div>
 
-        <div class="video-container">
-            <video controls>
-                <source src="{{ url_for('processed_file', filename=filename) }}" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm fixed w-full z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{{ url_for('index') }}" class="flex items-center text-2xl font-bold">
+                        <i class="fas fa-magic mr-2 logo-icon"></i>
+                        <span class="logo-gradient">WatermarkAway</span>
+                    </a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('index') }}" class="text-gray-600 hover:text-blue-600 transition-colors duration-200 font-medium">
+                        <i class="fas fa-home mr-1"></i>
+                        Home
+                    </a>
+                </div>
+            </div>
         </div>
+    </nav>
 
-        <div class="controls">
-            <a href="{{ url_for('download', filename=filename) }}" class="primary-btn">⬇️ Download Video</a>
-            <a href="{{ url_for('index') }}" class="secondary-btn">🔄 Process Another Video</a>
+    <div class="pt-24 pb-16 px-4 relative">
+        <div class="max-w-4xl mx-auto">
+            <!-- Success Message -->
+            <div class="text-center mb-12">
+                <div class="success-message inline-flex items-center bg-green-50 text-green-700 px-6 py-3 rounded-xl border-2 border-green-200">
+                    <i class="fas fa-check-circle text-green-500 mr-2 text-xl"></i>
+                    Watermark removed successfully!
+                </div>
+            </div>
+
+            <!-- Video Preview -->
+            <div class="bg-white p-8 rounded-2xl shadow-lg border-2 border-gray-100 mb-12">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Preview Your Video</h2>
+                <div class="video-container mb-8">
+                    <video controls>
+                        <source src="{{ url_for('download_file', filename=filename) }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="{{ url_for('download_file', filename=filename) }}" class="action-button flex-1 inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
+                        <i class="fas fa-download mr-2"></i>
+                        Download Video
+                    </a>
+                    <a href="{{ url_for('index') }}" class="action-button flex-1 inline-flex justify-center items-center px-6 py-3 border-2 border-gray-200 text-base font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
+                        <i class="fas fa-plus mr-2"></i>
+                        Process Another Video
+                    </a>
+                </div>
+            </div>
+
+            <!-- Features Section -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="feature-card bg-white p-6 rounded-xl shadow-sm">
+                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fas fa-magic text-blue-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2">Perfect Results</h3>
+                    <p class="text-gray-600">Advanced AI ensures seamless watermark removal without quality loss.</p>
+                </div>
+                <div class="feature-card bg-white p-6 rounded-xl shadow-sm">
+                    <div class="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fas fa-bolt text-pink-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2">Lightning Fast</h3>
+                    <p class="text-gray-600">Process your videos in seconds with our optimized algorithms.</p>
+                </div>
+                <div class="feature-card bg-white p-6 rounded-xl shadow-sm">
+                    <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mb-4">
+                        <i class="fas fa-shield-alt text-yellow-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2">Secure & Private</h3>
+                    <p class="text-gray-600">Your videos are processed securely and deleted after download.</p>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- Footer -->
+    <footer class="bg-white py-8 border-t border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center text-sm text-gray-600">
+                <p>© 2024 WatermarkAway. All rights reserved.</p>
+                <div class="mt-2">
+                    <a href="#" class="text-gray-600 hover:text-blue-600 mx-2 transition-colors duration-200">Privacy Policy</a>
+                    <a href="#" class="text-gray-600 hover:text-blue-600 mx-2 transition-colors duration-200">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>

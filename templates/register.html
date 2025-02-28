@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - VideoVault</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-blue: #2563EB;
+            --accent-pink: #FF85C0;
+            --accent-yellow: #FFD600;
+            --bg-blue: #EEF2FF;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #2563EB, #FF85C0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .blob-shape {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: #FF85C0;
+            filter: blur(100px);
+            opacity: 0.1;
+            border-radius: 50%;
+            z-index: 0;
+        }
+
+        .input-group {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .input-group:focus-within {
+            transform: translateY(-2px);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94A3B8;
+            transition: color 0.3s ease;
+        }
+
+        .input-group:focus-within .input-icon {
+            color: #2563EB;
+        }
+
+        .form-input {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .form-input:focus {
+            border-color: #2563EB;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .social-btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .social-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: translateX(-100%);
+        }
+
+        .social-btn:hover::after {
+            transform: translateX(100%);
+            transition: transform 0.5s ease;
+        }
+
+        .social-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .checkbox-wrapper {
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-wrapper:hover {
+            color: #2563EB;
+        }
+
+        .checkbox-input {
+            appearance: none;
+            width: 1.25rem;
+            height: 1.25rem;
+            border: 2px solid #E5E7EB;
+            border-radius: 0.375rem;
+            margin-right: 0.5rem;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-input:checked {
+            background-color: #2563EB;
+            border-color: #2563EB;
+        }
+
+        .checkbox-input:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 0.75rem;
+        }
+
+        .checkbox-input:focus {
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+            outline: none;
+        }
+
+        /* Add logo gradient styles */
+        .logo-gradient {
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            display: inline-block;
+        }
+
+        .logo-gradient::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(255, 133, 192, 0.1));
+            filter: blur(10px);
+            z-index: -1;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body class="bg-blue-50 min-h-screen relative">
+    <div class="blob-shape top-0 left-0"></div>
+    <div class="blob-shape bottom-0 right-0"></div>
+    <div class="min-h-screen flex flex-col items-center justify-center px-4 relative">
+        <!-- Logo and Branding -->
+        <div class="mb-8 text-center">
+            <a href="{{ url_for('index') }}" class="flex items-center justify-center text-3xl font-bold">
+                <i class="fas fa-photo-video mr-2 text-blue-600"></i>
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">VideoVault</span>
+            </a>
+            <p class="text-gray-600 mt-2">Your All-in-One Social Media Content Manager</p>
+        </div>
+
+        <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-lg border-2 border-gray-100">
+            <div>
+                <h2 class="mt-2 text-center text-3xl font-bold text-gray-900">
+                    Create your account
+                </h2>
+                <p class="mt-2 text-center text-sm text-gray-600">
+                    Already have an account?
+                    <a href="{{ url_for('login') }}" class="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200">
+                        Sign in
+                    </a>
+                </p>
+            </div>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="p-4 rounded-xl {{ 'bg-red-50 text-red-700 border-2 border-red-200' if category == 'error' else 'bg-green-50 text-green-700 border-2 border-green-200' }} flex items-center">
+                            <i class="fas {{ 'fa-exclamation-circle text-red-500' if category == 'error' else 'fa-check-circle text-green-500' }} mr-2"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <form class="mt-8 space-y-6" action="{{ url_for('register') }}" method="POST">
+                <div class="rounded-md space-y-4">
+                    <div class="input-group">
+                        <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                        <div class="relative">
+                            <i class="fas fa-user input-icon"></i>
+                            <input id="username" name="username" type="text" required
+                                   class="form-input appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl
+                                          placeholder-gray-400 focus:outline-none focus:ring-0
+                                          transition duration-150 ease-in-out text-sm"
+                                   placeholder="johndoe">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+                        <div class="relative">
+                            <i class="fas fa-envelope input-icon"></i>
+                            <input id="email" name="email" type="email" required
+                                   class="form-input appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl
+                                          placeholder-gray-400 focus:outline-none focus:ring-0
+                                          transition duration-150 ease-in-out text-sm"
+                                   placeholder="you@example.com">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <div class="relative">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input id="password" name="password" type="password" required
+                                   class="form-input appearance-none block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl
+                                          placeholder-gray-400 focus:outline-none focus:ring-0
+                                          transition duration-150 ease-in-out text-sm"
+                                   placeholder="••••••••">
+                            <button type="button" 
+                                    class="absolute inset-y-0 right-0 flex items-center px-4 text-gray-600 cursor-pointer hover:text-blue-600 transition-colors duration-200"
+                                    onclick="togglePasswordVisibility(this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                        <div class="relative">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input id="confirm_password" name="confirm_password" type="password" required
+                                   class="form-input appearance-none block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl
+                                          placeholder-gray-400 focus:outline-none focus:ring-0
+                                          transition duration-150 ease-in-out text-sm"
+                                   placeholder="••••••••">
+                            <button type="button" 
+                                    class="absolute inset-y-0 right-0 flex items-center px-4 text-gray-600 cursor-pointer hover:text-blue-600 transition-colors duration-200"
+                                    onclick="togglePasswordVisibility(this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center">
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" required class="checkbox-input">
+                        <span class="text-sm text-gray-700">
+                            I agree to the 
+                            <a href="#" class="text-blue-600 hover:text-blue-500">Terms of Service</a>
+                            and
+                            <a href="#" class="text-blue-600 hover:text-blue-500">Privacy Policy</a>
+                        </span>
+                    </label>
+                </div>
+
+                <div>
+                    <button type="submit"
+                            class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl
+                                   text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 
+                                   focus:ring-blue-500 transition duration-150 ease-in-out">
+                        <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                            <i class="fas fa-user-plus text-blue-500 group-hover:text-blue-400 transition duration-150 ease-in-out"></i>
+                        </span>
+                        Create Account
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-6">
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-white text-gray-500">
+                            Or continue with
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mt-6 grid grid-cols-2 gap-3">
+                    <button class="social-btn w-full inline-flex justify-center py-3 px-4 border-2 border-gray-200 rounded-xl shadow-sm 
+                                  bg-white text-sm font-medium text-gray-700 hover:border-pink-200 hover:bg-pink-50 transition-all duration-200">
+                        <img class="h-5 w-5" src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google">
+                        <span class="ml-2">Google</span>
+                    </button>
+
+                    <button class="social-btn w-full inline-flex justify-center py-3 px-4 border-2 border-gray-200 rounded-xl shadow-sm 
+                                  bg-white text-sm font-medium text-gray-700 hover:border-blue-200 hover:bg-blue-50 transition-all duration-200">
+                        <i class="fab fa-github h-5 w-5"></i>
+                        <span class="ml-2">GitHub</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 text-center text-sm text-gray-600">
+            <p class="text-gray-600 text-sm">
+                © 2024 VideoVault. All rights reserved.
+            </p>
+            <div class="mt-2">
+                <a href="#" class="text-gray-600 hover:text-blue-600 mx-2 transition-colors duration-200">Privacy Policy</a>
+                <a href="#" class="text-gray-600 hover:text-blue-600 mx-2 transition-colors duration-200">Terms of Service</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePasswordVisibility(button) {
+            const input = button.parentElement.querySelector('input');
+            const icon = button.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // Form validation
+        const form = document.querySelector('form');
+        const usernameInput = document.getElementById('username');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirm_password');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Reset previous error states
+            usernameInput.classList.remove('border-red-500');
+            emailInput.classList.remove('border-red-500');
+            passwordInput.classList.remove('border-red-500');
+            confirmPasswordInput.classList.remove('border-red-500');
+            
+            let isValid = true;
+            
+            // Username validation
+            if (!usernameInput.value || usernameInput.value.length < 3) {
+                usernameInput.classList.add('border-red-500');
+                showError(usernameInput, 'Username must be at least 3 characters');
+                isValid = false;
+            }
+            
+            // Email validation
+            if (!emailInput.value || !emailInput.value.includes('@')) {
+                emailInput.classList.add('border-red-500');
+                showError(emailInput, 'Please enter a valid email address');
+                isValid = false;
+            }
+            
+            // Password validation
+            if (!passwordInput.value || passwordInput.value.length < 6) {
+                passwordInput.classList.add('border-red-500');
+                showError(passwordInput, 'Password must be at least 6 characters');
+                isValid = false;
+            }
+            
+            // Confirm password validation
+            if (passwordInput.value !== confirmPasswordInput.value) {
+                confirmPasswordInput.classList.add('border-red-500');
+                showError(confirmPasswordInput, 'Passwords do not match');
+                isValid = false;
+            }
+            
+            if (isValid) {
+                this.submit();
+            }
+        });
+
+        function showError(input, message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'text-red-500 text-sm mt-1';
+            errorDiv.textContent = message;
+            
+            // Remove any existing error message
+            const existingError = input.parentElement.parentElement.querySelector('.text-red-500');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            input.parentElement.parentElement.appendChild(errorDiv);
+        }
+    </script>
+</body>
+</html> 

@@ -1,161 +1,278 @@
-# WatermarkAway Documentation
+# VideoVault - Professional Video Management Platform
 
-## Overview
-WatermarkAway is a web application designed to remove watermarks from videos and download content from platforms like TikTok. The application allows users to:
-- Upload videos and process them to remove watermarks.
-- Download processed videos.
-- Download videos from TikTok profiles.
+VideoVault is a powerful SaaS platform for downloading, processing, and managing videos from various social media platforms. Built with Python/Flask and modern web technologies, it offers a seamless experience for video content management.
 
-## Table of Contents
-1. [Technologies Used](#technologies-used)
-2. [Installation](#installation)
-3. [Usage](#usage)
-4. [File Structure](#file-structure)
-5. [Endpoints](#endpoints)
-6. [Redis Integration](#redis-integration)
-7. [Frontend](#frontend)
-8. [Contributing](#contributing)
-9. [License](#license)
+## 🚀 Features
 
-## Technologies Used
+### Core Functionality
+- **Multi-Platform Support**
+  - Instagram Reels & Posts
+  - TikTok Videos
+  - YouTube Shorts
+  - More platforms coming soon
 
-- ![Python](https://img.icons8.com/color/48/000000/python.png) **Python**: Primary programming language for the backend.
-- ![Flask](https://img.icons8.com/color/48/000000/flask.png) **Flask**: Lightweight WSGI web application framework for Python.
-- ![YouTube](https://img.icons8.com/color/48/000000/youtube-play.png) **yt-dlp**: Command-line program to download videos from YouTube and other sites.
-- ![OpenCV](https://img.icons8.com/color/48/000000/opencv.png) **OpenCV**: Library for computer vision tasks, used for video processing.
-- ![Movie](https://img.icons8.com/color/48/000000/movie.png) **MoviePy**: Python library for video editing.
-- ![Redis](https://img.icons8.com/color/48/000000/redis.png) **Redis**: In-memory data structure store used for caching and tracking downloads.
-- ![HTML](https://img.icons8.com/color/48/000000/html-5.png) **HTML/CSS**: For the frontend user interface.
+### Video Processing
+- **Watermark Removal**
+  - AI-powered watermark detection
+  - Clean removal without quality loss
+  - Batch processing support
 
-## Installation
+- **Video Enhancement**
+  - Quality optimization
+  - Format conversion
+  - Custom resolution support
 
-1. Clone the repository:
-   ```sh
-   git clone https://github.com/yourusername/watermarkaway.git
-   cd watermarkaway
+### User Management
+- **Secure Authentication**
+  - Email verification
+  - Social login (Google, GitHub)
+  - Password recovery
+
+- **User Dashboard**
+  - Download history
+  - Processing status
+  - Usage statistics
+
+### API Integration
+- **RESTful API**
+  - Comprehensive endpoints
+  - API key authentication
+  - Rate limiting
+  - Usage monitoring
+
+## 🛠 Technology Stack
+
+### Backend
+- Python 3.8+
+- Flask web framework
+- Supabase (Authentication & Database)
+- Redis (Caching & Rate Limiting)
+- Celery (Background Tasks)
+
+### Frontend
+- HTML5/CSS3
+- Tailwind CSS
+- JavaScript (ES6+)
+- Font Awesome Icons
+
+### Infrastructure
+- Docker containerization
+- Gunicorn WSGI server
+- Nginx reverse proxy
+- SSL/TLS encryption
+
+## 📦 Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/videovault.git
+   cd videovault
    ```
 
-2. Create a virtual environment:
-   ```sh
+2. **Set up virtual environment**
+   ```bash
    python -m venv venv
+   source venv/bin/activate  # Linux/Mac
+   # or
+   .\venv\Scripts\activate  # Windows
    ```
 
-3. Activate the virtual environment:
-   - On Windows:
-     ```sh
-     venv\Scripts\activate
-     ```
-   - On macOS/Linux:
-     ```sh
-     source venv/bin/activate
-     ```
-
-4. Install the required packages:
-   ```sh
+3. **Install dependencies**
+   ```bash
    pip install -r requirements.txt
    ```
 
-5. Set up Redis:
-   - Ensure Redis is installed and running on your machine. You can download it from [Redis.io](https://redis.io/).
-   - Create a `.env` file in the root directory and add your environment variables:
-     ```sh
-     RAPID_API_KEY=your_api_key
-     RAPID_API_HOST=your_api_host
-     ```
+4. **Configure environment variables**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
 
-## Usage
+5. **Initialize the database**
+   ```bash
+   flask db upgrade
+   ```
 
-1. Start the Flask application:
-   ```sh
+## 🔧 Configuration
+
+### Required Environment Variables
+```env
+FLASK_APP=app.py
+FLASK_ENV=development
+SECRET_KEY=your-secret-key
+SUPABASE_URL=your-supabase-url
+SUPABASE_KEY=your-supabase-key
+REDIS_URL=redis://localhost:6379
+```
+
+### Optional Features
+```env
+GOOGLE_CLIENT_ID=your-google-client-id
+GITHUB_CLIENT_ID=your-github-client-id
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your-email
+MAIL_PASSWORD=your-password
+```
+
+## 🚀 Deployment
+
+### Docker Deployment
+1. **Build the Docker image**
+   ```bash
+   docker build -t videovault .
+   ```
+
+2. **Run the container**
+   ```bash
+   docker run -p 5000:5000 videovault
+   ```
+
+### Nginx Configuration
+1. **Install Nginx** on your server (Ubuntu recommended):
+   ```bash
+   sudo apt update
+   sudo apt install nginx
+   ```
+
+2. **Configure Nginx** to reverse proxy to your Flask application:
+   Create a new configuration file in `/etc/nginx/sites-available/videovault`:
+   ```nginx
+   server {
+       listen 80;
+       server_name your_domain.com;  # Replace with your domain
+
+       location / {
+           proxy_pass http://localhost:5000;  # Flask app
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header X-Forwarded-Proto $scheme;
+       }
+   }
+   ```
+
+3. **Enable the configuration**:
+   ```bash
+   sudo ln -s /etc/nginx/sites-available/videovault /etc/nginx/sites-enabled
+   sudo nginx -t  # Test the configuration
+   sudo systemctl restart nginx  # Restart Nginx
+   ```
+
+### Celery Setup
+1. **Install Redis** (if not already installed):
+   ```bash
+   sudo apt install redis-server
+   ```
+
+2. **Start the Redis server**:
+   ```bash
+   sudo systemctl start redis
+   ```
+
+3. **Run Celery worker**:
+   In a new terminal, activate your virtual environment and run:
+   ```bash
+   celery -A app.celery worker --loglevel=info
+   ```
+
+## 📈 API Documentation
+
+### Authentication
+```http
+POST /api/v1/auth/register
+POST /api/v1/auth/login
+POST /api/v1/auth/refresh
+```
+
+### Video Operations
+```http
+POST /api/v1/videos/download
+POST /api/v1/videos/process
+GET /api/v1/videos/status/:id
+```
+
+### User Management
+```http
+GET /api/v1/user/profile
+PUT /api/v1/user/settings
+GET /api/v1/user/usage
+```
+
+## 🔒 Security Features
+
+- CSRF protection
+- Rate limiting
+- Input sanitization
+- XSS prevention
+- SQL injection protection
+- Secure session handling
+
+## 📊 Monitoring & Analytics
+
+- Request logging
+- Error tracking
+- Performance monitoring
+- User analytics
+- API usage statistics
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+- Documentation: [docs.videovault.com](https://docs.videovault.com)
+- Email: support@videovault.com
+- Discord: [VideoVault Community](https://discord.gg/videovault)
+
+## 🙏 Acknowledgments
+
+- [Flask](https://flask.palletsprojects.com/)
+- [Supabase](https://supabase.io/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Font Awesome](https://fontawesome.com/)
+
+## 🏃‍♂️ Running the Application
+
+### Using Python
+
+1. **Start the Development Server**
+   After setting up your environment and installing dependencies, you can run the application using the following command:
+
+   ```bash
    python app.py
    ```
 
-2. Open your web browser and navigate to:
+   This will start the Flask development server, and you can access the application at `http://127.0.0.1:5000/`.
+
+### Using Docker
+
+1. **Build the Docker Image**
+   If you prefer to run the application in a Docker container, first build the Docker image using the following command:
+
+   ```bash
+   docker build -t videovault .
    ```
-   http://localhost:5001
+
+2. **Run the Docker Container**
+   After building the image, you can run the container with the following command:
+
+   ```bash
+   docker run -p 5000:5000 videovault
    ```
 
-3. Use the application to:
-   - Upload videos and remove watermarks.
-   - Download TikTok videos.
+   This command maps port 5000 of the container to port 5000 on your host machine, allowing you to access the application at `http://127.0.0.1:5000/`.
 
-## File Structure
-```
-watermarkaway/
-│
-├── app.py                     # Main application file
-├── requirements.txt           # Python dependencies
-├── .gitignore                  # Files and directories to ignore in Git
-├── .env                        # Environment variables
-├── static/                     # Static files (CSS, JS, images)
-│   ├── css/
-│   ├── js/
-│   ├── uploads/               # Uploaded videos
-│   └── processed/             # Processed videos
-├── templates/                  # HTML templates
-│   ├── index.html             # Home page
-│   ├── tiktok_downloader.html  # TikTok downloader page
-│   ├── tiktok_results.html     # Results page for TikTok downloads
-│   ├── download_audio_video.html # Audio/video downloader page
-│   └── preview.html           # Preview processed video page
-└── README.md                  # Project documentation
-```
+### Summary of Running the Application
 
-## Endpoints
-| Method | Endpoint | Description |
-|--------|-------------|-------------|
-| GET | `/` | Render the home page. |
-| POST | `/tiktok-download` | Download videos from a TikTok profile. |
-| GET | `/uploads/<filename>` | Serve uploaded files. |
-| GET | `/processed/<filename>` | Serve processed files. |
-| GET | `/tiktok-downloader` | Render the TikTok downloader page. |
-| GET | `/download-audio-video` | Render the audio/video downloader page. |
-
-## Redis Integration
-Redis is used to store metadata about downloaded videos. The application checks Redis to see if a video has already been downloaded before attempting to download it again. This helps manage downloads efficiently and avoids unnecessary duplication.
-
-### Example Redis Commands
-
-Check if a video exists:
-```python
-if redis_client.exists(video_id):
-    # Video already downloaded
-```
-
-Store video metadata:
-```python
-redis_client.hset(video_id, mapping={
-    'title': video_info.get('title', ''),
-    'description': video_info.get('description', ''),
-    'url': url_for('serve_download', filename=clean_filename)
-})
-```
-
-## Frontend
-The frontend is built using **HTML and CSS**, with a responsive design to ensure usability across devices. The application provides a user-friendly interface for uploading videos, viewing download progress, and accessing processed videos.
-
-### Key HTML Templates
-- **`index.html`**: Main landing page where users can upload videos.
-- **`tiktok_downloader.html`**: Page for downloading TikTok videos.
-- **`tiktok_results.html`**: Displays the results of TikTok downloads.
-- **`preview.html`**: Shows a preview of the processed video.
-
-## Contributing
-Contributions are welcome! Follow these steps:
-1. Fork the repository.
-2. Create a new branch:
-   ```sh
-   git checkout -b feature-branch
-   ```
-3. Make your changes and commit them:
-   ```sh
-   git commit -m 'Add new feature'
-   ```
-4. Push to the branch:
-   ```sh
-   git push origin feature-branch
-   ```
-5. Create a pull request.
-
-## License
-This project is licensed under the **MIT License**. See the `LICENSE` file for details.
+- **For Development**: Use `python app.py` to run the application locally.
+- **For Production**: Use Docker to build and run the application in a containerized environment.

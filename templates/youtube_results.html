@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}YouTube Download Results - {{ content.username }} - WatermarkAway{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <div class="mb-6">
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">Download Results</h1>
+            <p class="text-gray-600">Content from: {{ content.username }}</p>
+        </div>
+
+        {% for video in content.videos %}
+        <div class="bg-gray-50 rounded-lg p-6 mb-6">
+            <div class="flex flex-col md:flex-row gap-6">
+                <div class="flex-grow">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-2">{{ video.title }}</h2>
+                    <p class="text-gray-600 mb-4">{{ video.description[:200] }}{% if video.description|length > 200 %}...{% endif %}</p>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        <div class="bg-white p-3 rounded-lg shadow-sm">
+                            <p class="text-sm text-gray-500">Duration</p>
+                            <p class="font-semibold">{{ video.duration_string }}</p>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg shadow-sm">
+                            <p class="text-sm text-gray-500">Views</p>
+                            <p class="font-semibold">{{ '{:,}'.format(video.view_count) }}</p>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg shadow-sm">
+                            <p class="text-sm text-gray-500">Likes</p>
+                            <p class="font-semibold">{{ '{:,}'.format(video.like_count) }}</p>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg shadow-sm">
+                            <p class="text-sm text-gray-500">Comments</p>
+                            <p class="font-semibold">{{ '{:,}'.format(video.comment_count) }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-4 mt-4">
+                <a href="{{ video.url }}" class="flex-1 inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
+                    <i class="fas fa-download mr-2"></i>
+                    Download Video
+                </a>
+                <a href="{{ url_for('index') }}" class="flex-1 inline-flex justify-center items-center px-6 py-3 border-2 border-gray-200 text-base font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
+                    <i class="fas fa-plus mr-2"></i>
+                    Download Another Video
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div>
+            <h2>Download Complete</h2>
+            <p>Uploaded by: {{ content.username }}</p>
+            <a href="{{ content.download_url }}" class="btn btn-primary">Download Video</a>
+            <!-- Add other relevant information -->
+        </div>
+    </div>
+</div>
+{% endblock %}
