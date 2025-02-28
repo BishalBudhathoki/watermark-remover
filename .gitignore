@@ -4,7 +4,6 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
 build/
 develop-eggs/
 dist/
@@ -21,36 +20,137 @@ wheels/
 .installed.cfg
 *.egg
 .env
-openssl-0.9.8zh.tar.gz
-openssl-0.9.8zh/
+.env.*
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
 
 # Virtual Environment
 venv/
 ENV/
 myenv/
 flask_session/
-venv/
+.venv/
+env/
+env.bak/
+venv.bak/
 dump.rdb
 phase1.md
 
-# Uploaded and processed videos
+# Media and Uploads
 static/uploads/*
 static/processed/*
 !static/uploads/.gitkeep
 !static/processed/.gitkeep
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.mkv
+*.webm
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.svg
+*.ico
 
-# IDE
+# IDE and Editors
 .idea/
 .vscode/
 *.swp
 *.swo
+*.swn
+*.bak
+*.sublime-workspace
+*.sublime-project
+.project
+.settings/
+.classpath
+.factorypath
+*.iml
+*.iws
+.idea_modules/
+.vs/
+.code-workspace
 
-# OS
+# OS Generated Files
 .DS_Store
-Thumbs.db 
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
 
-#docker
+# Logs and Databases
+*.log
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+logs/
+log/
+
+# Docker
 .dockerignore
 dockerfile
-docker build -t watermarkaway .
-docker run -d -p 5000:5000 watermarkaway
+docker-compose.yml
+docker-compose.override.yml
+.docker/
+
+# Dependencies and Package Managers
+node_modules/
+package-lock.json
+yarn.lock
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Security and Keys
+*.pem
+*.key
+*.cert
+*.crt
+*.csr
+*.p12
+*.pfx
+openssl-0.9.8zh.tar.gz
+openssl-0.9.8zh/
+
+# Temporary Files
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+.temp/
+.tmp/
+tmp/
+
+# Local Development
+.local/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+local_settings.py
+
+# Build and Dist
+/dist/
+/build/
+*.min.js
+*.min.css
