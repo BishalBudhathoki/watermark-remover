@@ -65,8 +65,8 @@ VideoVault is a powerful SaaS platform for downloading, processing, and managing
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/videovault.git
-   cd videovault
+   git clone https://github.com/BishalBudhathoki/watermark-remover.git
+   cd watermark-remover
    ```
 
 2. **Set up virtual environment**
@@ -117,6 +117,42 @@ MAIL_PASSWORD=your-password
 
 ## 🚀 Deployment
 
+### Local Development Workflow
+1. **Setup Development Environment**
+   ```bash
+   # Clone and setup as described in Installation section
+   ./git-deploy.sh --help  # View deployment script options
+   ```
+
+2. **Development Workflow**
+   - Create feature branch:
+     ```bash
+     ./git-deploy.sh -b feature/new-feature "Initial commit for new feature"
+     ```
+   - Make changes and commit:
+     ```bash
+     ./git-deploy.sh "Update feature implementation"
+     ```
+   - Create release:
+     ```bash
+     ./git-deploy.sh -b main -t v1.0.0 --backup "Release version 1.0.0"
+     ```
+
+3. **Pre-commit Hooks**
+   The repository includes pre-commit hooks that:
+   - Check Python syntax
+   - Run code formatting
+   - Detect sensitive data
+   - Run tests
+   - Validate commit messages
+
+4. **Pre-push Checks**
+   Before pushing to protected branches:
+   - Runs comprehensive test suite
+   - Checks for large files
+   - Performs security scans
+   - Validates development settings
+
 ### Docker Deployment
 1. **Build the Docker image**
    ```bash
@@ -128,53 +164,109 @@ MAIL_PASSWORD=your-password
    docker run -p 5000:5000 videovault
    ```
 
-### Nginx Configuration
-1. **Install Nginx** on your server (Ubuntu recommended):
+### Production Deployment
+
+1. **Preparation**
    ```bash
-   sudo apt update
-   sudo apt install nginx
+   # Create deployment configuration
+   cp .env.example .env.production
+   # Edit production environment variables
+   nano .env.production
    ```
 
-2. **Configure Nginx** to reverse proxy to your Flask application:
-   Create a new configuration file in `/etc/nginx/sites-available/videovault`:
-   ```nginx
-   server {
-       listen 80;
-       server_name your_domain.com;  # Replace with your domain
-
-       location / {
-           proxy_pass http://localhost:5000;  # Flask app
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-           proxy_set_header X-Forwarded-Proto $scheme;
-       }
-   }
-   ```
-
-3. **Enable the configuration**:
+2. **Database Setup**
    ```bash
-   sudo ln -s /etc/nginx/sites-available/videovault /etc/nginx/sites-enabled
-   sudo nginx -t  # Test the configuration
-   sudo systemctl restart nginx  # Restart Nginx
+   # Backup existing database
+   flask db-tools backup
+   
+   # Apply migrations
+   flask db upgrade
    ```
 
-### Celery Setup
-1. **Install Redis** (if not already installed):
+3. **Static Files**
    ```bash
-   sudo apt install redis-server
+   # Collect and optimize static files
+   flask static collect
+   flask static optimize
    ```
 
-2. **Start the Redis server**:
+4. **SSL/TLS Setup**
    ```bash
-   sudo systemctl start redis
+   # Generate SSL certificate using Let's Encrypt
+   sudo certbot --nginx -d yourdomain.com
    ```
 
-3. **Run Celery worker**:
-   In a new terminal, activate your virtual environment and run:
+5. **Application Deployment**
    ```bash
-   celery -A app.celery worker --loglevel=info
+   # Using the deployment script
+   ./git-deploy.sh -b production --backup "Production release v1.0.0"
+   
+   # Or manual deployment
+   git checkout production
+   git pull origin production
+   sudo systemctl restart videovault
    ```
+
+6. **Post-Deployment**
+   - Verify application status
+   - Check error logs
+   - Monitor performance
+   - Test critical features
+
+### Continuous Integration
+
+The repository is configured with:
+- GitHub Actions for automated testing
+- CodeQL for security analysis
+- Dependabot for dependency updates
+- Automated docker builds
+
+### Rollback Procedures
+
+1. **Quick Rollback**
+   ```bash
+   # Revert to previous version
+   git revert HEAD
+   ./git-deploy.sh "Revert to previous version"
+   ```
+
+2. **Version Rollback**
+   ```bash
+   # Rollback to specific tag
+   ./git-deploy.sh -b main -t v0.9.0 --backup "Rollback to v0.9.0"
+   ```
+
+3. **Database Rollback**
+   ```bash
+   # Revert last migration
+   flask db downgrade
+   ```
+
+### Monitoring & Maintenance
+
+1. **Health Checks**
+   ```bash
+   # Check application status
+   flask health-check
+   
+   # View logs
+   flask logs --tail 100
+   ```
+
+2. **Backup Schedule**
+   ```bash
+   # Manual backup
+   ./git-deploy.sh --backup "Pre-maintenance backup"
+   
+   # Automated backups are configured in crontab
+   0 2 * * * /path/to/backup-script.sh
+   ```
+
+3. **Performance Monitoring**
+   - Application metrics dashboard
+   - Resource usage alerts
+   - Error rate monitoring
+   - Response time tracking
 
 ## 📈 API Documentation
 

@@ -167,3 +167,145 @@ local_settings.py
 /build/
 *.min.js
 *.min.css
+
+# Local Development Scripts and Tools
+git-deploy.sh
+*.deploy.sh
+deploy-*.sh
+*.local.sh
+backups/
+.deployment/
+scripts/local/
+deploy_config.yaml
+deploy_settings.json
+*.deploy.conf
+.deploy/
+deployment.log
+
+# Development Environments
+.python-version
+.node-version
+.ruby-version
+.nvmrc
+.tool-versions
+.direnv/
+.envrc
+
+# Testing and Coverage
+coverage/
+.coverage.*
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/
+test-results/
+reports/
+.hypothesis/
+
+# Local Configuration
+*.local.yml
+*.local.yaml
+*.local.json
+*.local.conf
+config.local.*
+settings.local.*
+
+# IDE Specific
+.vscode/
+.idea/
+*.sublime-*
+.project
+.settings/
+.classpath
+nbproject/
+.vs/
+*.code-workspace
+.history/
+
+# Temporary and Cache
+.tmp/
+.temp/
+.cache/
+*.cache
+*.bak
+*.swp
+*~
+.DS_Store
+Thumbs.db
+.sass-cache/
+.eslintcache
+.stylelintcache
+*.log.*
+.env.*
+!.env.example
+
+# Build and Compilation
+dist/
+build/
+out/
+*.min.*
+*.compiled.*
+*.generated.*
+.webpack/
+.next/
+.nuxt/
+.vuepress/dist
+.serverless/
+
+# Development Tools
+.devcontainer/
+.github/workflows/local*
+.husky/_
+.lint-staged
+.prettierrc.local.*
+.eslintrc.local.*
+nodemon.json
+.watchmanconfig
+
+# Local Documentation
+docs/_build/
+site/
+.docusaurus/
+.jekyll-cache/
+.jekyll-metadata
+_site/
+
+# Debug
+debug/
+debug.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.debug
+
+# Profiling
+*.prof
+profile/
+.profile/
+chrome-profiler-events*.json
+speed-measure-plugin*.json
+
+# Local SSL Certificates
+*.local.pem
+*.local.key
+*.local.crt
+.certificates/
+ssl/local/
+
+# Local Database Files
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+db.local.*
+*.db-journal
+redis-data/
+mongodb/
+
+# Miscellaneous Local Files
+TODO.md
+NOTES.md
+*.local.md
+.scratch/
+.workspace/
+.local-history/

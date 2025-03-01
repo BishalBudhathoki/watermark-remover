@@ -714,7 +714,7 @@
                     <!-- Thumbnail / Preview -->
                     <div class="media-thumbnail" data-video-url="{{ video_url }}">
                         {% if item.media_type in ['video', 'highlight'] %}
-                            <video preload="metadata" poster="{{ video_url }}?poster=true">
+                            <video preload="metadata" poster="{{ video_url }}?poster=true" class="preview-media">
                                 <source src="{{ video_url }}" type="video/mp4">
                                 Your browser does not support the video tag.
                             </video>
@@ -1091,43 +1091,73 @@ document.addEventListener('DOMContentLoaded', function() {
                 modalPlatformBadge.appendChild(platformBadge);
             }
             
-            if (mediaType === 'video') {
+            if (mediaType === 'video' || mediaType === 'highlight') {
                 const video = document.createElement('video');
-                video.src = mediaUrl;
-                video.controls = true;
-                video.autoplay = false; // Disable autoplay
-                video.className = 'w-full';
                 
-                // Set poster image from the thumbnail
-                const thumbnailVideo = mediaCard?.querySelector('video');
-                if (thumbnailVideo) {
-                    video.poster = thumbnailVideo.poster || `${mediaUrl}?poster=true`;
-                } else {
-                    video.poster = `${mediaUrl}?poster=true`;
-                }
-
-                // Add duration display
-                const durationDisplay = mediaContainer.querySelector('.video-duration');
-                video.addEventListener('loadedmetadata', () => {
+                // Add loading indicator
+                const loadingIndicator = document.createElement('div');
+                loadingIndicator.className = 'absolute inset-0 flex items-center justify-center bg-black bg-opacity-50';
+                loadingIndicator.innerHTML = '<div class="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>';
+                mediaContainer.appendChild(loadingIndicator);
+                
+                // Configure video element
+                video.className = 'w-full';
+                video.controls = true;
+                video.autoplay = false;
+                video.preload = 'metadata';
+                video.crossOrigin = 'anonymous';
+                
+                // Add error handling
+                video.onerror = function(e) {
+                    console.error('Video load error:', e);
+                    loadingIndicator.remove();
+                    showNotification('Error loading video. Please try again.', 'error');
+                    closeModal();
+                };
+                
+                // Add loading handlers
+                video.onloadedmetadata = function() {
+                    const durationDisplay = mediaContainer.querySelector('.video-duration');
                     const duration = formatTime(video.duration);
                     durationDisplay.textContent = duration;
                     durationDisplay.style.display = 'block';
-                });
-                
-                video.onerror = function(e) {
-                    console.error('Video load error:', e);
-                    showNotification('Error loading video. Please try again.', 'error');
                 };
+                
+                video.oncanplay = function() {
+                    loadingIndicator.remove();
+                };
+                
+                // Set source and poster
+                const thumbnailVideo = mediaCard?.querySelector('video');
+                if (thumbnailVideo?.poster) {
+                    video.poster = thumbnailVideo.poster;
+                }
+                video.src = mediaUrl;
                 
                 mediaContainer.insertBefore(video, mediaContainer.firstChild);
-            } else {
+                
+            } else if (mediaType === 'image') {
                 const img = document.createElement('img');
-                img.src = mediaUrl;
+                
+                // Add loading indicator
+                const loadingIndicator = document.createElement('div');
+                loadingIndicator.className = 'absolute inset-0 flex items-center justify-center bg-black bg-opacity-50';
+                loadingIndicator.innerHTML = '<div class="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>';
+                mediaContainer.appendChild(loadingIndicator);
+                
                 img.className = 'w-full';
+                img.onload = function() {
+                    loadingIndicator.remove();
+                };
+                
                 img.onerror = function(e) {
                     console.error('Image load error:', e);
+                    loadingIndicator.remove();
                     showNotification('Error loading image. Please try again.', 'error');
+                    closeModal();
                 };
+                
+                img.src = mediaUrl;
                 mediaContainer.insertBefore(img, mediaContainer.firstChild);
             }
             
@@ -1141,9 +1171,11 @@ document.addEventListener('DOMContentLoaded', function() {
             requestAnimationFrame(() => {
                 mediaModal.classList.add('show');
             });
+            
         } catch (error) {
             console.error('Error in handleView:', error);
             showNotification('Error displaying media. Please try again.', 'error');
+            closeModal();
         }
     }
 
@@ -1323,15 +1355,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const videoProgress = thumbnailElement.querySelector('.video-progress');
         const mediaUrl = thumbnailElement.getAttribute('data-video-url');
 
-        if (mediaType === 'video' || thumbnailElement.closest('.media-card').querySelector('.platform-badge').textContent.toLowerCase().includes('ai_video')) {
-            if (!video.src) {
-                video.src = mediaUrl;
-            }
+        if (mediaType === 'video' || mediaType === 'highlight' || thumbnailElement.closest('.media-card').querySelector('.platform-badge')?.textContent.toLowerCase().includes('ai_video')) {
+            // Always set the video source to ensure it's correct
+            video.src = mediaUrl;
+            video.load();
 
-            // Load video if not loaded
-            if (video.readyState === 0) {
-                video.load();
-            }
+            // Add error handling for video loading
+            video.onerror = function(e) {
+                console.error('Video loading error:', e);
+                showNotification('Error loading video. Please try again.', 'error');
+            };
 
             if (video.paused) {
                 // Stop all other playing videos
@@ -1349,7 +1382,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
 
-                // Play current video
+                // Play current video with better error handling
                 video.play().then(() => {
                     thumbnailElement.classList.add('playing');
                     playButton.querySelector('i').className = 'fas fa-pause';
@@ -1361,7 +1394,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }).catch(error => {
                     console.error('Error playing video:', error);
-                    showNotification('Error playing video. Please try again.', 'error');
+                    // Try to reload the video before showing error
+                    video.load();
+                    video.play().catch(e => {
+                        console.error('Retry failed:', e);
+                        showNotification('Error playing video. Please try again.', 'error');
+                    });
                 });
             } else {
                 video.pause();
@@ -1375,12 +1413,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // Update progress bar and time
+            // Update progress bar and time with error handling
             function updateProgress() {
-                if (video.duration) {
-                    const progress = (video.currentTime / video.duration) * 100;
-                    progressBar.style.width = `${progress}%`;
-                    timeDisplay.textContent = formatTime(video.currentTime);
+                try {
+                    if (video.duration) {
+                        const progress = (video.currentTime / video.duration) * 100;
+                        progressBar.style.width = `${progress}%`;
+                        timeDisplay.textContent = formatTime(video.currentTime);
+                    }
+                } catch (error) {
+                    console.error('Error updating progress:', error);
                 }
             }
 
@@ -1388,11 +1430,15 @@ document.addEventListener('DOMContentLoaded', function() {
             video.removeEventListener('timeupdate', updateProgress);
             video.addEventListener('timeupdate', updateProgress);
 
-            // Allow clicking on progress bar to seek
+            // Allow clicking on progress bar to seek with error handling
             videoProgress.onclick = function(e) {
-                const rect = videoProgress.getBoundingClientRect();
-                const pos = (e.clientX - rect.left) / rect.width;
-                video.currentTime = pos * video.duration;
+                try {
+                    const rect = videoProgress.getBoundingClientRect();
+                    const pos = (e.clientX - rect.left) / rect.width;
+                    video.currentTime = pos * video.duration;
+                } catch (error) {
+                    console.error('Error seeking video:', error);
+                }
             };
 
             // Handle video end
@@ -1410,11 +1456,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             };
 
-            // Handle video loaded
+            // Handle video loaded with error handling
             video.onloadedmetadata = () => {
-                timeDisplay.textContent = formatTime(video.duration);
+                try {
+                    timeDisplay.textContent = formatTime(video.duration);
+                } catch (error) {
+                    console.error('Error setting duration:', error);
+                }
             };
-
         } else if (mediaType === 'image') {
             // Handle image preview in modal
             const img = thumbnailElement.querySelector('img');

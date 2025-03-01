@@ -187,7 +187,7 @@ def cleanup_face_thumbnails(face_thumbnails, force=False):
                     if force or file_age > (24 * 3600):  # 24 hours retention
                         os.remove(full_path)
                         logger.info(f"Cleaned up thumbnail: {full_path}")
-                    else:
+        else:
                         logger.info(f"Retaining thumbnail within retention period: {full_path}")
             except Exception as e:
                 logger.warning(f"Failed to clean up thumbnail {thumbnail}: {str(e)}")
@@ -312,8 +312,8 @@ def detect_faces():
                 results = face_detection.process(rgb_frame)
                 
                 # If faces found in this frame
-                if results.detections:
-                    frame_faces = []
+            if results.detections:
+                frame_faces = []
                     
                     for detection in results.detections:
                         # Get detection confidence
@@ -512,13 +512,13 @@ def generate_highlight():
         
         # Open the original video
         cap = cv2.VideoCapture(full_video_path)
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    
         # Create temporary video file for frames
         temp_output = os.path.join(PROCESSED_DIR, f"temp_{output_filename}")
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         out = cv2.VideoWriter(temp_output, fourcc, fps, (width, height))
         
         # Extract segments with the selected face - optimized approach
@@ -561,26 +561,72 @@ def generate_highlight():
                     frame_count = next_needed - 1  # Will be incremented below
             
             frame_count += 1
-        
-        cap.release()
-        out.release()
+    
+    cap.release()
+    out.release()
 
         # Use FFmpeg to copy the video stream from temp file and audio from original video
         import subprocess
+        
+        # Create a temporary file for the filter complex
+        filter_filename = os.path.join(PROCESSED_DIR, f"filter_{int(time.time())}.txt")
+        
+        # Calculate the segments for both video and audio
+        segments = []
+        current_segment = []
+        frames_list = sorted(list(frames_to_include))
+        
+        for i, frame in enumerate(frames_list):
+            if i == 0 or frame != frames_list[i-1] + 1:
+                if current_segment:
+                    segments.append(current_segment)
+                current_segment = [frame]
+            else:
+                current_segment.append(frame)
+        if current_segment:
+            segments.append(current_segment)
+        
+        # Create filter complex for audio and video segments
+        filter_complex = []
+        segment_inputs = []
+        
+        for i, segment in enumerate(segments):
+            start_time = segment[0] / fps
+            duration = (segment[-1] - segment[0] + 1) / fps
+            segment_inputs.extend([
+                '-ss', str(start_time),
+                '-t', str(duration),
+                '-i', full_video_path
+            ])
+            filter_complex.extend([
+                f'[{i}:v][{i}:a]'
+            ])
+        
+        filter_complex.append(f'concat=n={len(segments)}:v=1:a=1[outv][outa]')
+        
+        # Write filter complex to file
+        with open(filter_filename, 'w') as f:
+            f.write(''.join(filter_complex))
+        
         ffmpeg_cmd = [
-            'ffmpeg', '-y',
-            '-i', temp_output,  # First input (video)
-            '-i', full_video_path,  # Second input (original video with audio)
-            '-c:v', 'libx264',  # Use H.264 codec for better compatibility
-            '-preset', 'medium',  # Balance between speed and quality
-            '-c:a', 'aac',  # Use AAC audio codec
-            '-b:a', '192k',  # Audio bitrate
-            '-shortest',  # Cut to shortest stream
-            '-map', '0:v:0',  # Take video from first input
-            '-map', '1:a:0?',  # Take audio from second input (if exists)
-            '-movflags', '+faststart',  # Enable fast start for web playback
-            output_path
+            'ffmpeg', '-y'
         ]
+        
+        # Add all segment inputs
+        ffmpeg_cmd.extend(segment_inputs)
+        
+        # Add filter complex and output options
+        ffmpeg_cmd.extend([
+            '-filter_complex_script', filter_filename,
+            '-map', '[outv]',
+            '-map', '[outa]',
+            '-c:v', 'libx264',
+            '-preset', 'medium',
+            '-c:a', 'aac',
+            '-b:a', '192k',
+            '-movflags', '+faststart',
+            output_path
+        ])
         
         try:
             # Run FFmpeg command
@@ -594,12 +640,14 @@ def generate_highlight():
             logger.error(f"FFmpeg error: {e.stderr}")
             raise Exception(f"Error during video processing: {e.stderr}")
             
-        # Clean up temporary file
-        try:
-            os.remove(temp_output)
-            logger.info(f"Temporary file removed: {temp_output}")
-        except Exception as e:
-            logger.warning(f"Failed to remove temporary file: {e}")
+        finally:
+            # Clean up temporary files
+            try:
+                os.remove(temp_output)
+                os.remove(filter_filename)
+                logger.info(f"Temporary files removed: {temp_output}, {filter_filename}")
+            except Exception as e:
+                logger.warning(f"Failed to remove temporary files: {e}")
         
         # Update database with highlight video
         highlight_path = f"/static/processed/{output_filename}"
@@ -741,15 +789,72 @@ def serve_ai_video(filename):
         if not os.path.exists(file_path):
             logger.error(f"File not found: {file_path}")
             return jsonify({'error': 'File not found'}), 404
+
+        # Determine content type based on file extension
+        content_type = 'application/octet-stream'
+        if filename.lower().endswith(('.mp4', '.mov')):
+            content_type = 'video/mp4'
+        elif filename.lower().endswith(('.jpg', '.jpeg')):
+            content_type = 'image/jpeg'
+        elif filename.lower().endswith('.png'):
+            content_type = 'image/png'
+
+        # Get file size
+        file_size = os.path.getsize(file_path)
+        
+        # Handle range requests for video streaming
+        range_header = request.headers.get('Range')
+        
+        if range_header and content_type.startswith('video/'):
+            # Parse the range header
+            try:
+                bytes_range = range_header.replace('bytes=', '').split('-')
+                start = int(bytes_range[0])
+                end = int(bytes_range[1]) if bytes_range[1] else file_size - 1
+            except (ValueError, IndexError):
+                start = 0
+                end = file_size - 1
             
-        # For video files, use conditional response to support seeking
-        response = send_file(
-            file_path,
-            mimetype='video/mp4' if filename.endswith('.mp4') else 'image/jpeg',
-            as_attachment=False,
-            conditional=True
-        )
-        response.headers['Accept-Ranges'] = 'bytes'
+            if start >= file_size:
+                return jsonify({'error': 'Requested range not satisfiable'}), 416
+                
+            # Ensure end doesn't exceed file size
+            end = min(end, file_size - 1)
+            chunk_size = end - start + 1
+            
+            # Open file and seek to start
+            with open(file_path, 'rb') as f:
+                f.seek(start)
+                data = f.read(chunk_size)
+            
+            # Create response with partial content
+            response = current_app.response_class(
+                data,
+                206,
+                mimetype=content_type,
+                direct_passthrough=True
+            )
+            
+            response.headers.add('Content-Range', f'bytes {start}-{end}/{file_size}')
+            response.headers.add('Accept-Ranges', 'bytes')
+            response.headers.add('Content-Length', chunk_size)
+            
+        else:
+            # Serve entire file
+            response = send_file(
+                file_path,
+                mimetype=content_type,
+                as_attachment=False,
+                conditional=True
+            )
+            response.headers.add('Accept-Ranges', 'bytes')
+            response.headers.add('Content-Length', file_size)
+        
+        # Add cache control headers
+        response.headers.add('Cache-Control', 'public, max-age=3600')
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, OPTIONS')
+        
         return response
         
     except Exception as e:
