@@ -117,6 +117,9 @@ $RECYCLE.BIN/
 *.db
 logs/
 log/
+# Specific database files
+media_vault.db
+api_usage.json
 
 # Docker
 .dockerignore
