@@ -62,6 +62,10 @@ def test_instagram_download_cached(auth_client):
     test_file.parent.mkdir(parents=True, exist_ok=True)
     test_file.touch()
     
+    # Write some content to the file to prevent empty file error
+    with open(test_file, 'wb') as f:
+        f.write(b'test content')
+    
     # Cache the media
     cache.cache_media(test_url, 'test_user', test_media)
     
