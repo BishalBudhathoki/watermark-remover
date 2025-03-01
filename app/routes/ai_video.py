@@ -187,7 +187,7 @@ def cleanup_face_thumbnails(face_thumbnails, force=False):
                     if force or file_age > (24 * 3600):  # 24 hours retention
                         os.remove(full_path)
                         logger.info(f"Cleaned up thumbnail: {full_path}")
-        else:
+                    else:
                         logger.info(f"Retaining thumbnail within retention period: {full_path}")
             except Exception as e:
                 logger.warning(f"Failed to clean up thumbnail {thumbnail}: {str(e)}")
@@ -312,8 +312,8 @@ def detect_faces():
                 results = face_detection.process(rgb_frame)
                 
                 # If faces found in this frame
-            if results.detections:
-                frame_faces = []
+                if results.detections:
+                    frame_faces = []
                     
                     for detection in results.detections:
                         # Get detection confidence
@@ -512,13 +512,13 @@ def generate_highlight():
         
         # Open the original video
         cap = cv2.VideoCapture(full_video_path)
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        
         # Create temporary video file for frames
         temp_output = os.path.join(PROCESSED_DIR, f"temp_{output_filename}")
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         out = cv2.VideoWriter(temp_output, fourcc, fps, (width, height))
         
         # Extract segments with the selected face - optimized approach
@@ -561,9 +561,9 @@ def generate_highlight():
                     frame_count = next_needed - 1  # Will be incremented below
             
             frame_count += 1
-    
-    cap.release()
-    out.release()
+        
+        cap.release()
+        out.release()
 
         # Use FFmpeg to copy the video stream from temp file and audio from original video
         import subprocess
