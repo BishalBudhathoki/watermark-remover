@@ -12,6 +12,11 @@ from .routes.content_pipeline import content_pipeline_bp
 from .routes.auth_routes import social_auth_bp
 from pathlib import Path
 from app.routes.views import views_bp
+from .routes.instagram import instagram_bp
+from .routes.twitter import twitter_bp, init_twitter_resources
+from .routes.youtube import youtube_bp
+from .routes.tiktok import tiktok_bp
+from .routes.media import media_bp
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -112,21 +117,12 @@ def create_app():
 
         return response
 
-    # Register blueprints
+    # Register Blueprints
 ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
-
-    # Import and register other routes
-    from app.routes.twitter import twitter_bp, init_twitter_resources
-    from app.routes.instagram import instagram_bp
-    from app.routes.tiktok import tiktok_bp
-    from app.routes.youtube import youtube_bp
-    from app.routes.media import media_bp
-
 ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
-    init_twitter_resources(app)  # Initialize Twitter resources
 ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
