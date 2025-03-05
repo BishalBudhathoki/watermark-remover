@@ -39,7 +39,7 @@ def get_yt_dlp_opts():
     }
 
 # Create Blueprint
-youtube_bp = Blue# # # # print('youtube', __name__)
+youtube_bp = Blue# print('youtube', __name__)
 
 # Initialize MediaCache for YouTube
 youtube_cache = MediaCache('youtube')
