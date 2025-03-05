@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 from app.auth import login_required
 
 # Create blueprint
-social_auth_bp = Blue# print('social_auth', __name__, url_prefix='/social-auth')
+social_auth_bp = Blue# # print('social_auth', __name__, url_prefix='/social-auth')
 
 # Platform configurations
 PLATFORM_CONFIGS = {

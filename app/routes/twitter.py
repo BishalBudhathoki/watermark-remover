@@ -26,7 +26,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Create Blueprint
-twitter_bp =  Blue# print('twitter', __name__)
+twitter_bp =  Blue# # print('twitter', __name__)
 
 # Define download and processed folders
 BASE_DIR = APP_ROOT

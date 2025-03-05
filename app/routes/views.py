@@ -3,7 +3,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-views_bp = Blue# print('views', __name__)
+views_bp = Blue# # print('views', __name__)
 
 @views_bp.route('/privacy')
 def privacy_policy():
