@@ -32,8 +32,8 @@ def main():
 
         if result["success"]:
             logger.info("Local file upload successful!")
-ai_video_bp = Blue# # # # # # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # # # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # # # print('ai_video', __name__, url_prefix='/ai-video')
                 "file_path": result["file_path"],
                 "metadata": result["metadata"]
             }, indent=2))
@@ -50,8 +50,8 @@ ai_video_bp = Blue# # # # # # print('ai_video', __name__, url_prefix='/ai-video'
 
         if result["success"]:
             logger.info("URL download successful!")
-ai_video_bp = Blue# # # # # # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # # # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # # # print('ai_video', __name__, url_prefix='/ai-video')
                 "file_path": result["file_path"],
                 "metadata": result["metadata"]
             }, indent=2))

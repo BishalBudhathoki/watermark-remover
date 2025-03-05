@@ -21,7 +21,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-media_bp = Blue# # print('media', __name__)
+media_bp = Blueprint('media', __name__)
 
 # Get application root directory
 APP_ROOT = Path(__file__).resolve().parent.parent.parent
