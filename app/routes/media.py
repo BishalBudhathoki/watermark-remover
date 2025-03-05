@@ -21,7 +21,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-media_bp = Blueprint('media', __name__)
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
 # Get application root directory
 APP_ROOT = Path(__file__).resolve().parent.parent.parent

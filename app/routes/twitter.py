@@ -26,7 +26,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Create Blueprint
-twitter_bp = Blueprint('twitter', __name__)
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
 # Define download and processed folders
 BASE_DIR = APP_ROOT

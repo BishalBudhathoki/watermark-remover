@@ -15,15 +15,15 @@ def main():
     masked_id = client_id[:4] + '*' * (len(client_id) - 8) + client_id[-4:] if len(client_id) > 8 else '****'
     masked_secret = client_secret[:4] + '*' * (len(client_secret) - 8) + client_secret[-4:] if len(client_secret) > 8 else '****'
 
-    # # # # # print(f"Instagram Client ID: {masked_id}")
-    # # # # # print(f"Instagram Client Secret: {masked_secret}")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
     # Run the app
     try:
         subprocess.run([sys.executable, "app.py"], check=True)
     except KeyboardInterrupt:
-        # # # # # print("\nApplication stopped by user")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
     except subprocess.CalledProcessError as e:
-        # # # # # print(f"Application exited with error code {e.returncode}")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
 if __name__ == "__main__":

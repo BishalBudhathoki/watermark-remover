@@ -42,11 +42,11 @@ def main():
     hashtags = [tag.strip() for tag in hashtags_input.split(",") if tag.strip()]
 
     # Choose platforms
-    # # # # # # print("\n=== Available Platforms ===")
-    # # # # # # print("1. TikTok")
-    # # # # # # print("2. Instagram Reels")
-    # # # # # # print("3. YouTube Shorts")
-    # # # # # # print("4. All Platforms")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
     choice = input("Choose a platform (1-4): ")
 
@@ -60,13 +60,13 @@ def main():
             hashtags=hashtags
         )
 
-        # # # # # # print("\n=== TikTok Posting Result ===")
-        # # # # # # print(f"Success: {result['success']}")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
         if result['success']:
-            # # # # # # print(f"Post URL: {result['post_url']}")
-            # # # # # # print(f"Post ID: {result['post_id']}")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
         else:
-            # # # # # # print(f"Error: {result['error']}")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
     elif choice == "2":
         # Post to Instagram
@@ -78,13 +78,13 @@ def main():
             hashtags=hashtags
         )
 
-        # # # # # # print("\n=== Instagram Posting Result ===")
-        # # # # # # print(f"Success: {result['success']}")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
         if result['success']:
-            # # # # # # print(f"Post URL: {result['post_url']}")
-            # # # # # # print(f"Post ID: {result['post_id']}")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
         else:
-            # # # # # # print(f"Error: {result['error']}")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
     elif choice == "3":
         # Post to YouTube
@@ -96,13 +96,13 @@ def main():
             hashtags=hashtags
         )
 
-        # # # # # # print("\n=== YouTube Posting Result ===")
-        # # # # # # print(f"Success: {result['success']}")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
         if result['success']:
-            # # # # # # print(f"Post URL: {result['post_url']}")
-            # # # # # # print(f"Post ID: {result['post_id']}")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
         else:
-            # # # # # # print(f"Error: {result['error']}")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
     elif choice == "4":
         # Post to all platforms
@@ -129,15 +129,15 @@ def main():
             platforms_data=platforms_data
         )
 
-        # # # # # # print("\n=== All Platforms Posting Results ===")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
         for platform, result in results.items():
-            # # # # # # print(f"\n{platform.capitalize()}:")
-            # # # # # # print(f"  Success: {result['success']}")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
             if result['success']:
-                # # # # # # print(f"  Post URL: {result['post_url']}")
-                # # # # # # print(f"  Post ID: {result['post_id']}")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
             else:
-                # # # # # # print(f"  Error: {result['error']}")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
     else:
         logger.error("Invalid choice")

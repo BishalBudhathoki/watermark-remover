@@ -32,8 +32,8 @@ def main():
 
         if result["success"]:
             logger.info("Local file upload successful!")
-            # # # # # # print("\n=== Local File Upload Result ===")
-#             print(json.dumps({
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
                 "file_path": result["file_path"],
                 "metadata": result["metadata"]
             }, indent=2))
@@ -50,8 +50,8 @@ def main():
 
         if result["success"]:
             logger.info("URL download successful!")
-            # # # # # # print("\n=== URL Download Result ===")
-#             print(json.dumps({
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
                 "file_path": result["file_path"],
                 "metadata": result["metadata"]
             }, indent=2))

@@ -18,9 +18,9 @@ def main():
     """Run the example script."""
     # Check if OpenAI API key is set
     if not os.getenv("OPENAI_API_KEY"):
-        # # # # # # print("Warning: OPENAI_API_KEY environment variable not set.")
-        # # # # # # print("Please set it in your .env file or export it in your shell.")
-        # # # # # # print("For testing purposes, you can continue with fallback responses.")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
     # Create a text generator using the factory
     text_generator = TextGeneratorFactory.create()
@@ -34,32 +34,32 @@ def main():
     }
 
     # Generate captions
-    # # # # # # print("\n=== Generating Captions ===")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
     captions = text_generator.generate_captions(
         video_path="example_video.mp4",  # This is just a placeholder
         clip_metadata=clip_metadata,
         num_variations=3
     )
-    # # # # # # print(json.dumps(captions, indent=2))
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
     # Generate hashtags
-    # # # # # # print("\n=== Generating Hashtags ===")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
     hashtags = text_generator.generate_hashtags(
         video_path="example_video.mp4",  # This is just a placeholder
         clip_metadata=clip_metadata,
         num_hashtags=10
     )
-    # # # # # # print(json.dumps(hashtags, indent=2))
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
     # Generate platform-specific variations
-    # # # # # # print("\n=== Generating Platform Variations ===")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
     platforms = ["TikTok", "Instagram", "YouTube"]
     variations = text_generator.generate_platform_variations(
         video_path="example_video.mp4",  # This is just a placeholder
         clip_metadata=clip_metadata,
         platforms=platforms
     )
-    # # # # # # print(json.dumps(variations, indent=2))
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
 
 if __name__ == "__main__":

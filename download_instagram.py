@@ -87,15 +87,15 @@ def main():
         try:
             # Attempt to log in to Instagram
             loader.login(username, password)
-            # # # # # # print("Login successful!")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
         except instaloader.exceptions.BadCredentialsException:
-            # # # # # # print("Error: Invalid Instagram username or password.")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
             sys.exit(1)
         except instaloader.exceptions.TwoFactorAuthRequiredException:
-            # # # # # # print("Error: Two-factor authentication is required.")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
             sys.exit(1)
         except instaloader.exceptions.InvalidArgumentException:
-            # # # # # # print("Error: Invalid argument provided.")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
             sys.exit(1)
 
     try:
@@ -105,15 +105,15 @@ def main():
         # Download all posts from the profile
         download_posts(loader, profile)
 
-        # # # # # # print(f"All posts downloaded successfully from the profile: {target_profile}")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
     except instaloader.exceptions.ProfileNotExistsException:
-        # # # # # # print(f"Error: The profile '{target_profile}' does not exist.")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
     except instaloader.exceptions.PrivateProfileNotFollowedException:
-        # # # # # # print(f"Error: The profile '{target_profile}' is private and requires following.")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
     except Exception as e:
-        # # # # # # print(f"An error occurred: {str(e)}")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
 if __name__ == "__main__":

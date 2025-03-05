@@ -20,7 +20,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Create Blueprint
-tiktok_bp = Blueprint('tiktok', __name__)
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
 # Initialize MediaCache for TikTok
 tiktok_cache = MediaCache('tiktok')

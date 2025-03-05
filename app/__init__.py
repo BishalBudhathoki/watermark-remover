@@ -113,10 +113,10 @@ def create_app():
         return response
 
     # Register blueprints
-    app.register_blue# # # # # # print(ai_video_bp)
-    app.register_blue# # # # # # print(content_pipeline_bp)
-    app.register_blue# # # # # # print(social_auth_bp)
-    app.register_blue# # # # # # print(views_bp)
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
     # Import and register other routes
     from app.routes.twitter import twitter_bp, init_twitter_resources
@@ -125,12 +125,12 @@ def create_app():
     from app.routes.youtube import youtube_bp
     from app.routes.media import media_bp
 
-    app.register_blue# # # # # # print(twitter_bp, url_prefix='/api/v1/twitter')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
     init_twitter_resources(app)  # Initialize Twitter resources
-    app.register_blue# # # # # # print(instagram_bp)
-    app.register_blue# # # # # # print(tiktok_bp)
-    app.register_blue# # # # # # print(youtube_bp)
-    app.register_blue# # # # # # print(media_bp)
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
     # Add context processor for datetime
     @app.context_processor

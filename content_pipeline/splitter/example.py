@@ -34,19 +34,19 @@ def main():
     # Get video info
     try:
         video_info = get_video_info(video_path)
-        # # # # # # print("\n=== Video Information ===")
-        # # # # # # print(f"Duration: {video_info['duration']:.2f} seconds")
-        # # # # # # print(f"FPS: {video_info['fps']}")
-        # # # # # # print(f"Size: {video_info['size'][0]}x{video_info['size'][1]}")
-        # # # # # # print(f"Has Audio: {video_info['audio']}")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
     except Exception as e:
         logger.error(f"Error getting video info: {str(e)}")
         return
 
     # Ask for splitting parameters
-    # # # # # # print("\n=== Splitting Options ===")
-    # # # # # # print("1. Split by duration only")
-    # # # # # # print("2. Split by silence detection")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
     option = input("Choose an option (1/2): ")
 
     max_duration = float(input("Enter maximum clip duration in seconds (default: 60): ") or 60)
@@ -78,16 +78,16 @@ def main():
 
     if result["success"]:
         logger.info("Video splitting successful!")
-        # # # # # # print("\n=== Splitting Results ===")
-        # # # # # # print(f"Number of clips: {len(result['clips'])}")
-        # # # # # # print(f"Output directory: {result['metadata']['output_dir']}")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
-        # # # # # # print("\n=== Clips ===")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
         for i, clip in enumerate(result["clips"]):
-            # # # # # # print(f"Clip {i+1}:")
-            # # # # # # print(f"  Path: {clip['path']}")
-            # # # # # # print(f"  Duration: {clip['duration']:.2f} seconds")
-            # # # # # # print(f"  Time Range: {clip['start_time']:.2f}s - {clip['end_time']:.2f}s")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
     else:
         logger.error(f"Video splitting failed: {result['error']}")
 

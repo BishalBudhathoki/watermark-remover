@@ -57,7 +57,7 @@ except ImportError:
 from app.auth import login_required
 
 # Create blueprint
-content_pipeline_bp = Blueprint('content_pipeline', __name__, url_prefix='/content-pipeline')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
 # Define routes
 @content_pipeline_bp.route('/', methods=['GET'])

@@ -92,4 +92,4 @@ def send_confirmation_email(email, confirmation_url):
             server.sendmail(sender_email, email, msg.as_string())
         return True
     except Exception as e:
-        # # # # # # print(f"Error sending email: {str(e)}")
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')

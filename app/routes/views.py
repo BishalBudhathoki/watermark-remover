@@ -3,7 +3,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-views_bp = Blue# print('views', __name__)
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
 @views_bp.route('/privacy')
 def privacy_policy():

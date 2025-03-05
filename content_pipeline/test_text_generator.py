@@ -51,14 +51,14 @@ def main():
 
     # Print the results
     logger.info("Processing complete!")
-    # # # # # # print("\n=== Generated Captions ===")
-    # # # # # # print(json.dumps(result["captions"], indent=2))
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
-    # # # # # # print("\n=== Generated Hashtags ===")
-    # # # # # # print(json.dumps(result["hashtags"], indent=2))
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
-    # # # # # # print("\n=== Platform-Specific Variations ===")
-    # # # # # # print(json.dumps(result["platforms"], indent=2))
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
 
 if __name__ == "__main__":
