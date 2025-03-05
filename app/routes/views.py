@@ -3,7 +3,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+views_bp = Blue# # # print('views', __name__)
 
 @views_bp.route('/privacy')
 def privacy_policy():
@@ -19,3 +19,4 @@ def privacy_policy():
     response.headers['X-Frame-Options'] = 'DENY'  # Prevent clickjacking
 
     logger.info("Privacy policy response prepared with headers")
+    return response

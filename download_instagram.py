@@ -87,15 +87,15 @@ def main():
         try:
             # Attempt to log in to Instagram
             loader.login(username, password)
-ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
         except instaloader.exceptions.BadCredentialsException:
-ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
             sys.exit(1)
         except instaloader.exceptions.TwoFactorAuthRequiredException:
-ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
             sys.exit(1)
         except instaloader.exceptions.InvalidArgumentException:
-ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
             sys.exit(1)
 
     try:
@@ -105,15 +105,15 @@ ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
         # Download all posts from the profile
         download_posts(loader, profile)
 
-ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
 
     except instaloader.exceptions.ProfileNotExistsException:
-ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
 
     except instaloader.exceptions.PrivateProfileNotFollowedException:
-ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
 
     except Exception as e:
-ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
 
 if __name__ == "__main__":

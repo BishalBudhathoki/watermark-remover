@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Create Blueprint
-ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+instagram_bp = Blue# # # # # print('instagram', __name__)
 
 # Initialize MediaCache for Instagram
 instagram_cache = MediaCache('instagram')
@@ -643,3 +643,4 @@ def get_instagram_redirect_uri():
             'Check that your Instagram account is a Business/Creator account',
             'Verify Instagram account is connected to a Facebook Page'
         ]
+    })

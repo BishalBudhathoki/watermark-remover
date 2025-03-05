@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 from app.auth import login_required
 
 # Create blueprint
-ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+social_auth_bp = Blue# # # print('social_auth', __name__, url_prefix='/social-auth')
 
 # Platform configurations
 PLATFORM_CONFIGS = {
@@ -527,3 +527,4 @@ def process_token_response(platform, token_info):
         }
 
     # Default case
+    return token_info

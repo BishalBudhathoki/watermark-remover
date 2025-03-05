@@ -39,7 +39,7 @@ def get_yt_dlp_opts():
     }
 
 # Create Blueprint
-ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+youtube_bp = Blue# # # # # print('youtube', __name__)
 
 # Initialize MediaCache for YouTube
 youtube_cache = MediaCache('youtube')
@@ -709,3 +709,4 @@ def get_redirect_uri():
     return jsonify({
         'redirect_uri': redirect_uri,
         'instructions': 'Add this exact URI to the list of authorized redirect URIs in your Google Cloud Console project.'
+    })

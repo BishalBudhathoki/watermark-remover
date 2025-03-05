@@ -26,7 +26,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Create Blueprint
-ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+twitter_bp = Blue# # # # # print('twitter', __name__)
 
 # Define download and processed folders
 BASE_DIR = APP_ROOT
@@ -965,3 +965,4 @@ def schedule_cleanup(app):
     except ImportError:
         logger.warning("Flask-APScheduler not installed, skipping scheduled cleanup")
     except Exception as e:
+        logger.error(f"Error scheduling cleanup: {str(e)}")

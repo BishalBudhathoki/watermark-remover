@@ -12,11 +12,6 @@ from .routes.content_pipeline import content_pipeline_bp
 from .routes.auth_routes import social_auth_bp
 from pathlib import Path
 from app.routes.views import views_bp
-from .routes.instagram import instagram_bp
-from .routes.twitter import twitter_bp, init_twitter_resources
-from .routes.youtube import youtube_bp
-from .routes.tiktok import tiktok_bp
-from .routes.media import media_bp
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -117,16 +112,25 @@ def create_app():
 
         return response
 
-    # Register Blueprints
-    app.register_blueprint(ai_video_bp)
-    app.register_blueprint(instagram_bp)
-    app.register_blueprint(twitter_bp)
-    app.register_blueprint(youtube_bp)
-    app.register_blueprint(tiktok_bp)
-    app.register_blueprint(content_pipeline_bp)
-    app.register_blueprint(media_bp)
-    app.register_blueprint(social_auth_bp)
-    app.register_blueprint(views_bp)
+    # Register blueprints
+    app.register_blue# # # print(ai_video_bp)
+    app.register_blue# # # print(content_pipeline_bp)
+    app.register_blue# # # print(social_auth_bp)
+    app.register_blue# # # print(views_bp)
+
+    # Import and register other routes
+    from app.routes.twitter import twitter_bp, init_twitter_resources
+    from app.routes.instagram import instagram_bp
+    from app.routes.tiktok import tiktok_bp
+    from app.routes.youtube import youtube_bp
+    from app.routes.media import media_bp
+
+    app.register_blue# # # print(twitter_bp, url_prefix='/api/v1/twitter')
+    init_twitter_resources(app)  # Initialize Twitter resources
+    app.register_blue# # # print(instagram_bp)
+    app.register_blue# # # print(tiktok_bp)
+    app.register_blue# # # print(youtube_bp)
+    app.register_blue# # # print(media_bp)
 
     # Add context processor for datetime
     @app.context_processor

@@ -57,7 +57,7 @@ except ImportError:
 from app.auth import login_required
 
 # Create blueprint
-content_pipeline_bp = Blueprint('content_pipeline', __name__, url_prefix='/content-pipeline')
+content_pipeline_bp = Blue# # # # # print('content_pipeline', __name__, url_prefix='/content-pipeline')
 
 # Define routes
 @content_pipeline_bp.route('/', methods=['GET'])
@@ -386,3 +386,4 @@ def serve_uploaded_video(filename):
     """Serve an uploaded video file from the uploads directory."""
     user_id = session.get('user_id', 'anonymous')
     uploads_dir = os.path.join(current_app.config['DOWNLOAD_FOLDER'], 'uploads', user_id)
+    return send_from_directory(uploads_dir, filename)
