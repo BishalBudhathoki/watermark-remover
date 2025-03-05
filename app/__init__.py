@@ -118,15 +118,14 @@ def create_app():
         return response
 
     # Register Blueprints
-ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+    app.register_blueprint(ai_video_bp)
+    app.register_blueprint(instagram_bp)
+    app.register_blueprint(twitter_bp)
+    app.register_blueprint(youtube_bp)
+    app.register_blueprint(tiktok_bp)
+    app.register_blueprint(content_pipeline_bp)
+    app.register_blueprint(media_bp)
+    app.register_blueprint(social_auth_bp)
 
     # Add context processor for datetime
     @app.context_processor
