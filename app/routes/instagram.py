@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Create Blueprint
-instagram_bp = Blue# # print('instagram', __name__)
+instagram_bp = Blue# # # print('instagram', __name__)
 
 # Initialize MediaCache for Instagram
 instagram_cache = MediaCache('instagram')

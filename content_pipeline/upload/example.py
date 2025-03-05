@@ -32,7 +32,7 @@ def main():
 
         if result["success"]:
             logger.info("Local file upload successful!")
-            # # print("\n=== Local File Upload Result ===")
+            # # # print("\n=== Local File Upload Result ===")
             print(json.dumps({
                 "file_path": result["file_path"],
                 "metadata": result["metadata"]
@@ -50,7 +50,7 @@ def main():
 
         if result["success"]:
             logger.info("URL download successful!")
-            # # print("\n=== URL Download Result ===")
+            # # # print("\n=== URL Download Result ===")
             print(json.dumps({
                 "file_path": result["file_path"],
                 "metadata": result["metadata"]

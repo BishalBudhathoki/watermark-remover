@@ -149,39 +149,39 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // More permissive domain check
             if (!validDomains.some(d => hostname.endsWith(d))) {
-                // // console.log('Invalid domain:', hostname);
+                // // // console.log('Invalid domain:', hostname);
                 return false;
             }
 
             // For shorts URLs
             if (pathname.includes('/shorts/')) {
                 const videoId = pathname.split('/shorts/')[1];
-                // // console.log('Shorts video ID:', videoId);
+                // // // console.log('Shorts video ID:', videoId);
                 return videoId && videoId.length > 0;
             }
 
             // For youtu.be URLs
             if (hostname.includes('youtu.be')) {
                 const videoId = pathname.slice(1); // Remove leading slash
-                // // console.log('Youtu.be video ID:', videoId);
+                // // // console.log('Youtu.be video ID:', videoId);
                 return videoId && videoId.length > 0;
             }
 
             // For regular youtube.com URLs
             const videoId = urlObj.searchParams.get('v');
             if (videoId) {
-                // // console.log('Regular video ID:', videoId);
+                // // // console.log('Regular video ID:', videoId);
                 return true;
             }
 
             // For live streams
             if (pathname.includes('/live/')) {
                 const liveId = pathname.split('/live/')[1];
-                // // console.log('Live video ID:', liveId);
+                // // // console.log('Live video ID:', liveId);
                 return liveId && liveId.length > 0;
             }
 
-            // // console.log('No valid video ID found');
+            // // // console.log('No valid video ID found');
             return false;
         } catch (e) {
             console.error('URL validation error:', e);

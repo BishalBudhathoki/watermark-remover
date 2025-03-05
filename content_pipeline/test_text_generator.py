@@ -51,14 +51,14 @@ def main():
 
     # Print the results
     logger.info("Processing complete!")
-    # # print("\n=== Generated Captions ===")
-    # # print(json.dumps(result["captions"], indent=2))
+    # # # print("\n=== Generated Captions ===")
+    # # # print(json.dumps(result["captions"], indent=2))
 
-    # # print("\n=== Generated Hashtags ===")
-    # # print(json.dumps(result["hashtags"], indent=2))
+    # # # print("\n=== Generated Hashtags ===")
+    # # # print(json.dumps(result["hashtags"], indent=2))
 
-    # # print("\n=== Platform-Specific Variations ===")
-    # # print(json.dumps(result["platforms"], indent=2))
+    # # # print("\n=== Platform-Specific Variations ===")
+    # # # print(json.dumps(result["platforms"], indent=2))
 
 
 if __name__ == "__main__":
