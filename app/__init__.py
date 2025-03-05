@@ -113,10 +113,10 @@ def create_app():
         return response
 
     # Register blueprints
-    app.register_blue# print(ai_video_bp)
-    app.register_blue# print(content_pipeline_bp)
-    app.register_blue# print(social_auth_bp)
-    app.register_blue# print(views_bp)
+    app.register_blueprint(ai_video_bp)
+    app.register_blueprint(content_pipeline_bp)
+    app.register_blueprint(social_auth_bp)
+    app.register_blueprint(views_bp)
 
     # Import and register other routes
     from app.routes.twitter import twitter_bp, init_twitter_resources
@@ -125,11 +125,11 @@ def create_app():
     from app.routes.youtube import youtube_bp
     from app.routes.media import media_bp
 
-    app.register_blue# print(twitter_bp, url_prefix='/api/v1/twitter') # Initialize Twitter resources
-    app.register_blue# print(instagram_bp)
-    app.register_blue# print(tiktok_bp)
-    app.register_blue# print(youtube_bp)
-    app.register_blue# print(media_bp)
+    app.register_blueprint(twitter_bp, url_prefix='/api/v1/twitter') # Initialize Twitter resources
+    app.register_blueprint(instagram_bp)
+    app.register_blueprint(tiktok_bp)
+    app.register_blueprint(youtube_bp)
+    app.register_blueprint(media_bp)
 
     # Add context processor for datetime
     @app.context_processor
