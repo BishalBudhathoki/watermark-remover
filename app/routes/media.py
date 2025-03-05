@@ -21,7 +21,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-media_bp = Blue# print('media', __name__)
+media_bp = Blueprint('media', __name__)
 
 # Get application root directory
 APP_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -504,4 +504,3 @@ def calculate_media_stats(media_items):
         'videos': sum(1 for item in media_items if item.get('media_type') == 'video'),
         'images': sum(1 for item in media_items if item.get('media_type') == 'image'),
         'uploaded': sum(1 for item in media_items if item.get('uploaded_to') is not None)
-    }

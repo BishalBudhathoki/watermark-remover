@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 client_id: document.querySelector('meta[name="google-signin-client_id"]').content,
                 scope: 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.force-ssl'
             }).then(() => {
-                // // // // // // console.log('Google API initialized successfully');
+//                 // // // // // // console.log('Google API initialized successfully');
             }).catch(error => {
                 console.error('Google API initialization failed:', error);
             });
@@ -153,4 +153,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load Google API on page load
     loadGoogleAPI();
-});

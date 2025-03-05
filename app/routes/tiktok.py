@@ -20,7 +20,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Create Blueprint
-tiktok_bp = Blue# print('tiktok', __name__)
+tiktok_bp = Blueprint('tiktok', __name__)
 
 # Initialize MediaCache for TikTok
 tiktok_cache = MediaCache('tiktok')
@@ -336,4 +336,3 @@ def cleanup_old_downloads():
         # Clean up expired cache entries
         tiktok_cache.cleanup_expired_cache()
     except Exception as e:
-        logger.error(f"Error in cleanup: {str(e)}", exc_info=True)

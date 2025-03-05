@@ -33,7 +33,7 @@ def main():
         if result["success"]:
             logger.info("Local file upload successful!")
             # # # # # # print("\n=== Local File Upload Result ===")
-            print(json.dumps({
+#             print(json.dumps({
                 "file_path": result["file_path"],
                 "metadata": result["metadata"]
             }, indent=2))
@@ -51,7 +51,7 @@ def main():
         if result["success"]:
             logger.info("URL download successful!")
             # # # # # # print("\n=== URL Download Result ===")
-            print(json.dumps({
+#             print(json.dumps({
                 "file_path": result["file_path"],
                 "metadata": result["metadata"]
             }, indent=2))
@@ -60,4 +60,3 @@ def main():
 
 
 if __name__ == "__main__":
-    main()

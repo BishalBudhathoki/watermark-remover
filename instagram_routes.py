@@ -192,4 +192,3 @@ def instagram_download():
         return jsonify({
             'error': str(e),
             'message': 'Failed to download Instagram content. Please check the URL and try again.'
-        }), 500

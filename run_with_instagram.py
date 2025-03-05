@@ -27,4 +27,3 @@ def main():
         # # # # # print(f"Application exited with error code {e.returncode}")
 
 if __name__ == "__main__":
-    main()

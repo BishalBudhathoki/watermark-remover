@@ -76,15 +76,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Wait for video metadata to load before initializing canvas
     video.addEventListener('loadedmetadata', () => {
-        // // // // // // console.log('Video metadata loaded');
-        // // // // // // console.log('Video dimensions:', video.videoWidth, 'x', video.videoHeight);
+//         // // // // // // console.log('Video metadata loaded');
+//         // // // // // // console.log('Video dimensions:', video.videoWidth, 'x', video.videoHeight);
         initializeCanvas();
     });
 
     // Fallback if metadata doesn't load
     setTimeout(() => {
         if (canvas.width === 0) {
-            // // // // // // console.log('Fallback initialization');
+//             // // // // // // console.log('Fallback initialization');
             initializeCanvas();
         }
     }, 1000);
@@ -95,7 +95,7 @@ function initializeCanvas() {
     canvas.width = video.videoWidth || video.offsetWidth;
     canvas.height = video.videoHeight || video.offsetHeight;
 
-    // // // // // // console.log('Canvas dimensions:', canvas.width, 'x', canvas.height);
+//     // // // // // // console.log('Canvas dimensions:', canvas.width, 'x', canvas.height);
 
     // Position canvas over video
     canvas.style.position = 'absolute';
@@ -244,4 +244,3 @@ function fetchFormats() {
         console.error('Error:', error);
         alert('Failed to fetch formats. Please check your network connection and try again.');
     });
-}

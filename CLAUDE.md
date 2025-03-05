@@ -21,4 +21,3 @@
 - Security: validate all inputs, protect routes with decorators
 - Testing: pytest fixtures, mocks for external dependencies
 - Flask: use application factory pattern
-- Proper error logging and user-friendly messages

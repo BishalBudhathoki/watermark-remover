@@ -93,4 +93,3 @@ def send_confirmation_email(email, confirmation_url):
         return True
     except Exception as e:
         # # # # # # print(f"Error sending email: {str(e)}")
-        return False

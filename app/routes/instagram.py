@@ -643,4 +643,3 @@ def get_instagram_redirect_uri():
             'Check that your Instagram account is a Business/Creator account',
             'Verify Instagram account is connected to a Facebook Page'
         ]
-    })

@@ -19,4 +19,3 @@ def privacy_policy():
     response.headers['X-Frame-Options'] = 'DENY'  # Prevent clickjacking
 
     logger.info("Privacy policy response prepared with headers")
-    return response

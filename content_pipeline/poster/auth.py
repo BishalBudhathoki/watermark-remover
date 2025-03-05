@@ -244,4 +244,3 @@ def get_auth_manager(user_id: str) -> AuthManager:
     Returns:
         AuthManager instance
     """
-    return AuthManager(user_id)

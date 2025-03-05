@@ -133,7 +133,7 @@ class AIVideoCache:
 # Initialize cache handler
 ai_video_cache = AIVideoCache(redis_client)
 
-ai_video_bp = Blue# print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
 
 # Get application root directory
 APP_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -859,4 +859,3 @@ def serve_ai_video(filename):
 
     except Exception as e:
         logger.error(f"Error serving file: {str(e)}")
-        return jsonify({'error': str(e)}), 500
