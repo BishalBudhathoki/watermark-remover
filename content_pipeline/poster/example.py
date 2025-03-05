@@ -42,11 +42,11 @@ def main():
     hashtags = [tag.strip() for tag in hashtags_input.split(",") if tag.strip()]
 
     # Choose platforms
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
 
     choice = input("Choose a platform (1-4): ")
 
@@ -60,13 +60,13 @@ ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
             hashtags=hashtags
         )
 
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
         if result['success']:
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
         else:
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
 
     elif choice == "2":
         # Post to Instagram
@@ -78,13 +78,13 @@ ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
             hashtags=hashtags
         )
 
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
         if result['success']:
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
         else:
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
 
     elif choice == "3":
         # Post to YouTube
@@ -96,13 +96,13 @@ ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
             hashtags=hashtags
         )
 
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
         if result['success']:
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
         else:
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
 
     elif choice == "4":
         # Post to all platforms
@@ -129,15 +129,15 @@ ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
             platforms_data=platforms_data
         )
 
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
         for platform, result in results.items():
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
             if result['success']:
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
             else:
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
 
     else:
         logger.error("Invalid choice")

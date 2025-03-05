@@ -17,7 +17,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Create Blueprint
-ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # print('ai_video', __name__, url_prefix='/ai-video')
 
 # Define download and processed folders
 BASE_DIR = Path(__file__).resolve().parent
