@@ -34,19 +34,19 @@ def main():
     # Get video info
     try:
         video_info = get_video_info(video_path)
-ai_video_bp = Blue# # # # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # # # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # # # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # # # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # print('ai_video', __name__, url_prefix='/ai-video')
     except Exception as e:
         logger.error(f"Error getting video info: {str(e)}")
         return
 
     # Ask for splitting parameters
-ai_video_bp = Blue# # # # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # # # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # print('ai_video', __name__, url_prefix='/ai-video')
     option = input("Choose an option (1/2): ")
 
     max_duration = float(input("Enter maximum clip duration in seconds (default: 60): ") or 60)
@@ -78,16 +78,16 @@ ai_video_bp = Blue# # # # print('ai_video', __name__, url_prefix='/ai-video')
 
     if result["success"]:
         logger.info("Video splitting successful!")
-ai_video_bp = Blue# # # # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # # # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # print('ai_video', __name__, url_prefix='/ai-video')
 
-ai_video_bp = Blue# # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # print('ai_video', __name__, url_prefix='/ai-video')
         for i, clip in enumerate(result["clips"]):
-ai_video_bp = Blue# # # # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # # # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # # # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # print('ai_video', __name__, url_prefix='/ai-video')
     else:
         logger.error(f"Video splitting failed: {result['error']}")
 

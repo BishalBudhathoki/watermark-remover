@@ -92,4 +92,4 @@ def send_confirmation_email(email, confirmation_url):
             server.sendmail(sender_email, email, msg.as_string())
         return True
     except Exception as e:
-ai_video_bp = Blue# # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # print('ai_video', __name__, url_prefix='/ai-video')

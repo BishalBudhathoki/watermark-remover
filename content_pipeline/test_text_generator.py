@@ -51,14 +51,14 @@ def main():
 
     # Print the results
     logger.info("Processing complete!")
-ai_video_bp = Blue# # # # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # print('ai_video', __name__, url_prefix='/ai-video')
 
-ai_video_bp = Blue# # # # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # print('ai_video', __name__, url_prefix='/ai-video')
 
-ai_video_bp = Blue# # # # print('ai_video', __name__, url_prefix='/ai-video')
-ai_video_bp = Blue# # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # print('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # # # # print('ai_video', __name__, url_prefix='/ai-video')
 
 
 if __name__ == "__main__":
