@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Split Video - Content Repurposing Pipeline{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-12">
+    <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">Split Video</h1>
+                <p class="text-xl text-gray-600">
+                    Split your video into smaller clips for better engagement on social media.
+                </p>
+            </div>
+
+            <!-- Progress Steps -->
+            <div class="flex items-center justify-between mb-12 px-6">
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <p class="mt-2 text-blue-600 font-medium">Upload</p>
+                </div>
+                <div class="flex-1 h-1 bg-blue-600 mx-4"></div>
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">2</div>
+                    <p class="mt-2 text-blue-600 font-medium">Split</p>
+                </div>
+                <div class="flex-1 h-1 bg-gray-200 mx-4"></div>
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center font-bold">3</div>
+                    <p class="mt-2 text-gray-500">Generate Text</p>
+                </div>
+                <div class="flex-1 h-1 bg-gray-200 mx-4"></div>
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center font-bold">4</div>
+                    <p class="mt-2 text-gray-500">Post</p>
+                </div>
+            </div>
+
+            <!-- Video Preview -->
+            <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Video Preview</h2>
+
+                <div class="aspect-video bg-black rounded-xl overflow-hidden mb-6">
+                    <video id="video-preview" controls class="w-full h-full">
+                        <source src="{{ url_for('content_pipeline.serve_uploaded_video', filename=video_path.split('/')[-1]) }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+
+                <div class="flex items-center p-4 bg-blue-50 rounded-lg">
+                    <i class="fas fa-file-video text-blue-600 text-2xl mr-4"></i>
+                    <div>
+                        <p class="font-medium text-gray-900">{{ video_path.split('/')[-1] }}</p>
+                        <p class="text-sm text-gray-600" id="video-duration">Loading video information...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Split Settings -->
+            <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Split Settings</h2>
+
+                <form action="{{ url_for('content_pipeline.split') }}" method="POST" class="space-y-6">
+                    <!-- Clip Duration -->
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Clip Duration (seconds)</label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Minimum Duration</label>
+                                <input type="number" name="min_clip_duration" value="5" min="1" max="60" step="1"
+                                       class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-400 focus:border-transparent">
+                                <p class="text-xs text-gray-500 mt-1">Minimum length of each clip (seconds)</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Maximum Duration</label>
+                                <input type="number" name="max_clip_duration" value="60" min="5" max="300" step="1"
+                                       class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-400 focus:border-transparent">
+                                <p class="text-xs text-gray-500 mt-1">Maximum length of each clip (seconds)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Split on Silence -->
+                    <div>
+                        <div class="flex items-center mb-2">
+                            <input type="checkbox" name="split_on_silence" id="split-on-silence" class="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <label for="split-on-silence" class="ml-2 block text-gray-700 font-medium">Split on Silence</label>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-4">
+                            Automatically detect silent parts in the video and use them as split points.
+                            This creates more natural transitions between clips.
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="silence-settings">
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Silence Threshold</label>
+                                <input type="range" name="silence_threshold" min="0.01" max="0.1" step="0.01" value="0.03"
+                                       class="w-full" id="silence-threshold-slider">
+                                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                    <span>Low (0.01)</span>
+                                    <span id="silence-threshold-value">0.03</span>
+                                    <span>High (0.1)</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Lower values detect more subtle silences</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Minimum Silence Duration</label>
+                                <input type="range" name="silence_duration" min="0.1" max="2" step="0.1" value="0.5"
+                                       class="w-full" id="silence-duration-slider">
+                                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                    <span>Short (0.1s)</span>
+                                    <span id="silence-duration-value">0.5s</span>
+                                    <span>Long (2s)</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Minimum duration of silence to be considered a split point</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="text-center pt-4">
+                        <button type="submit" id="splitVideoBtn" class="px-8 py-4 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl">
+                            <i class="fas fa-cut mr-2"></i>
+                            Split Video
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-between">
+                <a href="{{ url_for('content_pipeline.upload') }}" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Upload
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const videoElement = document.getElementById('video-preview');
+        const videoDuration = document.getElementById('video-duration');
+        const splitOnSilence = document.getElementById('split-on-silence');
+        const silenceSettings = document.getElementById('silence-settings');
+        const silenceThresholdSlider = document.getElementById('silence-threshold-slider');
+        const silenceThresholdValue = document.getElementById('silence-threshold-value');
+        const silenceDurationSlider = document.getElementById('silence-duration-slider');
+        const silenceDurationValue = document.getElementById('silence-duration-value');
+        const splitVideoForm = document.querySelector('form');
+        const splitVideoBtn = document.getElementById('splitVideoBtn');
+
+        // Update video duration when metadata is loaded
+        videoElement.addEventListener('loadedmetadata', function() {
+            const duration = videoElement.duration;
+            const minutes = Math.floor(duration / 60);
+            const seconds = Math.floor(duration % 60);
+
+            videoDuration.textContent = `Duration: ${minutes}:${seconds.toString().padStart(2, '0')} | Format: ${videoElement.videoWidth}x${videoElement.videoHeight}`;
+        });
+
+        // Toggle silence settings visibility
+        splitOnSilence.addEventListener('change', function() {
+            if (this.checked) {
+                silenceSettings.classList.remove('opacity-50', 'pointer-events-none');
+            } else {
+                silenceSettings.classList.add('opacity-50', 'pointer-events-none');
+            }
+        });
+
+        // Initialize silence settings visibility
+        if (!splitOnSilence.checked) {
+            silenceSettings.classList.add('opacity-50', 'pointer-events-none');
+        }
+
+        // Update slider values
+        silenceThresholdSlider.addEventListener('input', function() {
+            silenceThresholdValue.textContent = this.value;
+        });
+
+        silenceDurationSlider.addEventListener('input', function() {
+            silenceDurationValue.textContent = `${this.value}s`;
+        });
+
+        // Show progress indicator when form is submitted
+        if (splitVideoForm) {
+            splitVideoForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                // Get the video duration for estimating progress
+                const videoDurationSecs = videoElement.duration;
+                const maxClipDuration = parseFloat(document.querySelector('input[name="max_clip_duration"]').value);
+                const estimatedClips = Math.ceil(videoDurationSecs / maxClipDuration);
+
+                // Show processing indicator
+                showProcessingIndicator('Splitting video into clips... This may take a few minutes.');
+
+                // Set initial progress
+                updateProgress(5);
+
+                // Simulate progress updates (since we can't get real-time progress from server)
+                let progress = 5;
+                const progressInterval = setInterval(() => {
+                    progress += 1;
+                    if (progress > 95) {
+                        clearInterval(progressInterval);
+                    } else {
+                        updateProgress(progress);
+                    }
+                }, (videoDurationSecs * 20) / 90); // Adjust speed based on video length
+
+                // Submit the form
+                this.submit();
+            });
+        }
+    });
+</script>
+{% endblock %}

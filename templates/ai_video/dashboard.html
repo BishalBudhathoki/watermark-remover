@@ -142,14 +142,14 @@
             <input type="file" name="video" id="videoInput" accept="video/*">
             <button type="submit" class="upload-button">Upload Video</button>
         </form>
-        
+
         <div class="progress-container" id="progressContainer">
             <div class="progress-bar">
                 <div class="progress" id="progressBar"></div>
             </div>
             <div class="progress-text" id="progressText">Processing video...</div>
         </div>
-        
+
         <div class="loading-spinner" id="loadingSpinner"></div>
         <div class="error-message" id="errorMessage"></div>
     </div>
@@ -229,24 +229,24 @@
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             const formData = new FormData(form);
-            
+
             // Show loading state
             loadingSpinner.style.display = 'block';
             progressContainer.style.display = 'block';
             facesContainer.innerHTML = '';
             errorMessage.style.display = 'none';
-            
+
             try {
                 const response = await fetch('/ai-video/detect-faces', {
                     method: 'POST',
                     body: formData
                 });
-                
+
                 const data = await response.json();
                 if (data.success) {
                     window.currentVideoId = data.video_id;
                     displayFaces(data.unique_faces);
-                    
+
                     // Start checking status
                     checkProcessingStatus(data.video_id);
                 } else {
@@ -262,12 +262,12 @@
 
         async function checkProcessingStatus(videoId) {
             let isProcessing = true;
-            
+
             while (isProcessing) {
                 try {
                     const response = await fetch(`/ai-video/check-status/${videoId}`);
                     const data = await response.json();
-                    
+
                     if (data.status === 'completed') {
                         updateProgress(100);
                         progressText.textContent = 'Processing complete!';
@@ -282,12 +282,12 @@
                     console.error('Error checking status:', error);
                     isProcessing = false;
                 }
-                
+
                 if (isProcessing) {
                     await new Promise(resolve => setTimeout(resolve, 1000));
                 }
             }
-            
+
             // Hide progress after a delay
             setTimeout(() => {
                 progressContainer.style.display = 'none';
@@ -295,4 +295,4 @@
         }
     </script>
 </body>
-</html> 
+</html>

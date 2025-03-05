@@ -59,16 +59,16 @@ class MediaCache:
         try:
             cache_key = self.get_cache_key(url, user_id)
             cached_data = redis_client.get(cache_key)
-            
+
             if not cached_data:
                 logger.debug(f"No cached data found for key: {cache_key}")
                 return None
-                
+
             media_info = json.loads(cached_data)
             if not isinstance(media_info, dict):
                 logger.warning(f"Cached data is not a dictionary: {type(media_info)}")
                 return None
-            
+
             # Check for file_path or local_path
             file_path_key = None
             if 'file_path' in media_info:
@@ -77,29 +77,29 @@ class MediaCache:
                 file_path_key = 'local_path'
                 # For consistency, add file_path if it doesn't exist
                 media_info['file_path'] = media_info['local_path']
-            
+
             if not file_path_key:
                 logger.warning("Cached media info missing both file_path and local_path")
                 return None
-            
+
             # Check if file exists
             file_path = Path(media_info[file_path_key])
             if not file_path.is_absolute():
                 file_path = DOWNLOAD_DIR / file_path
-                
+
             if not file_path.exists():
                 logger.warning(f"Cached file not found: {file_path}")
                 redis_client.delete(cache_key)
                 return None
-                
+
             if file_path.stat().st_size == 0:
                 logger.warning(f"Cached file is empty: {file_path}")
                 redis_client.delete(cache_key)
                 return None
-                
+
             logger.info(f"Successfully retrieved cached media for URL: {url}")
             return media_info
-            
+
         except Exception as e:
             logger.error(f"Error getting cached media: {str(e)}")
             return None
@@ -110,7 +110,7 @@ class MediaCache:
             if not isinstance(media_info, dict):
                 logger.error("Invalid media info format - not a dictionary")
                 return False
-                
+
             # Check for file_path or local_path
             file_path_key = None
             if 'file_path' in media_info:
@@ -121,19 +121,19 @@ class MediaCache:
                 # For consistency, add file_path if only local_path exists
                 media_info['file_path'] = media_info['local_path']
                 logger.debug(f"Using local_path and setting file_path: {media_info['local_path']}")
-                
+
             if not file_path_key:
                 logger.error("Invalid media info format - missing file_path or local_path")
                 return False
 
             # Get the file path and verify it exists
             file_path = Path(media_info[file_path_key])
-            
+
             # Check if we have an absolute_path provided (added for Twitter)
             if 'absolute_path' in media_info and media_info['absolute_path']:
                 logger.debug(f"Using provided absolute_path: {media_info['absolute_path']}")
                 absolute_path = Path(media_info['absolute_path'])
-                
+
                 # Verify this path exists
                 if absolute_path.exists():
                     logger.debug(f"Verified absolute_path exists: {absolute_path}")
@@ -143,14 +143,14 @@ class MediaCache:
                     absolute_path = None
             else:
                 absolute_path = None
-                
+
             # If we don't have a valid absolute_path, resolve it using standard logic
             if absolute_path is None:
                 if not file_path.is_absolute():
                     # Try with DOWNLOAD_DIR first
                     absolute_path = DOWNLOAD_DIR / file_path
                     logger.debug(f"Converted relative path to absolute using DOWNLOAD_DIR: {absolute_path}")
-                    
+
                     # If that doesn't exist, try with download_dir from media_info if available
                     if not absolute_path.exists() and 'download_dir' in media_info:
                         download_dir = Path(media_info['download_dir'])
@@ -182,30 +182,30 @@ class MediaCache:
                             return False
                     else:
                         return False
-                
+
             if absolute_path.stat().st_size == 0:
                 logger.error(f"File verification failed - file is empty: {absolute_path}")
                 return False
-                
+
             logger.debug(f"File verified: {absolute_path}, size: {absolute_path.stat().st_size} bytes")
 
             # Cache the media info
             cache_key = self.get_cache_key(url, user_id)
             logger.debug(f"Setting cache key: {cache_key}")
-            
+
             # Ensure the media_info is JSON serializable
             media_info_copy = dict(media_info)
-            
+
             # Add the verified absolute path to help with future retrievals
             media_info_copy['verified_path'] = str(absolute_path)
-            
+
             try:
                 json_data = json.dumps(media_info_copy)
                 logger.debug(f"JSON serialization successful, data length: {len(json_data)}")
             except Exception as json_err:
                 logger.error(f"JSON serialization error: {str(json_err)}")
                 return False
-            
+
             try:
                 redis_client.setex(
                     cache_key,
@@ -216,10 +216,10 @@ class MediaCache:
             except Exception as redis_err:
                 logger.error(f"Redis error setting cache: {str(redis_err)}")
                 return False
-            
+
             logger.info(f"Successfully cached media for URL: {url}")
             return True
-            
+
         except Exception as e:
             logger.error(f"Error caching media: {str(e)}")
             return False
@@ -243,34 +243,34 @@ class MediaCache:
         try:
             if not file_path:
                 return False
-                
+
             # Convert to Path object if it's a string
             path = Path(file_path)
-            
+
             # If path is relative, make it absolute using APP_ROOT
             if not path.is_absolute():
                 path = APP_ROOT / path
-            
+
             # Verify path is within APP_ROOT
             if not is_safe_path(path):
                 logger.error(f"File path {path} is outside allowed directory")
                 return False
-            
+
             # Check file existence and size
             if not path.exists():
                 logger.error(f"File not found: {path}")
                 return False
-                
+
             if path.stat().st_size == 0:
                 logger.error(f"File is empty: {path}")
                 return False
-                
+
             # Verify file is readable
             with open(path, 'rb') as f:
                 f.read(1)
-                
+
             return True
-                
+
         except Exception as e:
             logger.error(f"Error verifying file: {str(e)}")
             return False
@@ -289,8 +289,8 @@ class MediaCache:
                                 redis_client.delete(key)
                                 logger.info(f"Removed cache for missing file: {media_info.get('file_path')}")
                         elif isinstance(media_info, list):
-                            if not any(isinstance(item, dict) and 
-                                     self.verify_file_exists(item.get('file_path')) 
+                            if not any(isinstance(item, dict) and
+                                     self.verify_file_exists(item.get('file_path'))
                                      for item in media_info):
                                 redis_client.delete(key)
                                 logger.info(f"Removed cache for missing files in list: {key}")
@@ -334,7 +334,7 @@ class MediaCache:
                 if not isinstance(item, dict):
                     logger.warning(f"Skipping invalid item: not a dictionary")
                     continue
-                    
+
                 if 'file_path' not in item:
                     logger.warning(f"Skipping invalid item: no file_path")
                     continue
@@ -376,4 +376,4 @@ class MediaCache:
             return True
         except Exception as e:
             logger.error(f"Redis bulk set error: {str(e)}")
-            return False 
+            return False

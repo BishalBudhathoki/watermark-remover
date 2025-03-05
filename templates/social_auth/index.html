@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Social Media Authentication - Content Repurposing Pipeline{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-12">
+    <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">Social Media Authentication</h1>
+                <p class="text-xl text-gray-600">
+                    Connect your social media accounts to enable direct posting of your content.
+                </p>
+            </div>
+
+            <!-- Platform Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {% for platform_id, platform in platforms.items() %}
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div class="p-6">
+                        <div class="flex items-center justify-center mb-4">
+                            <div class="w-16 h-16 rounded-full bg-{{ 'green' if platform.authenticated else 'gray' }}-100 flex items-center justify-center">
+                                <i class="{{ platform.icon }} text-3xl text-{{ 'green' if platform.authenticated else 'gray' }}-500"></i>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold text-center text-gray-900 mb-2">{{ platform.name }}</h3>
+
+                        {% if platform.authenticated %}
+                        <div class="flex items-center justify-center mb-4">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                <i class="fas fa-check-circle mr-1"></i> Connected
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-600 text-center mb-4">
+                            Your {{ platform.name }} account is connected and ready to post content.
+                        </p>
+                        <form action="{{ url_for('social_auth.logout', platform=platform_id) }}" method="POST" class="text-center">
+                            <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200">
+                                <i class="fas fa-sign-out-alt mr-2"></i> Disconnect
+                            </button>
+                        </form>
+                        {% else %}
+                        <div class="flex items-center justify-center mb-4">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                                <i class="fas fa-times-circle mr-1"></i> Not Connected
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-600 text-center mb-4">
+                            Connect your {{ platform.name }} account to enable direct posting.
+                        </p>
+                        <div class="text-center">
+                            <a href="{{ url_for('social_auth.login', platform=platform_id) }}" class="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                                <i class="fas fa-link mr-2"></i> Connect
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Information Card -->
+            <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-4">About Social Media Authentication</h2>
+
+                <div class="space-y-4">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 mt-1">
+                            <i class="fas fa-shield-alt text-blue-500 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-medium text-gray-900">Secure Authentication</h3>
+                            <p class="text-gray-600">
+                                Your credentials are securely encrypted and stored locally. We never store your passwords.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 mt-1">
+                            <i class="fas fa-key text-blue-500 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-medium text-gray-900">OAuth Authentication</h3>
+                            <p class="text-gray-600">
+                                We use OAuth to securely connect to your accounts without needing your passwords.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 mt-1">
+                            <i class="fas fa-sync-alt text-blue-500 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-medium text-gray-900">Session Management</h3>
+                            <p class="text-gray-600">
+                                Your sessions are automatically refreshed when needed and expire after 30 days of inactivity.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-between">
+                <a href="{{ url_for('content_pipeline.index') }}" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Dashboard
+                </a>
+
+                <a href="{{ url_for('content_pipeline.post') }}" class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200">
+                    <i class="fas fa-paper-plane mr-2"></i>
+                    Go to Posting
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // You can add JavaScript for dynamic updates here if needed
+    });
+</script>
+{% endblock %}

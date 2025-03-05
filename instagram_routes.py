@@ -17,7 +17,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Create Blueprint
-instagram_bp = Blueprint('instagram', __name__)
+instagram_bp = Blue# # print('instagram', __name__)
 
 # Define download and processed folders
 BASE_DIR = Path(__file__).resolve().parent
@@ -34,11 +34,11 @@ def validate_instagram_url(url):
         parsed_url = urlparse(url)
         if not parsed_url.netloc in ['www.instagram.com', 'instagram.com']:
             return False, "Invalid Instagram URL domain"
-        
+
         path_parts = parsed_url.path.strip('/').split('/')
         if not path_parts:
             return False, "Invalid URL format"
-            
+
         valid_types = ['p', 'reel', 'stories']
         if any(t in url for t in valid_types):
             if len(path_parts) < 2:
@@ -46,7 +46,7 @@ def validate_instagram_url(url):
         else:
             if not path_parts[0]:
                 return False, "Invalid profile URL format"
-                
+
         return True, None
     except Exception as e:
         return False, f"URL validation error: {str(e)}"
@@ -72,11 +72,11 @@ def instagram_download():
     try:
         # Get user_id from session
         user_id = session['user']['id']
-        
+
         # Clean up the URL to remove query parameters and get the shortcode
         cleaned_url = url.split('?')[0]
         shortcode = cleaned_url.split('/')[-2] if cleaned_url.endswith('/') else cleaned_url.split('/')[-1]
-        
+
         # Configure headers to mimic a browser
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -120,7 +120,7 @@ def instagram_download():
 
         except Exception as e:
             logger.warning(f"yt-dlp download failed, trying alternative method: {str(e)}")
-            
+
             # Alternative method using Instagram's public API
             try:
                 # Get the post metadata
@@ -131,25 +131,25 @@ def instagram_download():
                         'shortcode': shortcode
                     })
                 }
-                
+
                 response = requests.get(api_url, params=params, headers=headers)
                 response.raise_for_status()
                 data = response.json()
-                
+
                 # Extract media URL
                 media_url = data['data']['shortcode_media']['video_url']
-                
+
                 # Download the video
                 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                 filename = str(INSTAGRAM_DOWNLOAD_PATH / f'instagram_reel_{shortcode}_{timestamp}.mp4')
-                
+
                 with requests.get(media_url, stream=True, headers=headers) as r:
                     r.raise_for_status()
                     with open(filename, 'wb') as f:
                         for chunk in r.iter_content(chunk_size=8192):
                             if chunk:
                                 f.write(chunk)
-                
+
                 # Save metadata for media dashboard
                 media_id = save_media_metadata(
                     user_id=user_id,
@@ -192,4 +192,4 @@ def instagram_download():
         return jsonify({
             'error': str(e),
             'message': 'Failed to download Instagram content. Please check the URL and try again.'
-        }), 500 
+        }), 500

@@ -19,7 +19,7 @@ def save_media_metadata(
 ) -> bool:
     """
     Save media metadata to a JSON file in the user's directory.
-    
+
     Args:
         user_id: The ID of the user who downloaded the media
         platform: The platform the media was downloaded from (e.g., 'tiktok')
@@ -29,7 +29,7 @@ def save_media_metadata(
         original_url: The original URL the media was downloaded from (optional)
         duration: The duration of the media in seconds (0 for images) (optional)
         metadata: Additional metadata about the media (optional)
-    
+
     Returns:
         bool: True if successful, False otherwise
     """
@@ -37,10 +37,10 @@ def save_media_metadata(
         # Create metadata directory if it doesn't exist
         metadata_dir = get_download_path(platform, 'metadata')
         metadata_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Create metadata file path
         metadata_file = metadata_dir / f"{Path(file_path).stem}_metadata.json"
-        
+
         # Prepare metadata
         metadata_obj = {
             'user_id': user_id,
@@ -53,14 +53,14 @@ def save_media_metadata(
             'download_date': datetime.now().isoformat(),
             'metadata': metadata
         }
-        
+
         # Save metadata
         with open(metadata_file, 'w', encoding='utf-8') as f:
             json.dump(metadata_obj, f, indent=2, ensure_ascii=False)
-            
+
         logger.info(f"Saved metadata for {file_path} to {metadata_file}")
         return True
-        
+
     except Exception as e:
         logger.error(f"Failed to save metadata for {file_path}: {str(e)}")
         return False
@@ -68,10 +68,10 @@ def save_media_metadata(
 def get_media_metadata(file_path: str) -> Dict[str, Any]:
     """
     Get metadata for a media file.
-    
+
     Args:
         file_path: The relative path to the media file
-    
+
     Returns:
         dict: The metadata for the media file, or None if not found
     """
@@ -82,14 +82,14 @@ def get_media_metadata(file_path: str) -> Dict[str, Any]:
             'metadata',
             f"{Path(file_path).stem}_metadata.json"
         )
-        
+
         # Read metadata
         if metadata_file.exists():
             with open(metadata_file, 'r', encoding='utf-8') as f:
                 return json.load(f)
-                
+
         return None
-        
+
     except Exception as e:
         logger.error(f"Failed to get metadata for {file_path}: {str(e)}")
         return None
@@ -97,10 +97,10 @@ def get_media_metadata(file_path: str) -> Dict[str, Any]:
 def delete_media_metadata(file_path: str) -> bool:
     """
     Delete metadata for a media file.
-    
+
     Args:
         file_path: The relative path to the media file
-    
+
     Returns:
         bool: True if successful, False otherwise
     """
@@ -111,15 +111,15 @@ def delete_media_metadata(file_path: str) -> bool:
             'metadata',
             f"{Path(file_path).stem}_metadata.json"
         )
-        
+
         # Delete metadata file if it exists
         if metadata_file.exists():
             metadata_file.unlink()
             logger.info(f"Deleted metadata file: {metadata_file}")
             return True
-            
+
         return False
-        
+
     except Exception as e:
         logger.error(f"Failed to delete metadata for {file_path}: {str(e)}")
-        return False 
+        return False

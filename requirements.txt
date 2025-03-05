@@ -31,6 +31,7 @@ ffmpeg-python==0.2.0
 Pillow==9.5.0
 mediapipe==0.10.21
 numpy==1.26.3
+pydub>=0.25.1
 
 # Web Framework Extensions
 flask-cors==4.0.0
@@ -79,3 +80,14 @@ supervisor==4.2.5
 newrelic==9.6.0
 
 face_recognition
+# Text generation
+openai>=0.28.0,<1.0.0
+tiktoken>=0.4.0,<0.6.0
+git+https://github.com/rabilrbl/deepseek-api.git
+google-generativeai>=0.3.0
+
+# Utilities
+validators>=0.22.0
+pyyaml>=6.0.1
+colorlog>=6.7.0
+python-magic>=0.4.27

@@ -30,21 +30,21 @@ redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=T
 
 class AIVideoCache:
     """Handle caching for AI video processing"""
-    
+
     def __init__(self, redis_client):
         self.redis = redis_client
         self.cache_ttl = 3600  # 1 hour cache TTL
         self.prefix = 'ai_video:'
-    
+
     def _get_face_detection_key(self, video_id):
         return f"{self.prefix}face_detection:{video_id}"
-    
+
     def _get_status_key(self, video_id):
         return f"{self.prefix}status:{video_id}"
-    
+
     def _get_highlight_key(self, video_id, face_id):
         return f"{self.prefix}highlight:{video_id}:{face_id}"
-    
+
     def cache_face_detection(self, video_id, detection_data):
         """Cache face detection results"""
         try:
@@ -57,7 +57,7 @@ class AIVideoCache:
             logger.info(f"Cached face detection data for video {video_id}")
         except Exception as e:
             logger.warning(f"Failed to cache face detection data: {str(e)}")
-    
+
     def get_face_detection(self, video_id):
         """Get cached face detection results"""
         try:
@@ -68,7 +68,7 @@ class AIVideoCache:
         except Exception as e:
             logger.warning(f"Failed to get cached face detection data: {str(e)}")
         return None
-    
+
     def cache_status(self, video_id, status_data):
         """Cache video processing status"""
         try:
@@ -81,7 +81,7 @@ class AIVideoCache:
             logger.info(f"Cached status for video {video_id}")
         except Exception as e:
             logger.warning(f"Failed to cache status: {str(e)}")
-    
+
     def get_status(self, video_id):
         """Get cached video processing status"""
         try:
@@ -93,7 +93,7 @@ class AIVideoCache:
             logger.warning(f"Redis error: {str(e)}")
             # Continue with database query
         return None
-    
+
     def cache_highlight(self, video_id, face_id, highlight_data):
         """Cache highlight video data"""
         try:
@@ -106,7 +106,7 @@ class AIVideoCache:
             logger.info(f"Cached highlight data for video {video_id}, face {face_id}")
         except Exception as e:
             logger.warning(f"Failed to cache highlight data: {str(e)}")
-    
+
     def get_highlight(self, video_id, face_id):
         """Get cached highlight video data"""
         try:
@@ -117,7 +117,7 @@ class AIVideoCache:
         except Exception as e:
             logger.warning(f"Failed to get cached highlight data: {str(e)}")
         return None
-    
+
     def invalidate_video_cache(self, video_id):
         """Invalidate all cache entries for a video"""
         try:
@@ -133,7 +133,7 @@ class AIVideoCache:
 # Initialize cache handler
 ai_video_cache = AIVideoCache(redis_client)
 
-ai_video_bp = Blueprint('ai_video', __name__, url_prefix='/ai-video')
+ai_video_bp = Blue# # print('ai_video', __name__, url_prefix='/ai-video')
 
 # Get application root directory
 APP_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -174,13 +174,13 @@ def cleanup_face_thumbnails(face_thumbnails, force=False):
     try:
         # Get the current time
         current_time = time.time()
-        
+
         for thumbnail in face_thumbnails:
             try:
                 # Get the file path from the thumbnail URL
                 thumbnail_path = thumbnail.replace('/static/processed/', '')
                 full_path = os.path.join(PROCESSED_DIR, thumbnail_path)
-                
+
                 if os.path.exists(full_path):
                     # Check if file is older than retention period (24 hours) or force cleanup
                     file_age = current_time - os.path.getctime(full_path)
@@ -203,7 +203,7 @@ def cleanup_old_files(max_age_hours=24):
             # Skip if not a file
             if not os.path.isfile(file_path):
                 continue
-                
+
             # Check if file is older than max_age_hours
             file_age = current_time - os.path.getctime(file_path)
             if file_age > (max_age_hours * 3600):  # Convert hours to seconds
@@ -226,14 +226,14 @@ def manage_thumbnails(video_id, new_thumbnails=None):
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        
+
         # Get existing thumbnails for other videos
         cursor.execute(
             "SELECT id, metadata FROM media_items WHERE id != ? AND platform = 'ai_video'",
             (video_id,)
         )
         results = cursor.fetchall()
-        
+
         # Clean up thumbnails from old videos (older than 24 hours)
         for result in results:
             try:
@@ -242,7 +242,7 @@ def manage_thumbnails(video_id, new_thumbnails=None):
                     cleanup_face_thumbnails(metadata['thumbnails'], force=False)
             except Exception as e:
                 logger.warning(f"Failed to clean up thumbnails for video {result['id']}: {str(e)}")
-        
+
         # If new thumbnails are provided, update the database
         if new_thumbnails:
             cursor.execute(
@@ -250,7 +250,7 @@ def manage_thumbnails(video_id, new_thumbnails=None):
                 (json.dumps({'thumbnails': new_thumbnails}), video_id)
             )
             conn.commit()
-        
+
         conn.close()
     except Exception as e:
         logger.error(f"Error managing thumbnails: {str(e)}")
@@ -261,68 +261,68 @@ def detect_faces():
     """Detect faces in the uploaded video"""
     if 'video' not in request.files:
         return jsonify({'error': 'No video file provided'}), 400
-    
+
     video_file = request.files['video']
     if video_file.filename == '':
         return jsonify({'error': 'No video selected'}), 400
-    
+
     # Save the uploaded video
     user_id = session['user']['id']
     filename = secure_filename(f"{user_id}_{int(time.time())}_{video_file.filename}")
     video_path = os.path.join(PROCESSED_DIR, filename)
     video_file.save(video_path)
-    
+
     # Process video to detect faces
     try:
         # Initialize MediaPipe Face Detection
         mp_face_detection = mp.solutions.face_detection
         mp_drawing = mp.solutions.drawing_utils
-        
+
         # Configure face detection with higher min_detection_confidence for better accuracy
         face_detection = mp_face_detection.FaceDetection(
             model_selection=1,  # 0 for short-range, 1 for full-range detection
             min_detection_confidence=0.6  # Confidence threshold to filter weak detections
         )
-        
+
         # Open the video
         cap = cv2.VideoCapture(video_path)
-        
+
         # Sample frames for face detection (every 15 frames for better tracking)
         faces_data = []
         frame_count = 0
         sample_rate = 15  # Increased sampling rate for better face tracking
-        
+
         # Dictionary to track faces across frames for consistency
         face_tracking = {}
         next_face_id = 0
-        
+
         # Keep track of generated thumbnails for cleanup
         generated_thumbnails = []
-        
+
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
                 break
-                
+
             if frame_count % sample_rate == 0:
                 # Convert to RGB for MediaPipe
                 rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                
+
                 # Process the frame for face detection
                 results = face_detection.process(rgb_frame)
-                
+
                 # If faces found in this frame
                 if results.detections:
                     frame_faces = []
-                    
+
                     for detection in results.detections:
                         # Get detection confidence
                         confidence = detection.score[0]
-                        
+
                         # Skip low confidence detections
                         if confidence < 0.6:
                             continue
-                            
+
                         # Get bounding box coordinates
                         bbox = detection.location_data.relative_bounding_box
                         ih, iw, _ = frame.shape
@@ -330,24 +330,24 @@ def detect_faces():
                         y = max(0, int(bbox.ymin * ih))
                         w = min(int(bbox.width * iw), iw - x)
                         h = min(int(bbox.height * ih), ih - y)
-                        
+
                         # Skip if bounding box is invalid
                         if w <= 0 or h <= 0:
                             continue
-                        
+
                         # Generate a unique ID for this face or use existing ID if similar face was tracked
                         face_id = str(uuid.uuid4())[:8]
-                        
+
                         # Save face thumbnail
                         face_img = frame[y:y+h, x:x+w]
                         face_filename = f"face_{face_id}_{frame_count}.jpg"
                         face_path = os.path.join(PROCESSED_DIR, face_filename)
                         cv2.imwrite(face_path, face_img)
-                        
+
                         # Track thumbnail for cleanup
                         thumbnail_url = f"/static/processed/{face_filename}"
                         generated_thumbnails.append(thumbnail_url)
-                        
+
                         # Add face data with confidence score
                         frame_faces.append({
                             'id': face_id,
@@ -358,7 +358,7 @@ def detect_faces():
                             'confidence': float(confidence),
                             'thumbnail': thumbnail_url
                         })
-                    
+
                     # Add frame data with faces if any valid faces were detected
                     if frame_faces:
                         faces_data.append({
@@ -366,11 +366,11 @@ def detect_faces():
                             'timestamp': frame_count / cap.get(cv2.CAP_PROP_FPS),
                             'faces': frame_faces
                         })
-            
+
             frame_count += 1
-        
+
         cap.release()
-        
+
         # Group similar faces (basic implementation - can be enhanced with face recognition)
         unique_faces = {}
         for frame_data in faces_data:
@@ -384,11 +384,11 @@ def detect_faces():
                     }
                 else:
                     unique_faces[face_id]['occurrences'] += 1
-        
+
         # Save detection results to database
         conn = get_db_connection()
         cursor = conn.cursor()
-        
+
         # Store video metadata
         cursor.execute(
             "INSERT INTO media_items (user_id, title, platform, media_type, local_path, original_url, metadata, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -400,7 +400,7 @@ def detect_faces():
             }), 'processing')
         )
         video_id = cursor.lastrowid
-        
+
         # Store face detection data
         detection_data = {
             'video_id': video_id,
@@ -408,18 +408,18 @@ def detect_faces():
             'unique_faces': list(unique_faces.values()),
             'faces_data': faces_data
         }
-        
+
         cursor.execute(
             "INSERT INTO ai_video_data (video_id, detection_data) VALUES (?, ?)",
             (video_id, json.dumps(detection_data))
         )
-        
+
         conn.commit()
         conn.close()
-        
+
         # Clean up old files in the background
         cleanup_old_files()
-        
+
         # Cache the detection results
         cache_data = {
             'video_id': video_id,
@@ -433,7 +433,7 @@ def detect_faces():
             }
         }
         ai_video_cache.cache_face_detection(video_id, cache_data)
-        
+
         # Cache initial status
         status_data = {
             'status': 'processing',
@@ -441,14 +441,14 @@ def detect_faces():
             'metadata': cache_data['metadata']
         }
         ai_video_cache.cache_status(video_id, status_data)
-        
+
         return jsonify({
             'success': True,
             'video_id': video_id,
             'unique_faces': list(unique_faces.values()),
             'video_path': f"/static/processed/{filename}"
         })
-        
+
     except Exception as e:
         logger.error(f"Error processing video: {str(e)}")
         # Clean up any generated thumbnails on error
@@ -463,95 +463,95 @@ def generate_highlight():
     data = request.json
     if not data or 'video_id' not in data or 'face_id' not in data:
         return jsonify({'error': 'Missing required parameters'}), 400
-    
+
     video_id = data['video_id']
     face_id = data['face_id']
-    
+
     # Check cache for existing highlight
     cached_highlight = ai_video_cache.get_highlight(video_id, face_id)
     if cached_highlight:
         return jsonify(cached_highlight)
-    
+
     try:
         # Get video and face data from database
         conn = get_db_connection()
         cursor = conn.cursor()
-        
+
         # Get the original video metadata to access thumbnails
         cursor.execute(
             "SELECT m.local_path, m.metadata, a.detection_data FROM media_items m JOIN ai_video_data a ON m.id = a.video_id WHERE m.id = ?",
             (video_id,)
         )
         result = cursor.fetchone()
-        
+
         if not result:
             return jsonify({'error': 'Video not found'}), 404
-        
+
         video_path = result['local_path']
         video_metadata = json.loads(result['metadata'])
         detection_data = json.loads(result['detection_data'])
-        
+
         # Don't clean up thumbnails immediately, manage them instead
         if 'thumbnails' in video_metadata:
             manage_thumbnails(video_id)
-        
+
         # Find all frames containing the selected face
         selected_frames = []
         for frame_data in detection_data['faces_data']:
             for face in frame_data['faces']:
                 if face['id'] == face_id:
                     selected_frames.append(frame_data['frame'])
-        
+
         if not selected_frames:
             return jsonify({'error': 'No frames found with the selected face'}), 404
-        
+
         # Generate highlight video
         full_video_path = str(APP_ROOT / video_path.lstrip('/'))
         output_filename = f"highlight_{video_id}_{face_id}_{int(time.time())}.mp4"
         output_path = os.path.join(PROCESSED_DIR, output_filename)
-        
+
         # Open the original video
         cap = cv2.VideoCapture(full_video_path)
         fps = cap.get(cv2.CAP_PROP_FPS)
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        
+
         # Create temporary video file for frames
         temp_output = os.path.join(PROCESSED_DIR, f"temp_{output_filename}")
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         out = cv2.VideoWriter(temp_output, fourcc, fps, (width, height))
-        
+
         # Extract segments with the selected face - optimized approach
         frame_count = 0
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         segment_length = int(fps * 3)  # 3 seconds before and after face appearance
-        
+
         # Pre-compute all frames to include in the highlight
         frames_to_include = set()
         for frame_num in selected_frames:
             # Add the frame with the face
             frames_to_include.add(frame_num)
-            
+
             # Add buffer frames before the face (if they exist)
             start_buffer = max(0, frame_num - segment_length)
             for i in range(start_buffer, frame_num):
                 frames_to_include.add(i)
-            
+
             # Add buffer frames after the face
             end_buffer = min(total_frames, frame_num + segment_length)
             for i in range(frame_num + 1, end_buffer):
                 frames_to_include.add(i)
-        
+
         # Process frames efficiently
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
                 break
-            
+
             # Only process frames that need to be included
             if frame_count in frames_to_include:
                 out.write(frame)
-            
+
             # Skip to next frame that needs processing if possible
             # This optimization helps with short videos
             if frame_count % 30 == 0 and frame_count + 1 < total_frames:
@@ -559,23 +559,23 @@ def generate_highlight():
                 if next_needed > frame_count + 1:
                     cap.set(cv2.CAP_PROP_POS_FRAMES, next_needed)
                     frame_count = next_needed - 1  # Will be incremented below
-            
+
             frame_count += 1
-        
+
         cap.release()
         out.release()
 
         # Use FFmpeg to copy the video stream from temp file and audio from original video
         import subprocess
-        
+
         # Create a temporary file for the filter complex
         filter_filename = os.path.join(PROCESSED_DIR, f"filter_{int(time.time())}.txt")
-        
+
         # Calculate the segments for both video and audio
         segments = []
         current_segment = []
         frames_list = sorted(list(frames_to_include))
-        
+
         for i, frame in enumerate(frames_list):
             if i == 0 or frame != frames_list[i-1] + 1:
                 if current_segment:
@@ -585,11 +585,11 @@ def generate_highlight():
                 current_segment.append(frame)
         if current_segment:
             segments.append(current_segment)
-        
+
         # Create filter complex for audio and video segments
         filter_complex = []
         segment_inputs = []
-        
+
         for i, segment in enumerate(segments):
             start_time = segment[0] / fps
             duration = (segment[-1] - segment[0] + 1) / fps
@@ -601,20 +601,20 @@ def generate_highlight():
             filter_complex.extend([
                 f'[{i}:v][{i}:a]'
             ])
-        
+
         filter_complex.append(f'concat=n={len(segments)}:v=1:a=1[outv][outa]')
-        
+
         # Write filter complex to file
         with open(filter_filename, 'w') as f:
             f.write(''.join(filter_complex))
-        
+
         ffmpeg_cmd = [
             'ffmpeg', '-y'
         ]
-        
+
         # Add all segment inputs
         ffmpeg_cmd.extend(segment_inputs)
-        
+
         # Add filter complex and output options
         ffmpeg_cmd.extend([
             '-filter_complex_script', filter_filename,
@@ -627,19 +627,19 @@ def generate_highlight():
             '-movflags', '+faststart',
             output_path
         ])
-        
+
         try:
             # Run FFmpeg command
-            result = subprocess.run(ffmpeg_cmd, 
+            result = subprocess.run(ffmpeg_cmd,
                                  check=True,
                                  capture_output=True,
                                  text=True)
             logger.info("FFmpeg command completed successfully")
-            
+
         except subprocess.CalledProcessError as e:
             logger.error(f"FFmpeg error: {e.stderr}")
             raise Exception(f"Error during video processing: {e.stderr}")
-            
+
         finally:
             # Clean up temporary files
             try:
@@ -648,7 +648,7 @@ def generate_highlight():
                 logger.info(f"Temporary files removed: {temp_output}, {filter_filename}")
             except Exception as e:
                 logger.warning(f"Failed to remove temporary files: {e}")
-        
+
         # Update database with highlight video
         highlight_path = f"/static/processed/{output_filename}"
         cursor.execute(
@@ -660,10 +660,10 @@ def generate_highlight():
             }), 'completed')
         )
         highlight_id = cursor.lastrowid
-        
+
         conn.commit()
         conn.close()
-        
+
         # Cache the highlight data
         highlight_data = {
             'success': True,
@@ -671,9 +671,9 @@ def generate_highlight():
             'highlight_path': highlight_path
         }
         ai_video_cache.cache_highlight(video_id, face_id, highlight_data)
-        
+
         return jsonify(highlight_data)
-        
+
     except Exception as e:
         logger.error(f"Error generating highlight: {str(e)}")
         return jsonify({'error': f"Error generating highlight: {str(e)}"}), 500
@@ -687,30 +687,30 @@ def check_status(video_id):
         cached_data = ai_video_cache.get_status(video_id)
         if cached_data:
             return jsonify(cached_data)
-        
+
         # If not in cache, get from database
         conn = get_db_connection()
         cursor = conn.cursor()
-        
+
         cursor.execute(
             "SELECT status, metadata FROM media_items WHERE id = ? AND user_id = ?",
             (video_id, session['user']['id'])
         )
         result = cursor.fetchone()
-        
+
         if not result:
             return jsonify({'error': 'Video not found'}), 404
-            
+
         status = result['status']
         metadata = json.loads(result['metadata'])
-        
+
         # Calculate progress
         progress = 0
         if status == 'completed':
             progress = 100
         elif status == 'processing':
             progress = 85
-        
+
         # Cache the status
         status_data = {
             'status': status,
@@ -718,9 +718,9 @@ def check_status(video_id):
             'metadata': metadata
         }
         ai_video_cache.cache_status(video_id, status_data)
-        
+
         return jsonify(status_data)
-        
+
     except Exception as e:
         logger.error(f"Error checking video status: {str(e)}")
         return jsonify({'error': str(e)}), 500
@@ -736,15 +736,15 @@ _init_db_done = False
 @ai_video_bp.before_app_request
 def init_ai_video_db():
     global _init_db_done
-    
+
     # Only run once
     if _init_db_done:
         return
-    
+
     _init_db_done = True
     conn = get_db_connection()
     cursor = conn.cursor()
-    
+
     # Create AI video data table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS ai_video_data (
@@ -755,10 +755,10 @@ def init_ai_video_db():
             FOREIGN KEY (video_id) REFERENCES media_items (id)
         )
     ''')
-    
+
     conn.commit()
     conn.close()
-    
+
     logger.info("AI video database tables initialized")
 
 def monitor_cache_health():
@@ -801,10 +801,10 @@ def serve_ai_video(filename):
 
         # Get file size
         file_size = os.path.getsize(file_path)
-        
+
         # Handle range requests for video streaming
         range_header = request.headers.get('Range')
-        
+
         if range_header and content_type.startswith('video/'):
             # Parse the range header
             try:
@@ -814,19 +814,19 @@ def serve_ai_video(filename):
             except (ValueError, IndexError):
                 start = 0
                 end = file_size - 1
-            
+
             if start >= file_size:
                 return jsonify({'error': 'Requested range not satisfiable'}), 416
-                
+
             # Ensure end doesn't exceed file size
             end = min(end, file_size - 1)
             chunk_size = end - start + 1
-            
+
             # Open file and seek to start
             with open(file_path, 'rb') as f:
                 f.seek(start)
                 data = f.read(chunk_size)
-            
+
             # Create response with partial content
             response = current_app.response_class(
                 data,
@@ -834,11 +834,11 @@ def serve_ai_video(filename):
                 mimetype=content_type,
                 direct_passthrough=True
             )
-            
+
             response.headers.add('Content-Range', f'bytes {start}-{end}/{file_size}')
             response.headers.add('Accept-Ranges', 'bytes')
             response.headers.add('Content-Length', chunk_size)
-            
+
         else:
             # Serve entire file
             response = send_file(
@@ -849,14 +849,14 @@ def serve_ai_video(filename):
             )
             response.headers.add('Accept-Ranges', 'bytes')
             response.headers.add('Content-Length', file_size)
-        
+
         # Add cache control headers
         response.headers.add('Cache-Control', 'public, max-age=3600')
         response.headers.add('Access-Control-Allow-Origin', '*')
         response.headers.add('Access-Control-Allow-Methods', 'GET, OPTIONS')
-        
+
         return response
-        
+
     except Exception as e:
         logger.error(f"Error serving file: {str(e)}")
-        return jsonify({'error': str(e)}), 500 
+        return jsonify({'error': str(e)}), 500

@@ -6,14 +6,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
-    
+
         // Clean the URL by removing query parameters and trailing slashes
         let cleanedUrl = urlInput.value.split('?')[0].replace(/\/$/, '');
-    
+
         // Show loading state
         statusMessage.innerHTML = 'Processing your request...';
         statusMessage.classList.remove('hidden');
-    
+
         try {
             const response = await fetch('/instagram-download', {
                 method: 'POST',
@@ -22,13 +22,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify({ url: cleanedUrl }),
             });
-    
+
             const result = await response.json();
-    
+
             if (!response.ok) {
                 throw new Error(result.error || 'Download failed');
             }
-    
+
             if (result.content) {
                 displayContent(result.content);
             }
@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Create table
         const table = document.createElement('table');
         table.className = 'styled-table';
-        
+
         // Add table header
         table.innerHTML = `
             <thead>
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const tbody = document.createElement('tbody');
         content.videos.forEach((item, index) => {
             const tr = document.createElement('tr');
-            
+
             // Get appropriate icon and class based on content type
             const getTypeIcon = (type) => {
                 switch(type) {
@@ -108,13 +108,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${item.date}</td>
                 <td>
                     <div class="action-buttons">
-                        ${item.is_video ? 
+                        ${item.is_video ?
                             `<button class="view-btn" data-url="${item.url}">View</button>` :
                             `<button class="view-btn" data-url="${item.url}" data-type="image">View</button>`
                         }
                         <a href="${item.url}" download class="download-btn">Download</a>
-                        ${item.additional_media.length > 0 ? 
-                            `<button class="more-btn" data-media='${JSON.stringify(item.additional_media)}'>+${item.additional_media.length}</button>` : 
+                        ${item.additional_media.length > 0 ?
+                            `<button class="more-btn" data-media='${JSON.stringify(item.additional_media)}'>+${item.additional_media.length}</button>` :
                             ''
                         }
                     </div>
@@ -161,9 +161,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function showPreviewModal(url, type = 'video') {
         const modal = document.createElement('div');
         modal.className = 'modal';
-        
-        const content = type === 'image' 
-            ? `<img src="${url}" alt="Preview" style="max-width: 100%; max-height: 80vh;">` 
+
+        const content = type === 'image'
+            ? `<img src="${url}" alt="Preview" style="max-width: 100%; max-height: 80vh;">`
             : `<video controls style="max-width: 100%; max-height: 80vh;">
                 <source src="${url}" type="video/mp4">
                 Your browser does not support the video tag.

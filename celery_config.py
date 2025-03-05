@@ -19,29 +19,29 @@ def create_celery_app(app=None):
         result_serializer='json',
         timezone='UTC',
         enable_utc=True,
-        
+
         # Task execution settings
         task_time_limit=3600,  # 1 hour
         task_soft_time_limit=3300,  # 55 minutes
         worker_max_tasks_per_child=200,
         worker_prefetch_multiplier=1,
-        
+
         # Result backend settings
         result_expires=86400,  # 24 hours
-        
+
         # Rate limiting
         task_annotations={
             'tasks.video_processing.*': {'rate_limit': '10/m'},
             'tasks.social_media.*': {'rate_limit': '30/m'},
         },
-        
+
         # Routing
         task_routes={
             'tasks.video_processing.*': {'queue': 'video_processing'},
             'tasks.social_media.*': {'queue': 'social_media'},
             'tasks.maintenance.*': {'queue': 'maintenance'},
         },
-        
+
         # Scheduled tasks
         beat_schedule={
             'cleanup-old-files': {
@@ -57,11 +57,11 @@ def create_celery_app(app=None):
                 'schedule': crontab(minute='*/5'),  # Run every 5 minutes
             },
         },
-        
+
         # Error handling
         task_acks_late=True,
         task_reject_on_worker_lost=True,
-        
+
         # Logging
         worker_log_format='[%(asctime)s: %(levelname)s/%(processName)s] %(message)s',
         worker_task_log_format='[%(asctime)s: %(levelname)s/%(processName)s] [%(task_name)s(%(task_id)s)] %(message)s',
@@ -86,4 +86,4 @@ default_retry_policy = {
     'interval_start': 0,
     'interval_step': 0.2,
     'interval_max': 0.2,
-} 
+}

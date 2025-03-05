@@ -56,19 +56,19 @@ def test_instagram_download_cached(auth_client):
             'timestamp': 1234567890
         }
     }
-    
+
     # Create test file
     test_file = DOWNLOAD_DIR / 'instagram' / 'test.mp4'
     test_file.parent.mkdir(parents=True, exist_ok=True)
     test_file.touch()
-    
+
     # Write some content to the file to prevent empty file error
     with open(test_file, 'wb') as f:
         f.write(b'test content')
-    
+
     # Cache the media
     cache.cache_media(test_url, 'test_user', test_media)
-    
+
     # Test download
     response = auth_client.post('/instagram-download', data={'url': test_url})
     assert response.status_code == 200
@@ -76,15 +76,15 @@ def test_instagram_download_cached(auth_client):
     # The title might not be directly in the HTML, check for other indicators
     assert b'Instagram Download Results' in response.data
     assert b'video' in response.data.lower() or b'img' in response.data.lower()
-    
+
     # Cleanup
     test_file.unlink()
 
 def test_instagram_download_new(auth_client):
     test_url = 'https://www.instagram.com/p/test456'
     response = auth_client.post('/instagram-download', data={'url': test_url})
-    
+
     # Since we can't actually download from Instagram in tests,
     # we expect a 500 error with a specific message
     assert response.status_code == 500
-    assert b'Failed to download Instagram content' in response.data 
+    assert b'Failed to download Instagram content' in response.data

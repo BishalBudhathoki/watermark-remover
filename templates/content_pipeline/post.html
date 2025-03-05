@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}Post Content - Content Repurposing Pipeline{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-12">
+    <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">Post Content</h1>
+                <p class="text-xl text-gray-600">
+                    Post your clips to various social media platforms with just a few clicks.
+                </p>
+            </div>
+
+            <!-- Progress Steps -->
+            <div class="flex items-center justify-between mb-12 px-6">
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <p class="mt-2 text-blue-600 font-medium">Upload</p>
+                </div>
+                <div class="flex-1 h-1 bg-blue-600 mx-4"></div>
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <p class="mt-2 text-blue-600 font-medium">Split</p>
+                </div>
+                <div class="flex-1 h-1 bg-blue-600 mx-4"></div>
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <p class="mt-2 text-blue-600 font-medium">Generate Text</p>
+                </div>
+                <div class="flex-1 h-1 bg-blue-600 mx-4"></div>
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 bg-pink-600 text-white rounded-full flex items-center justify-center font-bold">4</div>
+                    <p class="mt-2 text-pink-600 font-medium">Post</p>
+                </div>
+            </div>
+
+            <!-- Platform Selection -->
+            <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Select Platforms</h2>
+
+                <!-- Authentication Button -->
+                <div class="mb-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div class="flex items-start">
+                        <i class="fas fa-key text-blue-500 text-xl mt-1 mr-4"></i>
+                        <div class="flex-1">
+                            <p class="font-medium text-gray-900">Connect Your Social Media Accounts</p>
+                            <p class="text-sm text-gray-600 mb-3">
+                                You need to authenticate with each platform before you can post content.
+                            </p>
+                            <a href="{{ url_for('social_auth.index') }}" class="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                                <i class="fas fa-link mr-2"></i> Manage Social Media Connections
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <form action="{{ url_for('content_pipeline.post') }}" method="POST" class="space-y-8">
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Select Platforms</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="relative">
+                                <input type="checkbox" name="platforms" id="platform-all" value="all" class="hidden peer">
+                                <label for="platform-all" class="block p-4 bg-gray-50 rounded-lg border-2 border-gray-200 cursor-pointer peer-checked:border-purple-500 peer-checked:bg-purple-50 hover:bg-gray-100 transition-colors duration-200">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-globe text-xl mr-3 text-gray-600 peer-checked:text-purple-600"></i>
+                                        <div>
+                                            <p class="font-medium text-gray-900">All Platforms</p>
+                                            <p class="text-xs text-gray-600">Post to all available platforms</p>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+
+                            {% for platform in platforms %}
+                            <div class="relative">
+                                <input type="checkbox" name="platforms" id="platform-{{ platform }}" value="{{ platform }}" class="hidden peer" {% if not platform_auth_status[platform] %}disabled{% endif %}>
+                                <label for="platform-{{ platform }}" class="block p-4 bg-gray-50 rounded-lg border-2 border-gray-200 cursor-pointer peer-checked:border-purple-500 peer-checked:bg-purple-50 hover:bg-gray-100 transition-colors duration-200 {% if not platform_auth_status[platform] %}opacity-50{% endif %}">
+                                    <div class="flex items-center">
+                                        {% if platform == 'tiktok' %}
+                                        <i class="fab fa-tiktok text-xl mr-3 text-gray-600 peer-checked:text-purple-600"></i>
+                                        {% elif platform == 'instagram' %}
+                                        <i class="fab fa-instagram text-xl mr-3 text-gray-600 peer-checked:text-purple-600"></i>
+                                        {% elif platform == 'youtube' %}
+                                        <i class="fab fa-youtube text-xl mr-3 text-gray-600 peer-checked:text-purple-600"></i>
+                                        {% else %}
+                                        <i class="fas fa-share-alt text-xl mr-3 text-gray-600 peer-checked:text-purple-600"></i>
+                                        {% endif %}
+                                        <div>
+                                            <div class="flex items-center">
+                                                <p class="font-medium text-gray-900">{{ platform|capitalize }}</p>
+                                                {% if not platform_auth_status[platform] %}
+                                                <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                    <i class="fas fa-lock text-xs mr-1"></i> Not Connected
+                                                </span>
+                                                {% else %}
+                                                <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                    <i class="fas fa-check text-xs mr-1"></i> Connected
+                                                </span>
+                                                {% endif %}
+                                            </div>
+                                            <p class="text-xs text-gray-600">Post to {{ platform|capitalize }}</p>
+                                            {% if not platform_auth_status[platform] %}
+                                            <a href="{{ url_for('social_auth.login', platform=platform) }}" class="mt-2 inline-block text-xs text-blue-600 hover:underline">
+                                                <i class="fas fa-link text-xs mr-1"></i> Connect Now
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        {% set any_unauthenticated = false %}
+                        {% for platform, is_authenticated in platform_auth_status.items() %}
+                            {% if not is_authenticated %}
+                                {% set any_unauthenticated = true %}
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if any_unauthenticated %}
+                        <div class="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                            <div class="flex items-start">
+                                <i class="fas fa-exclamation-triangle text-yellow-500 text-xl mt-1 mr-4"></i>
+                                <div>
+                                    <p class="font-medium text-gray-900">Some platforms require authentication</p>
+                                    <p class="text-sm text-gray-600 mb-2">
+                                        You need to connect your social media accounts before posting.
+                                    </p>
+                                    <div class="flex flex-wrap gap-2">
+                                        {% for platform, is_authenticated in platform_auth_status.items() %}
+                                            {% if not is_authenticated %}
+                                            <a href="{{ url_for('social_auth.login', platform=platform) }}" class="inline-flex items-center px-3 py-1 bg-white border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50">
+                                                {% if platform == 'tiktok' %}
+                                                <i class="fab fa-tiktok mr-1"></i>
+                                                {% elif platform == 'instagram' %}
+                                                <i class="fab fa-instagram mr-1"></i>
+                                                {% elif platform == 'youtube' %}
+                                                <i class="fab fa-youtube mr-1"></i>
+                                                {% else %}
+                                                <i class="fas fa-link mr-1"></i>
+                                                {% endif %}
+                                                Connect {{ platform|capitalize }}
+                                            </a>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <a href="{{ url_for('social_auth.index') }}" class="inline-flex items-center px-3 py-1 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700">
+                                            <i class="fas fa-cog mr-1"></i> Manage All Connections
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Clips Selection -->
+                    <div class="mt-12">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6">Select Clips to Post</h2>
+
+                        <div class="space-y-8">
+                            {% for clip in clips %}
+                            <div class="bg-gray-50 rounded-xl overflow-hidden">
+                                <div class="flex flex-col md:flex-row">
+                                    <div class="md:w-1/3">
+                                        <div class="aspect-video bg-black">
+                                            <video controls class="w-full h-full">
+                                                <source src="{{ url_for('content_pipeline.serve_clip', filename=clip['path'].split('/')[-1]) }}" type="video/mp4">
+                                                Your browser does not support the video tag.
+                                            </video>
+                                        </div>
+                                    </div>
+                                    <div class="p-6 md:w-2/3">
+                                        <div class="flex items-center justify-between mb-4">
+                                            <div class="flex items-center">
+                                                <input type="checkbox" name="clips" id="clip-{{ loop.index0 }}" value="{{ loop.index0 }}" class="h-5 w-5 text-pink-600 focus:ring-pink-500 border-gray-300 rounded">
+                                                <label for="clip-{{ loop.index0 }}" class="ml-2 block text-lg font-medium text-gray-900">Clip {{ loop.index }}</label>
+                                            </div>
+                                            <span class="text-sm text-gray-500">{{ clip['path'].split('/')[-1] }}</span>
+                                        </div>
+
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-sm text-gray-600 mb-1">Select Caption</label>
+                                                <select name="caption_{{ loop.index0 }}" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-pink-400 focus:border-transparent">
+                                                    {% for caption in clip.captions %}
+                                                    <option value="{{ caption }}">{{ caption }}</option>
+                                                    {% endfor %}
+                                                </select>
+
+                                                {% if clip.captions|length == 0 %}
+                                                <p class="text-xs text-red-500 mt-1">No captions were generated.</p>
+                                                {% elif clip.captions|length < 2 %}
+                                                <p class="text-xs text-gray-500 mt-1">Only {{ clip.captions|length }} caption was generated.</p>
+                                                {% else %}
+                                                <p class="text-xs text-green-500 mt-1">{{ clip.captions|length }} captions were generated.</p>
+                                                {% endif %}
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-sm text-gray-600 mb-1">Hashtags</label>
+                                                <textarea name="hashtags_{{ loop.index0 }}" rows="2" class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-pink-400 focus:border-transparent">{{ clip.hashtags|join(' ') }}</textarea>
+
+                                                {% if clip.hashtags|length == 0 %}
+                                                <p class="text-xs text-red-500 mt-1">No hashtags were generated.</p>
+                                                {% elif clip.hashtags|length < 5 %}
+                                                <p class="text-xs text-gray-500 mt-1">Only {{ clip.hashtags|length }} hashtags were generated.</p>
+                                                {% else %}
+                                                <p class="text-xs text-green-500 mt-1">{{ clip.hashtags|length }} hashtags were generated.</p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="text-center pt-8">
+                        <button type="submit" id="post-button" class="px-8 py-4 bg-pink-600 text-white rounded-xl hover:bg-pink-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-share-alt mr-2"></i>
+                            Post Content
+                        </button>
+                        <p class="text-sm text-gray-500 mt-2">
+                            This will post your selected clips to the chosen platforms.
+                        </p>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-between">
+                <a href="{{ url_for('content_pipeline.generate_text') }}" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Generate Text
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const platformAll = document.getElementById('platform-all');
+        const platformCheckboxes = document.querySelectorAll('.platform-checkbox');
+        const clipCheckboxes = document.querySelectorAll('input[name="clips"]');
+        const postButton = document.getElementById('post-button');
+
+        // Toggle individual platform checkboxes when "All Platforms" is selected
+        platformAll.addEventListener('change', function() {
+            platformCheckboxes.forEach(checkbox => {
+                checkbox.checked = false;
+                checkbox.disabled = this.checked;
+            });
+
+            updatePostButtonState();
+        });
+
+        // Uncheck "All Platforms" when an individual platform is selected
+        platformCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    platformAll.checked = false;
+                }
+
+                updatePostButtonState();
+            });
+        });
+
+        // Update post button state based on selections
+        function updatePostButtonState() {
+            const hasPlatform = platformAll.checked || Array.from(platformCheckboxes).some(cb => cb.checked);
+            const hasClip = Array.from(clipCheckboxes).some(cb => cb.checked);
+
+            postButton.disabled = !(hasPlatform && hasClip);
+        }
+
+        // Add event listeners to clip checkboxes
+        clipCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updatePostButtonState);
+        });
+
+        // Initialize button state
+        updatePostButtonState();
+    });
+</script>
+{% endblock %}

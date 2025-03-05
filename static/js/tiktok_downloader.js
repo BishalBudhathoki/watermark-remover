@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     downloadForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const url = profileUrlInput.value.trim();
-        
+
         if (!url || !isValidTikTokUrl(url)) {
             alert('Please enter a valid TikTok profile URL');
             return;
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const parsedUrl = new URL(url);
             return (
-                parsedUrl.hostname.includes('tiktok.com') && 
+                parsedUrl.hostname.includes('tiktok.com') &&
                 parsedUrl.pathname.includes('@')
             );
         } catch {
@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 client_id: document.querySelector('meta[name="google-signin-client_id"]').content,
                 scope: 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.force-ssl'
             }).then(() => {
-                console.log('Google API initialized successfully');
+                // // console.log('Google API initialized successfully');
             }).catch(error => {
                 console.error('Google API initialization failed:', error);
             });
@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 const result = await response.json();
-                
+
                 if (!response.ok) {
                     throw new Error(result.error || 'Upload failed');
                 }
@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle upload button click
     uploadBtn.addEventListener('click', () => {
         const auth2 = gapi.auth2.getAuthInstance();
-        
+
         if (!auth2.isSignedIn.get()) {
             // If not signed in, trigger sign in flow
             auth2.signIn().then(googleUser => {
@@ -153,4 +153,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load Google API on page load
     loadGoogleAPI();
-}); 
+});

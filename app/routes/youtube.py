@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template, url_for, session, current_app, abort
+from flask import Blueprint, request, jsonify, render_template, url_for, session, current_app, abort, redirect
 from pathlib import Path
 from urllib.parse import urlparse
 import logging
@@ -11,6 +11,7 @@ from googleapiclient.http import MediaFileUpload
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+import os
 
 from ..services.cache import MediaCache
 from ..utils.path import get_download_path, get_relative_path
@@ -38,7 +39,7 @@ def get_yt_dlp_opts():
     }
 
 # Create Blueprint
-youtube_bp = Blueprint('youtube', __name__)
+youtube_bp = Blue# # print('youtube', __name__)
 
 # Initialize MediaCache for YouTube
 youtube_cache = MediaCache('youtube')
@@ -46,27 +47,63 @@ youtube_cache = MediaCache('youtube')
 # YouTube OAuth configuration
 SCOPES = [
     'https://www.googleapis.com/auth/youtube.upload',
-    'https://www.googleapis.com/auth/youtube'
+    'https://www.googleapis.com/auth/youtube',
+    'https://www.googleapis.com/auth/userinfo.profile',
+    'https://www.googleapis.com/auth/userinfo.email',
+    'openid'
 ]
 
+@youtube_bp.route('/get-youtube-auth-url')
 def get_youtube_auth_url():
     """Generate YouTube OAuth URL."""
     try:
-        flow = InstalledAppFlow.from_client_secrets_file(
-            'client_secrets.json',
-            scopes=SCOPES
+        # Use a fixed redirect URI that matches what's registered in Google Cloud Console
+        # This should be the exact same URI that you registered in the Google Cloud Console
+        redirect_uri = url_for('youtube.oauth_callback', _external=True)
+
+        # Log the redirect URI for debugging
+        logger.info(f"Using redirect URI: {redirect_uri}")
+
+        # Store the return URL in session for later use
+        session['youtube_callback_return_url'] = session.get('youtube_auth_return_url')
+
+        # Get client ID and secret from environment variables
+        client_id = os.getenv('YOUTUBE_CLIENT_ID')
+        client_secret = os.getenv('YOUTUBE_CLIENT_SECRET')
+
+        if not client_id or not client_secret:
+            logger.error("Missing YouTube client credentials in environment variables")
+            return jsonify({'error': 'Missing YouTube client credentials'}), 500
+
+        # Create client config dictionary
+        client_config = {
+            "web": {
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                "redirect_uris": [redirect_uri]
+            }
+        }
+
+        # Create flow from client config
+        flow = InstalledAppFlow.from_client_config(
+            client_config,
+            scopes=SCOPES,
+            redirect_uri=redirect_uri
         )
-        
+
         # Generate authorization URL
         auth_url, _ = flow.authorization_url(
             access_type='offline',
             include_granted_scopes='true'
         )
-        
+
         return jsonify({
             'auth_url': auth_url
         })
-        
+
     except Exception as e:
         logger.error(f"Error generating auth URL: {str(e)}")
         return jsonify({'error': str(e)}), 500
@@ -76,46 +113,46 @@ def validate_youtube_url(url: str) -> tuple[bool, str]:
     try:
         parsed_url = urlparse(url)
         valid_domains = ['youtube.com', 'www.youtube.com', 'youtu.be', 'm.youtube.com']
-        
+
         if not any(domain in parsed_url.netloc for domain in valid_domains):
             return False, "Invalid YouTube URL domain"
-            
+
         # For youtu.be short URLs
         if 'youtu.be' in parsed_url.netloc:
             if not parsed_url.path[1:]:
                 return False, "Invalid YouTube short URL format"
             return True, "video"
-            
+
         # For youtube.com URLs
         if '/watch' in parsed_url.path:
             if not 'v=' in parsed_url.query:
                 return False, "Invalid YouTube video URL format"
             return True, "video"
-            
+
         # For YouTube Shorts
         if '/shorts/' in parsed_url.path:
             video_id = parsed_url.path.split('/shorts/')[1].split('/')[0]
             if video_id and len(video_id) > 0:
                 return True, "video"
             return False, "Invalid YouTube shorts URL format"
-            
+
         # For YouTube Live streams
         if '/live/' in parsed_url.path:
             live_id = parsed_url.path.split('/live/')[1].split('/')[0]
             if live_id and len(live_id) > 0:
                 return True, "video"
             return False, "Invalid YouTube live URL format"
-            
+
         if '/playlist' in parsed_url.path:
             if not 'list=' in parsed_url.query:
                 return False, "Invalid YouTube playlist URL format"
             return True, "playlist"
-            
+
         if '/channel/' in parsed_url.path or '/c/' in parsed_url.path or '/user/' in parsed_url.path:
             return True, "channel"
-            
+
         return False, "Invalid YouTube URL format"
-        
+
     except Exception as e:
         return False, f"URL validation error: {str(e)}"
 
@@ -141,12 +178,12 @@ def download_youtube_content(url: str, user_id: str, download_path: Path) -> tup
         # Prepare download path
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         unique_id = str(uuid.uuid4())[:8]
-        
+
         # Create output template with proper path handling
         output_template = str(download_path.joinpath(
             f'youtube_%(title)s_{timestamp}_{unique_id}.%(ext)s'
         ))
-        
+
         # Get base options and update with download-specific settings
         ydl_opts = get_yt_dlp_opts()
         ydl_opts.update({
@@ -173,25 +210,25 @@ def download_youtube_content(url: str, user_id: str, download_path: Path) -> tup
                 # First try to extract info without downloading
                 logger.info(f"Extracting video information for URL: {url}")
                 info = ydl.extract_info(url, download=False)
-                
+
                 if not info:
                     raise ValueError("Failed to extract video information")
-                
+
                 # Now proceed with download
                 logger.info(f"Downloading video from URL: {url}")
                 info = ydl.extract_info(url, download=True)
                 filename = Path(ydl.prepare_filename(info))
-                
+
                 # Ensure file was downloaded successfully
                 if not filename.exists() or filename.stat().st_size == 0:
                     raise Exception(f"Download failed: File not found or empty - {filename}")
-                
+
                 # Ensure the download directory exists
                 download_path.mkdir(parents=True, exist_ok=True)
-                
+
                 # Get relative path for storage
                 relative_path = get_relative_path(filename)
-                
+
                 # Prepare media info
                 media_info = {
                     'id': info['id'],
@@ -207,16 +244,16 @@ def download_youtube_content(url: str, user_id: str, download_path: Path) -> tup
                         'upload_date': info.get('upload_date', '')
                     }
                 }
-                
+
                 # Cache the successful download
                 youtube_cache.cache_media(url, user_id, media_info)
-                
+
                 return media_info, filename
-                
+
             except Exception as e:
                 logger.error(f"Error during YouTube download: {str(e)}")
                 raise Exception(f"Failed to download video: {str(e)}")
-                
+
     except Exception as e:
         logger.error(f"YouTube download error: {str(e)}")
         raise
@@ -291,7 +328,7 @@ def fetch_video_info():
             try:
                 logger.info(f'Fetching video info for URL: {url}')
                 info = ydl.extract_info(url, download=False)
-                
+
                 if not info:
                     raise ValueError('Failed to extract video information')
 
@@ -334,21 +371,21 @@ def download_video():
     try:
         if not session.get('user'):
             return jsonify({'error': 'Please login to download content'}), 401
-            
+
         data = request.get_json()
         url = data.get('url')
         download_type = data.get('downloadType')
         format_type = data.get('format')
         quality = data.get('quality')
-        
+
         if not url:
             return jsonify({'error': 'No URL provided'}), 400
-            
+
         # Validate URL
         is_valid, url_type = validate_youtube_url(url)
         if not is_valid:
             return jsonify({'error': url_type}), 400
-            
+
         # Specify the download path
         download_path = Path(current_app.config['DOWNLOAD_FOLDER']) / 'youtube'
         download_path.mkdir(parents=True, exist_ok=True)  # Create directory if it doesn't exist
@@ -391,7 +428,7 @@ def download_video():
             else:
                 height = int(quality)
                 format_str = f'bestvideo[height<={height}]+bestaudio/best[height<={height}]'
-            
+
             ydl_opts.update({
                 'format': format_str,
                 'merge_output_format': format_type,
@@ -405,7 +442,7 @@ def download_video():
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=True)
                 filename = ydl.prepare_filename(info)
-                
+
                 # Handle potential extension changes from post-processing
                 if download_type == 'audio':
                     if format_type == 'mp3':
@@ -414,20 +451,20 @@ def download_video():
                         filename = str(Path(filename).with_suffix('.m4a'))
                 else:
                     filename = str(Path(filename).with_suffix(f'.{format_type}'))
-                
+
                 file_path = Path(filename)
-                
+
                 # Ensure file exists
                 if not file_path.exists():
                     raise Exception(f"Download failed: File not found - {file_path}")
-                
+
                 # Get relative path for database
                 relative_path = get_relative_path(file_path)
-                
+
                 # Get actual file size
                 file_size = file_path.stat().st_size
                 file_size_mb = round(file_size / (1024 * 1024), 2)
-                
+
                 # Get actual resolution for videos
                 actual_resolution = "N/A"
                 if download_type == 'video':
@@ -435,13 +472,13 @@ def download_video():
                         # Try to get actual resolution from downloaded file
                         formats = info.get('formats', [])
                         logger.info(f"Available formats: {[f.get('format_id', 'unknown') for f in formats]}")
-                        
+
                         # First try to get the selected format
                         selected_format = None
                         format_id = info.get('format_id')
                         requested_format = info.get('requested_format')  # New: check requested format
                         logger.info(f"Looking for format_id: {format_id}, requested_format: {requested_format}")
-                        
+
                         # First check the requested format
                         if requested_format:
                             width = requested_format.get('width')
@@ -449,7 +486,7 @@ def download_video():
                             if width or height:
                                 selected_format = requested_format
                                 logger.info(f"Using requested format: {requested_format}")
-                        
+
                         # If no resolution in requested format, look for the exact format
                         if not selected_format:
                             for fmt in formats:
@@ -457,30 +494,30 @@ def download_video():
                                     selected_format = fmt
                                     logger.info(f"Found exact format match: {fmt}")
                                     break
-                        
+
                         # If not found, look for the format with matching height
                         if not selected_format and quality != 'best':
                             target_height = int(quality)
                             logger.info(f"Looking for format with height: {target_height}")
-                            matching_formats = [f for f in formats 
+                            matching_formats = [f for f in formats
                                              if f.get('height') == target_height and f.get('vcodec') != 'none']
                             if matching_formats:
                                 # Choose the one with the best video codec and bitrate
                                 selected_format = max(matching_formats,
                                                     key=lambda f: (f.get('vbr', 0) or 0))
                                 logger.info(f"Found height match: {selected_format}")
-                        
+
                         # If still not found, use the format with the best video quality
                         if not selected_format:
                             logger.info("Looking for best video quality format")
                             video_formats = [f for f in formats if f.get('vcodec') != 'none']
                             if video_formats:
-                                selected_format = max(video_formats, 
-                                                    key=lambda f: (f.get('height', 0) or 0, 
+                                selected_format = max(video_formats,
+                                                    key=lambda f: (f.get('height', 0) or 0,
                                                                  f.get('width', 0) or 0,
                                                                  f.get('vbr', 0) or 0))
                                 logger.info(f"Selected best quality format: {selected_format}")
-                        
+
                         if selected_format:
                             width = selected_format.get('width')
                             height = selected_format.get('height')
@@ -496,7 +533,7 @@ def download_video():
                         logger.error(f"Could not determine actual resolution: {str(e)}")
                         logger.error(f"Format info: {info}")
                         actual_resolution = "Unknown"
-                
+
                 # Save to database
                 media_info = {
                     'id': info['id'],
@@ -517,7 +554,7 @@ def download_video():
                         'file_size_mb': file_size_mb
                     }
                 }
-                
+
                 save_media_metadata(
                     user_id=session['user']['id'],
                     platform='youtube',
@@ -528,10 +565,10 @@ def download_video():
                     duration=media_info['metadata']['duration'],
                     metadata=media_info['metadata']
                 )
-                
+
                 # Cache the media info
                 youtube_cache.cache_media(url, session['user']['id'], media_info)
-                
+
                 # Return JSON response with download URL and detailed info
                 return jsonify({
                     'success': True,
@@ -546,11 +583,11 @@ def download_video():
                     'duration': media_info['metadata']['duration'],
                     'media_dashboard_url': url_for('index')  # Use the index route which likely shows the dashboard
                 })
-            
+
         except Exception as e:
             logger.error(f"Download error: {str(e)}")
             return jsonify({'error': str(e)}), 500
-            
+
     except Exception as e:
         logger.error(f"Error processing download request: {str(e)}")
         return jsonify({'error': str(e)}), 500
@@ -565,3 +602,111 @@ def list_routes():
             'path': str(rule)
         })
     return jsonify(routes)
+
+@youtube_bp.route('/oauth-callback')
+def oauth_callback():
+    """Handle OAuth callback from YouTube."""
+    try:
+        # Get the authorization code from the request
+        code = request.args.get('code')
+        if not code:
+            logger.error("No authorization code received")
+            return render_template('youtube_auth_result.html', success=False, message="No authorization code received")
+
+        # Use a fixed redirect URI that matches what's registered in Google Cloud Console
+        redirect_uri = url_for('youtube.oauth_callback', _external=True)
+        logger.info(f"Using callback redirect URI: {redirect_uri}")
+
+        # Get client ID and secret from environment variables
+        client_id = os.getenv('YOUTUBE_CLIENT_ID')
+        client_secret = os.getenv('YOUTUBE_CLIENT_SECRET')
+
+        if not client_id or not client_secret:
+            logger.error("Missing YouTube client credentials in environment variables")
+            return render_template('youtube_auth_result.html', success=False, message="Missing YouTube client credentials")
+
+        # Create client config dictionary
+        client_config = {
+            "web": {
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                "redirect_uris": [redirect_uri]
+            }
+        }
+
+        try:
+            # Exchange the code for credentials
+            flow = InstalledAppFlow.from_client_config(
+                client_config,
+                scopes=SCOPES,
+                redirect_uri=redirect_uri
+            )
+            flow.fetch_token(code=code)
+            credentials = flow.credentials
+        except Exception as e:
+            # If there's a scope mismatch, try again with the scopes from the response
+            if 'Scope has changed' in str(e):
+                logger.warning(f"Scope mismatch detected: {str(e)}")
+
+                # Extract the scopes from the error message
+                scope_str = request.args.get('scope', '')
+                logger.info(f"Received scopes: {scope_str}")
+
+                # Create a new flow with the expanded scopes
+                expanded_scopes = scope_str.split()
+                logger.info(f"Using expanded scopes: {expanded_scopes}")
+
+                flow = InstalledAppFlow.from_client_config(
+                    client_config,
+                    scopes=expanded_scopes,
+                    redirect_uri=redirect_uri
+                )
+                flow.fetch_token(code=code)
+                credentials = flow.credentials
+            else:
+                # If it's not a scope issue, re-raise the exception
+                raise
+
+        # Store the credentials in the session
+        session['youtube_credentials'] = {
+            'token': credentials.token,
+            'refresh_token': credentials.refresh_token,
+            'token_uri': credentials.token_uri,
+            'client_id': credentials.client_id,
+            'client_secret': credentials.client_secret,
+            'scopes': credentials.scopes
+        }
+
+        # Store in auth manager if available
+        try:
+            from content_pipeline.poster.auth import get_auth_manager
+            user_id = session.get('user_id', 'anonymous')
+            auth_manager = get_auth_manager(user_id)
+            auth_manager.store_credentials('youtube', session['youtube_credentials'])
+            logger.info(f"Stored YouTube credentials for user {user_id}")
+        except Exception as e:
+            logger.error(f"Error storing credentials in auth manager: {str(e)}")
+
+        # Check if we have a return URL in the session
+        return_url = session.pop('youtube_callback_return_url', None)
+        if return_url:
+            return redirect(return_url)
+
+        # Otherwise, show a success message
+        return render_template('youtube_auth_result.html', success=True, message="Successfully authenticated with YouTube")
+
+    except Exception as e:
+        logger.error(f"Error in OAuth callback: {str(e)}")
+        return render_template('youtube_auth_result.html', success=False, message=f"Authentication error: {str(e)}")
+
+@youtube_bp.route('/get-redirect-uri')
+def get_redirect_uri():
+    """Display the redirect URI for registration in Google Cloud Console."""
+    redirect_uri = url_for('youtube.oauth_callback', _external=True)
+    return jsonify({
+        'redirect_uri': redirect_uri,
+        'instructions': 'Add this exact URI to the list of authorized redirect URIs in your Google Cloud Console project.'
+    })

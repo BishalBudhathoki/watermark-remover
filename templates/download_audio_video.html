@@ -10,12 +10,12 @@
                 <i class="fab fa-youtube text-red-600 mr-2"></i>
                 YouTube Video Downloader
             </h1>
-            
+
             <form id="downloadForm" class="space-y-6">
                 <div class="input-group">
-                    <input type="url" 
-                        id="videoUrl" 
-                        placeholder="Paste YouTube video URL here..." 
+                    <input type="url"
+                        id="videoUrl"
+                        placeholder="Paste YouTube video URL here..."
                         class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-400 focus:border-transparent outline-none"
                         required
                     >
@@ -29,7 +29,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="option-group">
                             <label for="downloadType" class="block text-sm font-medium text-gray-700 mb-1">Download Type</label>
-                            <select id="downloadType" 
+                            <select id="downloadType"
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-transparent outline-none"
                                     required>
                                 <option value="video">Video</option>
@@ -39,7 +39,7 @@
 
                         <div class="option-group">
                             <label for="quality" class="block text-sm font-medium text-gray-700 mb-1">Quality</label>
-                            <select id="quality" 
+                            <select id="quality"
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-transparent outline-none"
                                     required>
                                 <option value="best">Best</option>
@@ -54,7 +54,7 @@
 
                         <div class="option-group">
                             <label for="format" class="block text-sm font-medium text-gray-700 mb-1">Format</label>
-                            <select id="format" 
+                            <select id="format"
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-transparent outline-none"
                                     required>
                                 <option value="mp4">MP4</option>
@@ -66,8 +66,8 @@
                         </div>
                     </div>
 
-                    <button type="button" 
-                            id="downloadBtn" 
+                    <button type="button"
+                            id="downloadBtn"
                             class="w-full bg-red-600 text-white py-3 px-6 rounded-xl hover:bg-red-700 transition-colors duration-200 flex items-center justify-center">
                         <i class="fas fa-download mr-2"></i>
                         Download
@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle format options based on download type
     downloadTypeSelect.addEventListener('change', function() {
         const isAudio = this.value === 'audio';
-        formatSelect.innerHTML = isAudio 
+        formatSelect.innerHTML = isAudio
             ? `<option value="mp3">MP3</option>
                <option value="m4a">M4A</option>`
             : `<option value="mp4">MP4</option>
@@ -135,10 +135,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const urlObj = new URL(url);
             const hostname = urlObj.hostname;
             const pathname = urlObj.pathname;
-            
+
             // Valid YouTube domains
             const validDomains = ['youtube.com', 'www.youtube.com', 'youtu.be', 'm.youtube.com', 'youtube.com'];
-            
+
             // Debug info
             console.log('URL Debug:', {
                 fullUrl: url,
@@ -146,42 +146,42 @@ document.addEventListener('DOMContentLoaded', function() {
                 pathname: pathname,
                 isValidDomain: validDomains.some(d => hostname.endsWith(d))
             });
-            
+
             // More permissive domain check
             if (!validDomains.some(d => hostname.endsWith(d))) {
-                console.log('Invalid domain:', hostname);
+                // // console.log('Invalid domain:', hostname);
                 return false;
             }
-            
+
             // For shorts URLs
             if (pathname.includes('/shorts/')) {
                 const videoId = pathname.split('/shorts/')[1];
-                console.log('Shorts video ID:', videoId);
+                // // console.log('Shorts video ID:', videoId);
                 return videoId && videoId.length > 0;
             }
-            
+
             // For youtu.be URLs
             if (hostname.includes('youtu.be')) {
                 const videoId = pathname.slice(1); // Remove leading slash
-                console.log('Youtu.be video ID:', videoId);
+                // // console.log('Youtu.be video ID:', videoId);
                 return videoId && videoId.length > 0;
             }
-            
+
             // For regular youtube.com URLs
             const videoId = urlObj.searchParams.get('v');
             if (videoId) {
-                console.log('Regular video ID:', videoId);
+                // // console.log('Regular video ID:', videoId);
                 return true;
             }
-            
+
             // For live streams
             if (pathname.includes('/live/')) {
                 const liveId = pathname.split('/live/')[1];
-                console.log('Live video ID:', liveId);
+                // // console.log('Live video ID:', liveId);
                 return liveId && liveId.length > 0;
             }
-            
-            console.log('No valid video ID found');
+
+            // // console.log('No valid video ID found');
             return false;
         } catch (e) {
             console.error('URL validation error:', e);
@@ -260,8 +260,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Display video info with fallbacks for all fields
                 videoInfo.innerHTML = `
                     <div class="flex items-start space-x-4">
-                        <img src="${data.video_info.thumbnail || '/static/images/twitter_placeholder.jpg'}" 
-                             alt="Video thumbnail" 
+                        <img src="${data.video_info.thumbnail || '/static/images/twitter_placeholder.jpg'}"
+                             alt="Video thumbnail"
                              class="w-32 rounded-lg"
                              onerror="this.src='/static/images/twitter_placeholder.jpg'">
                         <div>
@@ -333,7 +333,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <p class="font-medium">Download completed successfully!</p>
                         <p class="mt-2">${data.title}</p>
                         <p class="text-sm">By: ${data.uploader}</p>
-                        
+
                         <div class="mt-3 p-3 bg-green-100 rounded-lg">
                             <h4 class="font-medium text-green-800 mb-2">Download Details:</h4>
                             <ul class="text-sm space-y-1">
@@ -344,7 +344,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 ${data.actual_resolution && data.actual_resolution !== 'N/A' ? `<li><span class="font-medium">Resolution:</span> ${data.actual_resolution}</li>` : ''}
                             </ul>
                         </div>
-                        
+
                         <div class="mt-4 flex flex-col sm:flex-row gap-3">
                             <a href="${data.download_url}" class="flex-1 inline-flex justify-center items-center bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700">
                                 <i class="fas fa-download mr-2"></i> Download File
@@ -355,7 +355,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                 `;
-                
+
                 // Don't reset the form yet to allow the user to download
             } else {
                 throw new Error(data.error || 'Download failed');
@@ -390,10 +390,10 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const response = await fetch('/download-progress');
                 const data = await response.json();
-                
+
                 // Update progress bar
                 progressBar.style.width = `${data.progress}%`;
-                
+
                 // Check for completion or error
                 if (data.status === 'completed' || data.progress >= 100) {
                     clearInterval(progressInterval);

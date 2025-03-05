@@ -20,7 +20,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Create Blueprint
-tiktok_bp = Blueprint('tiktok', __name__)
+tiktok_bp = Blue# # print('tiktok', __name__)
 
 # Initialize MediaCache for TikTok
 tiktok_cache = MediaCache('tiktok')
@@ -33,20 +33,20 @@ def validate_tiktok_url(url):
     try:
         parsed_url = urlparse(url)
         valid_domains = ['tiktok.com', 'www.tiktok.com', 'vt.tiktok.com', 'm.tiktok.com']
-        
+
         if not any(domain in parsed_url.netloc for domain in valid_domains):
             return False, "Invalid TikTok URL domain", None
-            
+
         # For profile URLs
         if '@' in parsed_url.path:
             username = parsed_url.path.split('@')[1].split('?')[0].split('/')[0]
             if username:
                 return True, "profile", username
-            
+
         # For single video URLs
         if '/video/' in url or 'vt.tiktok.com' in url:
             return True, "video", None
-            
+
         return False, "Invalid TikTok URL format", None
     except Exception as e:
         return False, f"URL validation error: {str(e)}", None
@@ -63,13 +63,13 @@ def download_tiktok_content(url, user_id, profile_username=None):
         # Prepare download path with timestamp and unique ID
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         unique_id = str(uuid.uuid4())[:8]
-        
+
         # Create filename template
         filename_template = f'tiktok_%(title)s_{timestamp}_{unique_id}.%(ext)s'
-        
+
         # Create output template using get_download_path
         output_template = str(get_download_path('tiktok', filename_template))
-        
+
         # Download options
         ydl_opts = {
             'format': 'best',
@@ -88,14 +88,14 @@ def download_tiktok_content(url, user_id, profile_username=None):
                 # Download the video
                 info = ydl.extract_info(url, download=True)
                 filename = Path(ydl.prepare_filename(info))
-                
+
                 # Ensure file was downloaded successfully
                 if not filename.exists() or filename.stat().st_size == 0:
                     raise Exception(f"Download failed: File not found or empty - {filename}")
-                
+
                 # Get relative path for storage
                 relative_path = get_relative_path(filename)
-                
+
                 # Prepare media info
                 media_info = {
                     'id': info['id'],
@@ -111,7 +111,7 @@ def download_tiktok_content(url, user_id, profile_username=None):
                         'upload_date': info.get('upload_date', '')
                     }
                 }
-                
+
                 # Save to database
                 save_media_metadata(
                     user_id=user_id,
@@ -123,15 +123,15 @@ def download_tiktok_content(url, user_id, profile_username=None):
                     duration=media_info['metadata']['duration'],
                     metadata=media_info['metadata']
                 )
-                
+
                 # Cache the media info
                 if not tiktok_cache.cache_media(url, user_id, media_info):
                     logger.warning(f"Failed to cache media for URL: {url}")
                 else:
                     logger.info(f"Successfully downloaded and cached: {url}")
-                
+
                 return media_info, media_info['file_path']
-                
+
             except Exception as e:
                 # Clean up any partially downloaded files
                 try:
@@ -141,7 +141,7 @@ def download_tiktok_content(url, user_id, profile_username=None):
                 except Exception as cleanup_error:
                     logger.error(f"Error cleaning up failed download: {cleanup_error}")
                 raise
-            
+
     except Exception as e:
         logger.error(f"Download error: {str(e)}")
         raise
@@ -162,7 +162,7 @@ def tiktok_single_download():
         return jsonify({'error': 'No URL provided'}), 400
 
     # Validate URL
-    is_valid, url_type = validate_tiktok_url(url)
+    is_valid, url_type, username = validate_tiktok_url(url)
     if not is_valid or url_type != "video":
         return jsonify({'error': 'Invalid TikTok video URL'}), 400
 
@@ -191,7 +191,7 @@ def tiktok_single_download():
                 )
 
         media_info, filename = download_tiktok_content(url, user_id)
-        
+
         return render_template('tiktok_results.html',
             content={
                 'username': media_info['metadata']['uploader'],
@@ -250,11 +250,11 @@ def tiktok_profile_download():
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             # Extract playlist info first
             playlist_info = ydl.extract_info(url, download=False)
-            
+
             # Process only the first 10 videos
             for entry in playlist_info['entries'][:10]:
                 video_url = f"https://www.tiktok.com/@{username}/video/{entry['id']}"
-                
+
                 # Check if video is already cached
                 cached_media = tiktok_cache.get_cached_media(video_url, user_id)
                 if cached_media:
@@ -298,7 +298,7 @@ def tiktok_profile_download():
             # Continue even if caching fails
 
         # Return only the display data (without file_path)
-        display_videos = [{k: v for k, v in video.items() if k != 'file_path'} 
+        display_videos = [{k: v for k, v in video.items() if k != 'file_path'}
                          for video in processed_videos]
 
         return render_template('tiktok_results.html',
@@ -321,7 +321,7 @@ def cleanup_old_downloads():
     try:
         max_age = 3600  # 1 hour
         current_time = time.time()
-        
+
         # Clean up files in the main TikTok directory
         for file in TIKTOK_DIR.iterdir():
             try:

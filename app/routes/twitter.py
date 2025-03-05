@@ -26,7 +26,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Create Blueprint
-twitter_bp = Blueprint('twitter', __name__)
+twitter_bp = Blue# # print('twitter', __name__)
 
 # Define download and processed folders
 BASE_DIR = APP_ROOT
@@ -49,22 +49,22 @@ def ensure_static_folder(app=None):
         if app is None:
             from flask import current_app
             app = current_app
-            
+
         static_folder = Path(app.static_folder)
         if not static_folder.exists():
             static_folder.mkdir(exist_ok=True)
-        
+
         images_folder = static_folder / 'images'
         if not images_folder.exists():
             images_folder.mkdir(exist_ok=True)
-            
+
         # Create a default placeholder image if it doesn't exist
         placeholder_path = images_folder / 'twitter_placeholder.jpg'
         if not placeholder_path.exists():
             # Create a blue placeholder image
             img = Image.new('RGB', (800, 600), color=(73, 109, 137))
             draw = ImageDraw.Draw(img)
-            
+
             # Add text if possible
             try:
                 # Try to use a system font
@@ -73,7 +73,7 @@ def ensure_static_folder(app=None):
                     font_path = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'  # Linux
                 if not os.path.exists(font_path):
                     font_path = 'C:\\Windows\\Fonts\\arial.ttf'  # Windows
-                
+
                 if os.path.exists(font_path):
                     font = ImageFont.truetype(font_path, 40)
                     draw.text((400, 300), "Twitter Image Placeholder", fill=(255, 255, 255), font=font, anchor="mm")
@@ -82,7 +82,7 @@ def ensure_static_folder(app=None):
                     draw.text((400, 300), "Twitter Image Placeholder", fill=(255, 255, 255))
             except Exception as font_error:
                 logger.warning(f"Could not add text to placeholder: {str(font_error)}")
-            
+
             img.save(placeholder_path)
             logger.info(f"Created placeholder image at {placeholder_path}")
     except Exception as e:
@@ -129,14 +129,14 @@ def clean_twitter_url(url):
         parsed = urlparse(url)
         if not parsed.netloc in ['twitter.com', 'x.com']:
             raise ValueError('Invalid domain')
-        
+
         # Convert x.com to twitter.com
         if parsed.netloc == 'x.com':
             url = url.replace('x.com', 'twitter.com')
-            
+
         # Convert /i/web/ URLs to standard format
         url = url.replace('/i/web/', '/')
-        
+
         return url
     except Exception as e:
         logger.error(f'Error cleaning URL {url}: {str(e)}')
@@ -202,17 +202,17 @@ class MediaDownloader:
         try:
             logger.info(f"Using simplified image download for tweet: {self.url}")
             logger.info(f"Download path: {self.download_path}")
-            
+
             # Extract tweet ID from URL
             match = re.search(r'status/(\d+)', self.url)
             if not match:
                 raise ValueError("Could not extract tweet ID from URL")
-            
+
             tweet_id = match.group(1)
             logger.info(f"Extracted tweet ID: {tweet_id}")
-            
+
             image_url = None
-            
+
             # Method 1: Try the Twitter API directly
             try:
                 logger.info(f"Trying Twitter API for tweet {tweet_id}")
@@ -220,11 +220,11 @@ class MediaDownloader:
                 response = requests.get(api_url, headers={
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
                 })
-                
+
                 if response.status_code == 200:
                     data = response.json()
                     logger.info(f"Twitter API response: {data}")
-                    
+
                     if 'includes' in data and 'media' in data['includes']:
                         for media in data['includes']['media']:
                             if media['type'] == 'photo':
@@ -236,7 +236,7 @@ class MediaDownloader:
                     logger.warning(f"Twitter API returned status code {response.status_code}")
             except Exception as api_error:
                 logger.error(f"Error with Twitter API: {str(api_error)}")
-            
+
             # Method 2: Use yt-dlp to extract thumbnail URLs
             if not image_url:
                 logger.info(f"Using yt-dlp to extract thumbnail URLs for tweet {tweet_id}")
@@ -249,22 +249,22 @@ class MediaDownloader:
                     'ignoreerrors': True,
                     'no_warnings': True
                 }
-                
+
                 try:
                     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                         info = ydl.extract_info(self.url, download=False)
-                        
+
                         # Check if we have thumbnails
                         if info and info.get('thumbnails'):
                             # Get the highest quality thumbnail
-                            thumbnails = sorted(info['thumbnails'], 
-                                            key=lambda x: x.get('width', 0) * x.get('height', 0) if x.get('width') and x.get('height') else 0, 
+                            thumbnails = sorted(info['thumbnails'],
+                                            key=lambda x: x.get('width', 0) * x.get('height', 0) if x.get('width') and x.get('height') else 0,
                                             reverse=True)
                             image_url = thumbnails[0]['url']
                             logger.info(f"Found image URL using yt-dlp: {image_url}")
                 except Exception as ydl_error:
                     logger.error(f"Error with yt-dlp: {str(ydl_error)}")
-            
+
             # Method 3: Try the syndication API
             if not image_url:
                 try:
@@ -276,7 +276,7 @@ class MediaDownloader:
                     response.raise_for_status()
                     tweet_data = response.json()
                     logger.info(f"Successfully retrieved syndication data: {tweet_data}")
-                    
+
                     # Check for photos
                     if 'photos' in tweet_data and tweet_data['photos']:
                         # Get the first photo
@@ -289,7 +289,7 @@ class MediaDownloader:
                             else:
                                 image_url = image_url + '?format=jpg&name=large'
                             logger.info(f"Found image URL in syndication API: {image_url}")
-                    
+
                     # Check for media in the tweet
                     elif 'mediaDetails' in tweet_data:
                         for media in tweet_data['mediaDetails']:
@@ -305,7 +305,7 @@ class MediaDownloader:
                                     break
                 except Exception as api_error:
                     logger.error(f"Error with syndication API: {str(api_error)}")
-            
+
             # Method 4: Try direct HTML scraping
             if not image_url:
                 try:
@@ -315,13 +315,13 @@ class MediaDownloader:
                         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
                         'Accept-Language': 'en-US,en;q=0.9',
                     }
-                    
+
                     # Try to get the tweet page
                     response = requests.get(self.url, headers=headers)
                     response.raise_for_status()
                     html_content = response.text
                     logger.info(f"Successfully retrieved HTML content")
-                    
+
                     # Look for image URLs in the HTML using multiple patterns
                     # Pattern 1: Twitter card image (most reliable)
                     card_pattern = r'<meta property="og:image" content="([^"]+)"'
@@ -334,7 +334,7 @@ class MediaDownloader:
                         else:
                             image_url = image_url + '?format=jpg&name=large'
                         logger.info(f"Found image URL using Twitter card: {image_url}")
-                    
+
                     # Pattern 2: Direct image URL in HTML
                     if not image_url:
                         image_patterns = [
@@ -345,7 +345,7 @@ class MediaDownloader:
                             r'https://pbs\.twimg\.com/profile_images/[A-Za-z0-9_/-]+\.(jpg|png|webp)',
                             r'https://pbs\.twimg\.com/amplify_video_thumb/[A-Za-z0-9_-]+/[A-Za-z0-9_/]+\.(jpg|png|webp)'
                         ]
-                        
+
                         for pattern in image_patterns:
                             match = re.search(pattern, html_content)
                             if match:
@@ -359,7 +359,7 @@ class MediaDownloader:
                                 break
                 except Exception as html_error:
                     logger.error(f"Error with HTML scraping: {str(html_error)}")
-            
+
             # Method 5: Try using nitter.net as a proxy
             if not image_url:
                 try:
@@ -370,12 +370,12 @@ class MediaDownloader:
                         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
                         'Accept-Language': 'en-US,en;q=0.9',
                     }
-                    
+
                     response = requests.get(nitter_url, headers=headers)
                     response.raise_for_status()
                     html_content = response.text
                     logger.info(f"Successfully retrieved nitter.net content")
-                    
+
                     # Look for image URLs in the HTML
                     image_patterns = [
                         r'<img src="([^"]+)" class="media-image"',
@@ -383,7 +383,7 @@ class MediaDownloader:
                         r'<a href="([^"]+)" target="_blank" class="media-link"',
                         r'<a href="([^"]+)" class="image-attachment"'
                     ]
-                    
+
                     for pattern in image_patterns:
                         match = re.search(pattern, html_content)
                         if match:
@@ -397,7 +397,7 @@ class MediaDownloader:
                             break
                 except Exception as nitter_error:
                     logger.error(f"Error with nitter.net: {str(nitter_error)}")
-            
+
             # Method 6: Try using fxtwitter.com as a proxy
             if not image_url:
                 try:
@@ -406,12 +406,12 @@ class MediaDownloader:
                     headers = {
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
                     }
-                    
+
                     response = requests.get(fx_url, headers=headers)
                     response.raise_for_status()
                     data = response.json()
                     logger.info(f"Successfully retrieved fxtwitter.com data")
-                    
+
                     if 'tweet' in data and 'media' in data['tweet']:
                         media = data['tweet']['media']
                         if 'photos' in media and media['photos']:
@@ -422,38 +422,38 @@ class MediaDownloader:
                                 logger.info(f"Found image URL using fxtwitter.com: {image_url}")
                 except Exception as fx_error:
                     logger.error(f"Error with fxtwitter.com: {str(fx_error)}")
-            
+
             # If we still don't have an image URL, use a default placeholder
             if not image_url:
                 logger.warning("Could not find any image URL, using a default image")
                 # Ensure static folder and placeholder image exist
                 ensure_static_folder(current_app)
-                
+
                 # Use a default image from the static folder
                 default_image_path = Path(current_app.static_folder) / 'images' / 'twitter_placeholder.jpg'
-                
+
                 # If the default image doesn't exist, create a simple one
                 if not default_image_path.exists():
                     logger.info("Creating a default placeholder image")
                     img = Image.new('RGB', (800, 600), color=(73, 109, 137))
                     default_image_path.parent.mkdir(exist_ok=True)
                     img.save(default_image_path)
-                
+
                 # Copy the default image to our download path
                 filename = f"image_{uuid.uuid4()}.jpg"
                 filepath = self.download_path / filename
-                
+
                 import shutil
                 shutil.copy(default_image_path, filepath)
                 logger.info(f"Copied placeholder image to {filepath}")
-                
+
                 # Create a small thumbnail
                 thumbnail = Image.open(default_image_path)
                 thumbnail.thumbnail((300, 300))
                 thumb_path = self.download_path / f"thumb_{filename}"
                 thumbnail.save(thumb_path)
                 logger.info(f"Created thumbnail at {thumb_path}")
-                
+
                 # Update media info
                 self.media_info.update({
                     'local_path': str(filepath),
@@ -469,9 +469,9 @@ class MediaDownloader:
                         'note': 'Default placeholder image used as original could not be retrieved'
                     }
                 })
-                
+
                 return self.media_info
-            
+
             # Download the image
             logger.info(f"Downloading image from URL: {image_url}")
             response = requests.get(image_url, headers={
@@ -481,12 +481,12 @@ class MediaDownloader:
                 'Referer': 'https://twitter.com/'
             })
             response.raise_for_status()
-            
+
             # Check if the response is actually an image
             content_type = response.headers.get('Content-Type', '')
             if not content_type.startswith('image/'):
                 logger.warning(f"Response is not an image. Content-Type: {content_type}")
-                
+
                 # Try to extract image from HTML if the response is HTML
                 if content_type.startswith('text/html'):
                     logger.info("Response is HTML, trying to extract image URL from it")
@@ -497,13 +497,13 @@ class MediaDownloader:
                         r'<img src="([^"]+)"',
                         r'<meta property="og:image" content="([^"]+)"'
                     ]
-                    
+
                     for pattern in image_patterns:
                         match = re.search(pattern, html_content)
                         if match:
                             new_image_url = match.group(1)
                             logger.info(f"Found new image URL in HTML response: {new_image_url}")
-                            
+
                             # Try to download the new image URL
                             try:
                                 new_response = requests.get(new_image_url, headers={
@@ -513,7 +513,7 @@ class MediaDownloader:
                                     'Referer': 'https://twitter.com/'
                                 })
                                 new_response.raise_for_status()
-                                
+
                                 # Check if the new response is an image
                                 new_content_type = new_response.headers.get('Content-Type', '')
                                 if new_content_type.startswith('image/'):
@@ -522,25 +522,25 @@ class MediaDownloader:
                                     break
                             except Exception as e:
                                 logger.error(f"Error downloading new image URL: {str(e)}")
-                
+
                 # If still not an image, raise an error
                 if not content_type.startswith('image/'):
                     raise ValueError(f"Response is not an image. Content-Type: {content_type}")
-            
+
             # Save image
             img = Image.open(BytesIO(response.content))
             filename = f"image_{uuid.uuid4()}.{img.format.lower() if img.format else 'jpg'}"
             filepath = self.download_path / filename
             img.save(filepath)
             logger.info(f"Saved image to {filepath}")
-            
+
             # Create thumbnail
             thumbnail = img.copy()
             thumbnail.thumbnail((300, 300))
             thumb_path = self.download_path / f"thumb_{filename}"
             thumbnail.save(thumb_path)
             logger.info(f"Created thumbnail at {thumb_path}")
-            
+
             # Update media info
             self.media_info.update({
                 'local_path': str(filepath),
@@ -555,9 +555,9 @@ class MediaDownloader:
                     'upload_date': datetime.now().strftime('%Y%m%d'),
                 }
             })
-            
+
             return self.media_info
-            
+
         except Exception as e:
             logger.error(f"Simple image download error: {str(e)}")
             raise
@@ -571,28 +571,28 @@ class MediaDownloader:
         try:
             ydl_opts = get_safe_ydl_opts(self.download_path)
             ydl_opts['progress_hooks'] = [self.progress_hook]
-            
+
             logger.info(f"Downloading video from {self.url} to {self.download_path}")
-            
+
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(self.url, download=True)
-                
+
                 if not info:
                     raise ValueError("Could not extract video information")
-                
+
                 # Get the downloaded file path
                 if 'requested_downloads' in info:
                     downloaded_file = info['requested_downloads'][0]['filepath']
                 else:
                     downloaded_file = str(self.download_path / f"{info.get('title', 'video')}.{info.get('ext', 'mp4')}")
-                
+
                 logger.info(f"Video downloaded to: {downloaded_file}")
-                
+
                 # Verify the file exists
                 if not os.path.exists(downloaded_file):
                     logger.error(f"Downloaded file not found at {downloaded_file}")
                     raise FileNotFoundError(f"Downloaded file not found at {downloaded_file}")
-                
+
                 # Get thumbnail
                 thumbnail_path = None
                 if info.get('thumbnail'):
@@ -605,7 +605,7 @@ class MediaDownloader:
                             logger.info(f"Thumbnail saved to: {thumbnail_path}")
                     except Exception as thumb_error:
                         logger.error(f"Error downloading thumbnail: {str(thumb_error)}")
-                
+
                 # Update media info
                 self.media_info.update({
                     'local_path': downloaded_file,
@@ -623,9 +623,9 @@ class MediaDownloader:
                     },
                     'status': 'completed'
                 })
-                
+
                 return self.media_info
-                
+
         except Exception as e:
             logger.error(f"Video download error: {str(e)}")
             raise
@@ -656,7 +656,7 @@ def twitter_download_route():
         data = request.get_json()
         if not data or 'url' not in data:
             return jsonify({'error': 'URL is required'}), 400
-            
+
         url = data['url']
         try:
             url = clean_twitter_url(url)
@@ -664,20 +664,20 @@ def twitter_download_route():
         except ValueError as e:
             logger.error(f"URL validation error: {str(e)}")
             return jsonify({'error': str(e)}), 400
-        
+
         # Get user ID from session or use anonymous
         from flask import session
         user_id = 'anonymous'
         if session.get('user') and isinstance(session['user'], dict) and 'id' in session['user']:
             user_id = session['user']['id']
-        
+
         logger.info(f"User ID for media request: {user_id}")
-        
+
         # Check if media is already cached
         if twitter_cache.is_media_cached(url, user_id):
             logger.info(f"Found cached media for URL: {url}")
             cached_media = twitter_cache.get_cached_media(url, user_id)
-            
+
             # Ensure we have the download_id for the URL
             if cached_media and 'local_path' in cached_media:
                 local_path = Path(cached_media['local_path'])
@@ -685,7 +685,7 @@ def twitter_download_route():
                 if len(parts) >= 2 and parts[0] == 'twitter':
                     download_id = parts[1]
                     filename = local_path.name
-                    
+
                     return jsonify({
                         'status': 'success',
                         'media_info': cached_media,
@@ -694,13 +694,13 @@ def twitter_download_route():
                                               filename=filename),
                         'cached': True
                     })
-            
+
         # Create download directory with deterministic name based on tweet ID
         tweet_id = get_tweet_id_from_url(url)
         download_id = f"tweet_{tweet_id}"
         download_path = TWITTER_DOWNLOAD_PATH / download_id
         download_path.mkdir(exist_ok=True)
-        
+
         # Determine media type - check if URL contains image indicators or use the type from the request
         requested_type = data.get('type', 'auto')
         if requested_type == 'image':
@@ -710,10 +710,10 @@ def twitter_download_route():
         else:
             # Auto detect based on URL
             media_type = 'image' if 'photo' in url.lower() or url.lower().endswith(('.jpg', '.jpeg', '.png', '.gif')) else 'video'
-        
+
         logger.info(f"Processing media type: {media_type} for URL: {url}")
         downloader = MediaDownloader(url, download_path, media_type)
-        
+
         try:
             if media_type == 'image':
                 # Use the simplified image download method
@@ -724,7 +724,7 @@ def twitter_download_route():
                 except yt_dlp.utils.DownloadError as e:
                     error_message = str(e)
                     logger.error(f"Download error: {error_message}")
-                    
+
                     # If no video found, try to get an image instead
                     if "No video could be found in this tweet" in error_message:
                         logger.info("No video found in tweet, trying to download as image instead")
@@ -734,7 +734,7 @@ def twitter_download_route():
                         media_info['media_type'] = 'image'
                     else:
                         raise
-            
+
             # Convert absolute paths to relative paths for storage in the database
             if 'local_path' in media_info and media_info['local_path']:
                 # If it's already a string, convert to Path object
@@ -742,22 +742,22 @@ def twitter_download_route():
                     file_path = Path(media_info['local_path'])
                 else:
                     file_path = media_info['local_path']
-                
+
                 # Include the tweet_id subdirectory in the relative path
                 rel_path = f"twitter/{download_id}/{file_path.name}"
                 media_info['file_path'] = rel_path
                 media_info['local_path'] = rel_path
-            
+
             if 'thumbnail_path' in media_info and media_info['thumbnail_path']:
                 if isinstance(media_info['thumbnail_path'], str):
                     thumb_path = Path(media_info['thumbnail_path'])
                 else:
                     thumb_path = media_info['thumbnail_path']
-                
+
                 # Ensure thumbnail path includes the tweet_id subdirectory
                 rel_path = f"twitter/{download_id}/{thumb_path.name}"
                 media_info['thumbnail_path'] = rel_path
-            
+
             # Save metadata to database
             try:
                 save_media_metadata(
@@ -772,31 +772,31 @@ def twitter_download_route():
                     thumbnail_path=media_info.get('thumbnail_path')
                 )
                 logger.info(f"Media metadata saved successfully for URL: {url}")
-                
+
                 # Cache the media info
                 if not twitter_cache.cache_media(url, user_id, media_info):
                     logger.warning(f"Failed to cache media for URL: {url}")
                     # Debug info for cache failure
                     logger.warning(f"Media info structure: {media_info.keys()}")
-                    
+
                     if 'file_path' in media_info:
                         logger.warning(f"File path: {media_info['file_path']}")
-                        
+
                     if 'local_path' in media_info:
                         logger.warning(f"Local path: {media_info['local_path']}")
                         file_path = DOWNLOAD_DIR / media_info['local_path']
                         logger.warning(f"Absolute path: {file_path}")
                         logger.warning(f"File exists: {file_path.exists()}")
-                        
+
                         # Create media_info with correct absolute paths
                         media_info_for_cache = media_info.copy()
                         media_info_for_cache['absolute_path'] = str(file_path)
                         media_info_for_cache['download_dir'] = str(DOWNLOAD_DIR)
-                        
+
                         # Second attempt with correct paths
                         if not twitter_cache.cache_media(url, user_id, media_info_for_cache):
                             logger.warning("Second cache attempt also failed")
-                            
+
                             # Try with a direct file check
                             if os.path.exists(str(file_path)):
                                 logger.info(f"File exists at {file_path}, trying with simplified media info")
@@ -809,7 +809,7 @@ def twitter_download_route():
                                     'media_type': media_info['media_type'],
                                     'platform': 'twitter'
                                 }
-                                
+
                                 # Third attempt with simplified info
                                 if not twitter_cache.cache_media(url, user_id, simple_media_info):
                                     logger.error("All cache attempts failed")
@@ -824,11 +824,11 @@ def twitter_download_route():
                         logger.info("Verified cache entry exists")
                     else:
                         logger.warning("Cache entry verification failed")
-                    
+
             except Exception as db_error:
                 logger.error(f"Error saving media metadata: {str(db_error)}")
                 # Continue even if database save fails
-            
+
             return jsonify({
                 'status': 'success',
                 'media_info': media_info,
@@ -836,18 +836,18 @@ def twitter_download_route():
                                       download_id=download_id,
                                       filename=os.path.basename(media_info['local_path']))
             })
-            
+
         except yt_dlp.utils.DownloadError as e:
             error_message = str(e)
             logger.error(f"Download error: {error_message}")
-            
+
             if "Unsupported URL" in error_message:
                 return jsonify({'error': 'This Twitter URL is not supported or the content is private'}), 400
             elif "unavailable" in error_message.lower():
                 return jsonify({'error': 'The content is no longer available or is private'}), 400
             else:
                 return jsonify({'error': 'Failed to download. Please check the URL and try again.'}), 500
-            
+
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}", exc_info=True)
         return jsonify({'error': 'An unexpected error occurred. Please try again later.'}), 500
@@ -858,16 +858,16 @@ def download_file(download_id, filename):
     try:
         file_path = TWITTER_DOWNLOAD_PATH / download_id / filename
         logger.info(f"Attempting to serve file: {file_path}")
-        
+
         if not file_path.exists():
             logger.error(f"File not found: {file_path}")
             raise FileNotFoundError("File not found")
-        
+
         # Verify file is within allowed directory
         if not str(file_path.resolve()).startswith(str(TWITTER_DOWNLOAD_PATH.resolve())):
             logger.error(f"Invalid file path: {file_path}")
             raise ValueError("Invalid file path")
-        
+
         # Determine content type
         ext = os.path.splitext(filename)[1].lower()
         content_types = {
@@ -882,9 +882,9 @@ def download_file(download_id, filename):
             '.m4a': 'audio/mp4'
         }
         content_type = content_types.get(ext, 'application/octet-stream')
-        
+
         logger.info(f"Serving file {file_path} with content type {content_type}")
-            
+
         return send_file(
             str(file_path),
             as_attachment=True,
@@ -901,7 +901,7 @@ def cleanup_old_downloads():
     try:
         max_age = 3600  # 1 hour
         current_time = time.time()
-        
+
         for download_dir in TWITTER_DOWNLOAD_PATH.iterdir():
             try:
                 if download_dir.is_dir():
@@ -939,11 +939,11 @@ def schedule_cleanup(app):
     """Schedule periodic cache cleanup when app starts."""
     try:
         from flask_apscheduler import APScheduler
-        
+
         # Create scheduler
         scheduler = APScheduler()
         scheduler.init_app(app)
-        
+
         # Add cache cleanup job - run once per day
         scheduler.add_job(
             id='twitter_cache_cleanup',
@@ -951,7 +951,7 @@ def schedule_cleanup(app):
             trigger='interval',
             hours=24
         )
-        
+
         # Add file cleanup job - run every 6 hours
         scheduler.add_job(
             id='twitter_file_cleanup',
@@ -959,7 +959,7 @@ def schedule_cleanup(app):
             trigger='interval',
             hours=6
         )
-        
+
         scheduler.start()
         logger.info("Scheduled Twitter cache and file cleanup jobs")
     except ImportError:

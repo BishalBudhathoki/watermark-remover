@@ -1,3 +1,8 @@
+# Environment variables
+.env
+.env.*
+!.env.example
+
 # Python
 __pycache__/
 *.py[cod]
@@ -19,20 +24,64 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-.env
-.env.*
-*.pyc
-.pytest_cache/
+
+# Virtual Environment
+venv/
+myenv/
+env/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Application specific
+uploads/
+processed/
+downloads/
+flask_session/
+*.db
+*.sqlite3
+media_vault.db
+
+# SSL and Certbot
+certbot/
+ssl/
+*.pem
+*.key
+*.crt
+
+# Logs
+*.log
+logs/
+log/
+
+# Docker
+.docker/
+
+# Redis
+*.rdb
+
+# Temporary files
+*.tmp
+*.temp
 .coverage
+.pytest_cache/
 htmlcov/
-.tox/
-.nox/
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
+
+# API keys and secrets
+api_keys.yaml
+secrets.yaml
+*_credentials.json
+client_secrets.json
+
+# Instagram/TikTok verification files
+tiktok*.txt
+instagram*.txt
+instagram_cookies.txt
 
 # Virtual Environment
 venv/

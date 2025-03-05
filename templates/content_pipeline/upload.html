@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Video - Content Repurposing Pipeline{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-12">
+    <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">Upload Video</h1>
+                <p class="text-xl text-gray-600">
+                    Upload your video to start the content repurposing process.
+                </p>
+            </div>
+
+            <!-- Progress Steps -->
+            <div class="flex items-center justify-between mb-12 px-6">
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">1</div>
+                    <p class="mt-2 text-blue-600 font-medium">Upload</p>
+                </div>
+                <div class="flex-1 h-1 bg-gray-200 mx-4">
+                    <div class="h-full bg-blue-600 w-0"></div>
+                </div>
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center font-bold">2</div>
+                    <p class="mt-2 text-gray-500">Split</p>
+                </div>
+                <div class="flex-1 h-1 bg-gray-200 mx-4"></div>
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center font-bold">3</div>
+                    <p class="mt-2 text-gray-500">Generate Text</p>
+                </div>
+                <div class="flex-1 h-1 bg-gray-200 mx-4"></div>
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center font-bold">4</div>
+                    <p class="mt-2 text-gray-500">Post</p>
+                </div>
+            </div>
+
+            <!-- Upload Form -->
+            <div class="bg-white rounded-2xl shadow-lg p-8">
+                <form action="{{ url_for('content_pipeline.upload') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
+                    <!-- Upload Area -->
+                    <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center" id="drop-area">
+                        <input type="file" name="video" id="file-input" class="hidden" accept="video/*">
+                        <div class="space-y-4">
+                            <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+                                <i class="fas fa-cloud-upload-alt text-blue-600 text-3xl"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-900">Drag and drop your video here</h3>
+                            <p class="text-gray-600">
+                                or
+                            </p>
+                            <button type="button" id="browse-button" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                                Browse Files
+                            </button>
+                            <p class="text-sm text-gray-500">
+                                Supported formats: MP4, MOV, AVI, WMV, MKV<br>
+                                Maximum file size: 1GB
+                            </p>
+                        </div>
+                        <div id="file-preview" class="hidden mt-6">
+                            <div class="flex items-center p-4 bg-blue-50 rounded-lg">
+                                <i class="fas fa-file-video text-blue-600 text-2xl mr-4"></i>
+                                <div class="flex-1">
+                                    <p class="font-medium text-gray-900" id="file-name"></p>
+                                    <p class="text-sm text-gray-600" id="file-size"></p>
+                                </div>
+                                <button type="button" id="remove-file" class="text-gray-500 hover:text-red-600">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- URL Upload Option -->
+                    <div class="text-center">
+                        <p class="text-gray-600 mb-4">Or upload from URL</p>
+                        <div class="flex">
+                            <input type="text" name="video_url" placeholder="Enter video URL (YouTube, Vimeo, etc.)"
+                                   class="flex-1 px-4 py-3 rounded-l-lg border border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-transparent">
+                            <button type="submit" name="url_submit" value="true" class="px-6 py-3 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700 transition-colors duration-200">
+                                <i class="fas fa-link mr-2"></i>
+                                Fetch
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="text-center">
+                        <button type="submit" id="upload-button" class="px-8 py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <i class="fas fa-upload mr-2"></i>
+                            Upload Video
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-between mt-8">
+                <a href="{{ url_for('content_pipeline.index') }}" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropArea = document.getElementById('drop-area');
+        const fileInput = document.getElementById('file-input');
+        const browseButton = document.getElementById('browse-button');
+        const filePreview = document.getElementById('file-preview');
+        const fileName = document.getElementById('file-name');
+        const fileSize = document.getElementById('file-size');
+        const removeFile = document.getElementById('remove-file');
+        const uploadButton = document.getElementById('upload-button');
+
+        // Open file dialog when browse button is clicked
+        browseButton.addEventListener('click', function() {
+            fileInput.click();
+        });
+
+        // Handle file selection
+        fileInput.addEventListener('change', function() {
+            handleFiles(this.files);
+        });
+
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Highlight drop area when item is dragged over it
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight() {
+            dropArea.classList.add('border-blue-500');
+            dropArea.classList.add('bg-blue-50');
+        }
+
+        function unhighlight() {
+            dropArea.classList.remove('border-blue-500');
+            dropArea.classList.remove('bg-blue-50');
+        }
+
+        // Handle dropped files
+        dropArea.addEventListener('drop', function(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        });
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+
+                // Check if file is a video
+                if (!file.type.startsWith('video/')) {
+                    alert('Please upload a video file.');
+                    return;
+                }
+
+                // Check file size (max 1GB)
+                if (file.size > 1024 * 1024 * 1024) {
+                    alert('File size exceeds 1GB limit.');
+                    return;
+                }
+
+                // Update file input
+                fileInput.files = files;
+
+                // Show file preview
+                fileName.textContent = file.name;
+                fileSize.textContent = formatFileSize(file.size);
+                filePreview.classList.remove('hidden');
+
+                // Enable upload button
+                uploadButton.disabled = false;
+            }
+        }
+
+        // Remove selected file
+        removeFile.addEventListener('click', function() {
+            fileInput.value = '';
+            filePreview.classList.add('hidden');
+            uploadButton.disabled = true;
+        });
+
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' bytes';
+            else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+            else if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+            else return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+        }
+    });
+</script>
+{% endblock %}

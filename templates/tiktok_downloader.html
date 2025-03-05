@@ -12,18 +12,18 @@
                 TikTok Video Downloader
             </h1>
             <p class="text-gray-600 mb-8">Download any TikTok video</p>
-            
+
             <form action="{{ url_for('tiktok.tiktok_single_download') }}" method="POST" class="space-y-6">
                 <div class="input-group">
-                    <input type="url" 
-                        id="video_url" 
+                    <input type="url"
+                        id="video_url"
                         name="video_url"
-                        placeholder="https://vt.tiktok.com/..." 
+                        placeholder="https://vt.tiktok.com/..."
                         class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-400 focus:border-transparent outline-none"
                         required
                     >
                 </div>
-                <button type="submit" 
+                <button type="submit"
                         class="w-full bg-black text-white py-3 px-6 rounded-xl hover:bg-gray-800 transition-colors duration-200 flex items-center justify-center">
                     <i class="fas fa-download mr-2"></i>
                     Download Video
@@ -38,18 +38,18 @@
                 TikTok Profile Downloader
             </h1>
             <p class="text-gray-600 mb-8">Download videos from any TikTok profile</p>
-            
+
             <form action="{{ url_for('tiktok.tiktok_profile_download') }}" method="POST" class="space-y-6">
                 <div class="input-group">
-                    <input type="url" 
-                        id="profile_url" 
+                    <input type="url"
+                        id="profile_url"
                         name="profile_url"
-                        placeholder="https://www.tiktok.com/@username" 
+                        placeholder="https://www.tiktok.com/@username"
                         class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-400 focus:border-transparent outline-none"
                         required
                     >
                 </div>
-                <button type="submit" 
+                <button type="submit"
                         class="w-full bg-black text-white py-3 px-6 rounded-xl hover:bg-gray-800 transition-colors duration-200 flex items-center justify-center">
                     <i class="fas fa-download mr-2"></i>
                     Download Profile Content
@@ -92,9 +92,9 @@
 document.querySelector('form').addEventListener('submit', function() {
     const statusDiv = document.getElementById('downloadStatus');
     const progressBar = statusDiv.querySelector('.progress-bar');
-    
+
     statusDiv.classList.remove('hidden');
-    
+
     // Disable submit button
     const submitBtn = this.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
@@ -102,4 +102,4 @@ document.querySelector('form').addEventListener('submit', function() {
 });
 </script>
 {% endblock %}
-{% endblock %} 
+{% endblock %}

@@ -13,7 +13,7 @@ __all__ = [
     'enhance_video',
     'compress_video',
     'cleanup_processed_files',
-    
+
     # Social Media Tasks
     'download_tiktok',
     'download_instagram',
@@ -21,7 +21,7 @@ __all__ = [
     'download_twitter',  # New Twitter task
     'batch_download',
     'cleanup_failed_downloads',
-    
+
     # Maintenance Tasks
     'cleanup_old_files',
     'update_usage_statistics',

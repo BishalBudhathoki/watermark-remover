@@ -1,47 +1,57 @@
-You are an expert Python developer specializing in API integrations. I need a **Twitter Video Downloader** built in Python.
+You are a highly skilled Python developer and assistant working inside Cursor AI IDE. Your task is to help me build a fully functional **Content Repurposing and Cross-Posting Pipeline** using Python. The project should follow best practices for modularity, scalability, and error handling. The pipeline consists of the following key components:
 
-### **Project Overview:**
-- The script should **fetch video URLs** from Twitter posts and **download them**.
-- It should use the **Twitter API** (v2) and handle authentication securely.
-- The solution should be **efficient, scalable, and error-resistant**.
+**2.1 Content Repurposing/Cross-Posting Pipeline**
 
-### **Tech Stack:**
-- Programming Language: **Python**
-- Libraries: **tweepy, requests**
-- Authentication: **Twitter API (Bearer Token)**
-- Video Handling: **Requests for file downloads**
+### Requirements
+- Language: Python 3.x
+- Tools: MoviePy (for video splitting), OpenAI API (or similar for text generation), HTTP libraries (for cross-posting).
+- Structure: Organized into well-separated modules (`upload.py`, `splitter.py`, `text_generator.py`, `poster.py`).
+- Logging: Use Python's built-in `logging` library.
+- Configurable via `.env` file (API keys, platform endpoints, etc.).
 
-### **Steps to Implement:**
-1. **Obtain Twitter API credentials**  
-   - The script should authenticate using the **Twitter API v2**.
-   - Credentials should be stored securely using environment variables.
-   
-2. **Implement Authentication**  
-   - Use **OAuth 2.0 Bearer Token** for accessing public tweets.
-   - Handle authentication failures properly.
+---
 
-3. **Extract Video URLs**  
-   - Parse the **tweet JSON response** to extract video URLs.
-   - Support different video qualities (highest resolution preferred).
+### Steps to Implement
 
-4. **Implement Download Functionality**  
-   - Download videos using `requests` and save them locally.
-   - Ensure downloads are resumable and handle large files efficiently.
+#### 1. Video Upload
+- Create a function that handles video file uploads (from local directory or user input).
+- Accept file path input.
+- Perform basic validation (file type, size limit).
+- Return a file handle or path for processing.
 
-5. **Handle Errors & Edge Cases**  
-   - Handle **rate limits**, **private accounts**, and **non-video tweets** gracefully.
-   - Provide meaningful error messages.
+#### 2. Video Splitting (MoviePy)
+- Load the uploaded video using **MoviePy**.
+- Automatically detect logical splits based on:
+    - Duration thresholds (e.g., split into 60-second segments for TikTok).
+    - Optional: silent sections (advanced feature if time allows).
+- Save clips to a temporary folder.
+- Return metadata: clip count, durations, file paths.
 
-### **Additional Features (Optional but Preferred):**
-- Allow downloading by **tweet URL or tweet ID**.
-- Provide an option to **choose video resolution**.
-- Multi-threaded downloads for speed optimization.
-- CLI interface for easy usage.
+#### 3. Text Variations with AI
+- Use OpenAI API (or compatible LLM including Deepseek) to generate:
+    - Multiple captions for each clip.
+    - Suggested hashtags.
+    - Platform-specific text variations (YouTube Shorts, TikTok, Instagram Reels, etc.).
+- Implement fallback if API fails.
 
-### **Deliverables:**
-- A **fully functional Python script** for downloading Twitter videos.
-- Proper **error handling and logging**.
-- Well-structured **code with comments** explaining key functions.
-- Instructions on how to set up and run the script.
+#### 4. Cross-Posting
+- Create functions to upload each clip to:
+    - TikTok
+    - Instagram Reels
+    - YouTube Shorts
+- Each platform should have its own posting logic,
+- Apply the generated captions and hashtags.
 
-**Generate the complete working Python script for Twitter video downloading now!**
+---
+Expected AI Behavior in Cursor AI IDE
+Generate the full folder structure with initial files.
+Add code skeletons for each step with proper docstrings.
+Write example functions and handle typical edge cases (network failures, corrupted videos, etc.).
+Use async where beneficial (for parallel uploads).
+Explain each step inline using comments for clarity.
+Suggest improvements where applicable (caching, retries, etc.).
+Option to choose target platforms dynamically.
+Basic progress bar during processing (using tqdm or similar).
+Make sure the code is modular and easy to extend.
+Ensure the code is well-documented and easy to understand.
+

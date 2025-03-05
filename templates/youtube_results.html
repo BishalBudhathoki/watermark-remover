@@ -16,7 +16,7 @@
                 <div class="flex-grow">
                     <h2 class="text-xl font-semibold text-gray-800 mb-2">{{ video.title }}</h2>
                     <p class="text-gray-600 mb-4">{{ video.description[:200] }}{% if video.description|length > 200 %}...{% endif %}</p>
-                    
+
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                         <div class="bg-white p-3 rounded-lg shadow-sm">
                             <p class="text-sm text-gray-500">Duration</p>
@@ -37,7 +37,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <div class="flex flex-col sm:flex-row gap-4 mt-4">
                 <a href="{{ video.url }}" class="flex-1 inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
                     <i class="fas fa-download mr-2"></i>

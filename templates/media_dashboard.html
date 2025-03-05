@@ -131,8 +131,8 @@
         overflow: hidden;
         cursor: pointer;
     }
-    
-    .media-thumbnail img, 
+
+    .media-thumbnail img,
     .media-thumbnail video {
         position: absolute;
         top: 0;
@@ -640,7 +640,7 @@
                     <div class="stats-value">{{ stats.total_media }}</div>
                 </div>
             </div>
-            
+
             <div class="stats-card">
                 <div class="stats-icon bg-pink-50">
                     <i class="fas fa-video text-pink-500 text-xl"></i>
@@ -650,7 +650,7 @@
                     <div class="stats-value">{{ stats.videos }}</div>
                 </div>
             </div>
-            
+
             <div class="stats-card">
                 <div class="stats-icon bg-purple-50">
                     <i class="fas fa-image text-purple-500 text-xl"></i>
@@ -660,7 +660,7 @@
                     <div class="stats-value">{{ stats.images }}</div>
                 </div>
             </div>
-            
+
             <div class="stats-card">
                 <div class="stats-icon bg-green-50">
                     <i class="fas fa-cloud-upload-alt text-green-500 text-xl"></i>
@@ -724,13 +724,13 @@
                                  alt="{{ item.title }}"
                                  loading="lazy">
                         {% endif %}
-                        
+
                         <div class="media-overlay">
                             <div class="play-button">
                                 <i class="fas fa-{% if item.media_type in ['video', 'highlight'] %}play{% else %}search-plus{% endif %}"></i>
                             </div>
                         </div>
-                        
+
                         {% if item.media_type in ['video', 'highlight'] %}
                         <div class="video-controls">
                             <div class="video-progress">
@@ -740,7 +740,7 @@
                         </div>
                         {% endif %}
                     </div>
-                    
+
                     <div class="media-info">
                         <!-- Platform Badge -->
                         <div class="media-header">
@@ -760,7 +760,7 @@
 
                         <!-- Title -->
                         <h3 class="media-title">{{ item.title }}</h3>
-                        
+
                         <!-- Meta Info -->
                         <div class="media-meta">
                             {% if item.metadata.uploader %}
@@ -769,20 +769,20 @@
                                     <span>{{ item.metadata.uploader }}</span>
                                 </div>
                             {% endif %}
-                            
+
                             {% if item.metadata.like_count is defined %}
                                 <div class="meta-item">
                                     <i class="fas fa-heart text-xs text-pink-500"></i>
                                     <span>{{ '{:,}'.format(item.metadata.like_count) }}</span>
                                 </div>
                             {% endif %}
-                            
+
                             <div class="meta-item ml-auto">
                                 <i class="fas fa-calendar text-xs"></i>
                                 <span>{{ item.created_at.strftime('%b %d, %Y') }}</span>
                             </div>
                         </div>
-                        
+
                         <!-- Technical Specs -->
                         {% if item.platform == 'youtube' and item.metadata %}
                             <div class="media-specs">
@@ -792,21 +792,21 @@
                                         <span class="spec-value">{{ item.metadata.download_type|title }}</span>
                                     </div>
                                 {% endif %}
-                                
+
                                 {% if item.metadata.format %}
                                     <div class="spec-item">
                                         <span class="spec-label">Format</span>
                                         <span class="spec-value">{{ item.metadata.format|upper }}</span>
                                     </div>
                                 {% endif %}
-                                
+
                                 {% if item.metadata.actual_resolution %}
                                     <div class="spec-item">
                                         <span class="spec-label">Resolution</span>
                                         <span class="spec-value">{{ item.metadata.actual_resolution }}</span>
                                     </div>
                                 {% endif %}
-                                
+
                                 {% if item.metadata.file_size_mb %}
                                     <div class="spec-item">
                                         <span class="spec-label">Size</span>
@@ -815,12 +815,12 @@
                                 {% endif %}
                             </div>
                         {% endif %}
-                        
+
                         <!-- Description -->
                         {% if item.metadata.description %}
                             <p class="media-description">{{ item.metadata.description }}</p>
                         {% endif %}
-                        
+
                         <!-- Actions -->
                         <div class="media-actions">
                             <div class="action-buttons">
@@ -834,7 +834,7 @@
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
-                            
+
                             <div class="primary-actions">
                                 {% if item.media_type == 'video' or item.platform == 'ai_video' %}
                                 <button class="btn-sm bg-blue-600 text-white hover:bg-blue-700 view-media-btn"
@@ -855,7 +855,7 @@
                                     <i class="fas fa-eye"></i> View
                                 </button>
                                 {% endif %}
-                                
+
                                 <a href="{{ video_url }}"
                                    class="btn-sm bg-gray-100 text-gray-700 hover:bg-gray-200"
                                    download="{{ item.title }}">
@@ -965,11 +965,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const uploader = card.querySelector('.meta-item span')?.textContent.toLowerCase() || '';
             const description = card.querySelector('.media-description')?.textContent.toLowerCase() || '';
 
-            const matchesSearch = !searchTerm || 
-                                title.includes(searchTerm) || 
-                                uploader.includes(searchTerm) || 
+            const matchesSearch = !searchTerm ||
+                                title.includes(searchTerm) ||
+                                uploader.includes(searchTerm) ||
                                 description.includes(searchTerm);
-                                
+
             const matchesPlatform = !selectedPlatform || platform.includes(selectedPlatform);
             const matchesType = !selectedType || type === selectedType;
 
@@ -1052,7 +1052,7 @@ document.addEventListener('DOMContentLoaded', function() {
     searchInput.addEventListener('input', debounce(() => filterAndSortMedia(), 300));
     platformFilter.addEventListener('change', filterAndSortMedia);
     typeFilter.addEventListener('change', filterAndSortMedia);
-    
+
     sortButton.addEventListener('click', () => {
         sortAscending = !sortAscending;
         const icon = sortButton.querySelector('i');
@@ -1068,7 +1068,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const title = this.getAttribute('data-media-title');
             const uploader = this.getAttribute('data-media-uploader');
             const date = this.getAttribute('data-media-date');
-            
+
             handleView(mediaUrl, mediaType, title, uploader, date);
         });
     });
@@ -1079,34 +1079,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="modal-platform-badge"></div>
                 <div class="video-duration absolute bottom-4 right-4 bg-black bg-opacity-75 text-white px-2 py-1 rounded text-sm" style="display: none;"></div>
             `;
-            
+
             // Get platform from the media card
             const mediaCard = document.querySelector(`[data-video-url="${mediaUrl}"]`)?.closest('.media-card');
             const platformBadge = mediaCard?.querySelector('.platform-badge')?.cloneNode(true);
-            
+
             // Update platform badge in modal with enhanced styling
             const modalPlatformBadge = mediaContainer.querySelector('.modal-platform-badge');
             modalPlatformBadge.innerHTML = '';
             if (platformBadge) {
                 modalPlatformBadge.appendChild(platformBadge);
             }
-            
+
             if (mediaType === 'video' || mediaType === 'highlight') {
                 const video = document.createElement('video');
-                
+
                 // Add loading indicator
                 const loadingIndicator = document.createElement('div');
                 loadingIndicator.className = 'absolute inset-0 flex items-center justify-center bg-black bg-opacity-50';
                 loadingIndicator.innerHTML = '<div class="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>';
                 mediaContainer.appendChild(loadingIndicator);
-                
+
                 // Configure video element
                 video.className = 'w-full';
                 video.controls = true;
                 video.autoplay = false;
                 video.preload = 'metadata';
                 video.crossOrigin = 'anonymous';
-                
+
                 // Add error handling
                 video.onerror = function(e) {
                     console.error('Video load error:', e);
@@ -1114,7 +1114,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     showNotification('Error loading video. Please try again.', 'error');
                     closeModal();
                 };
-                
+
                 // Add loading handlers
                 video.onloadedmetadata = function() {
                     const durationDisplay = mediaContainer.querySelector('.video-duration');
@@ -1122,56 +1122,56 @@ document.addEventListener('DOMContentLoaded', function() {
                     durationDisplay.textContent = duration;
                     durationDisplay.style.display = 'block';
                 };
-                
+
                 video.oncanplay = function() {
                     loadingIndicator.remove();
                 };
-                
+
                 // Set source and poster
                 const thumbnailVideo = mediaCard?.querySelector('video');
                 if (thumbnailVideo?.poster) {
                     video.poster = thumbnailVideo.poster;
                 }
                 video.src = mediaUrl;
-                
+
                 mediaContainer.insertBefore(video, mediaContainer.firstChild);
-                
+
             } else if (mediaType === 'image') {
                 const img = document.createElement('img');
-                
+
                 // Add loading indicator
                 const loadingIndicator = document.createElement('div');
                 loadingIndicator.className = 'absolute inset-0 flex items-center justify-center bg-black bg-opacity-50';
                 loadingIndicator.innerHTML = '<div class="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>';
                 mediaContainer.appendChild(loadingIndicator);
-                
+
                 img.className = 'w-full';
                 img.onload = function() {
                     loadingIndicator.remove();
                 };
-                
+
                 img.onerror = function(e) {
                     console.error('Image load error:', e);
                     loadingIndicator.remove();
                     showNotification('Error loading image. Please try again.', 'error');
                     closeModal();
                 };
-                
+
                 img.src = mediaUrl;
                 mediaContainer.insertBefore(img, mediaContainer.firstChild);
             }
-            
+
             // Update modal info
             modalTitle.textContent = title || 'Untitled';
             modalUploader.textContent = uploader || 'Unknown';
             modalDate.textContent = date || '';
-            
+
             // Show modal with animation
             mediaModal.style.display = 'block';
             requestAnimationFrame(() => {
                 mediaModal.classList.add('show');
             });
-            
+
         } catch (error) {
             console.error('Error in handleView:', error);
             showNotification('Error displaying media. Please try again.', 'error');
@@ -1246,10 +1246,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const mediaCard = document.querySelector(`[data-media-id="${mediaId}"]`);
         const titleElement = mediaCard.querySelector('.media-title');
         const currentTitle = titleElement.textContent;
-        
+
         const newTitle = prompt('Enter new title:', currentTitle);
         if (!newTitle || newTitle === currentTitle) return;
-        
+
         try {
             const response = await fetch(`/api/media/edit/${mediaId}`, {
                 method: 'POST',
@@ -1258,7 +1258,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify({ title: newTitle })
             });
-            
+
             if (response.ok) {
                 titleElement.textContent = newTitle;
                 showNotification('Title updated successfully', 'success');
@@ -1282,7 +1282,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Content-Type': 'application/json'
                 }
             });
-            
+
             const data = await response.json();
             if (response.ok) {
                 // Copy share link to clipboard
@@ -1303,14 +1303,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const notification = document.createElement('div');
         notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${type === 'error' ? 'bg-red-500' : 'bg-green-500'} text-white transform transition-all duration-300 translate-y-[-100%]`;
         notification.textContent = message;
-        
+
         document.body.appendChild(notification);
-        
+
         // Animate in
         requestAnimationFrame(() => {
             notification.style.transform = 'translateY(0)';
         });
-        
+
         // Remove after 3 seconds
         setTimeout(() => {
             notification.style.transform = 'translateY(-100%)';
@@ -1326,12 +1326,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const totalMediaElement = document.querySelector('.stats-grid .total-media');
         const videosElement = document.querySelector('.stats-grid .videos');
         const imagesElement = document.querySelector('.stats-grid .images');
-        
+
         if (totalMediaElement) {
             const currentTotal = parseInt(totalMediaElement.textContent) || 0;
             totalMediaElement.textContent = currentTotal + change;
         }
-        
+
         if (mediaType === 'video' && videosElement) {
             const currentVideos = parseInt(videosElement.textContent) || 0;
             videosElement.textContent = currentVideos + change;
@@ -1386,7 +1386,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 video.play().then(() => {
                     thumbnailElement.classList.add('playing');
                     playButton.querySelector('i').className = 'fas fa-pause';
-                    
+
                     // Show video controls
                     const videoControls = thumbnailElement.querySelector('.video-controls');
                     if (videoControls) {
@@ -1405,7 +1405,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 video.pause();
                 thumbnailElement.classList.remove('playing');
                 playButton.querySelector('i').className = 'fas fa-play';
-                
+
                 // Hide video controls
                 const videoControls = thumbnailElement.querySelector('.video-controls');
                 if (videoControls) {
@@ -1448,7 +1448,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 progressBar.style.width = '0%';
                 timeDisplay.textContent = formatTime(0);
                 video.currentTime = 0;
-                
+
                 // Hide video controls
                 const videoControls = thumbnailElement.querySelector('.video-controls');
                 if (videoControls) {
@@ -1468,7 +1468,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Handle image preview in modal
             const img = thumbnailElement.querySelector('img');
             if (img) {
-                handleView(img.src, 'image', 
+                handleView(img.src, 'image',
                           thumbnailElement.closest('.media-card').querySelector('.media-title').textContent,
                           thumbnailElement.closest('.media-card').querySelector('.meta-item span')?.textContent || '',
                           thumbnailElement.closest('.media-card').querySelector('.media-meta .ml-auto span')?.textContent || '');
@@ -1509,7 +1509,7 @@ document.addEventListener('DOMContentLoaded', function() {
     toggleFiltersBtn.addEventListener('click', () => {
         filtersVisible = !filtersVisible;
         searchFilters.style.display = filtersVisible ? 'block' : 'none';
-        
+
         // Update button appearance
         toggleFiltersBtn.classList.toggle('bg-gray-100');
         const filterIcon = toggleFiltersBtn.querySelector('i');
@@ -1563,19 +1563,19 @@ document.addEventListener('DOMContentLoaded', function() {
             a.href = option.url;
             a.className = `flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-150 ease-in-out group`;
             a.setAttribute('role', 'menuitem');
-            
+
             const iconSpan = document.createElement('span');
             iconSpan.className = `inline-flex items-center justify-center w-8 h-8 rounded-lg ${option.color} bg-opacity-10 mr-3 group-hover:bg-opacity-20 transition-all duration-150 ease-in-out`;
             iconSpan.innerHTML = `<i class="${option.icon} text-lg"></i>`;
-            
+
             const textSpan = document.createElement('span');
             textSpan.className = 'flex-1';
             textSpan.textContent = option.text;
-            
+
             const arrowSpan = document.createElement('span');
             arrowSpan.className = 'ml-2 text-gray-400 group-hover:text-gray-500';
             arrowSpan.innerHTML = '<i class="fas fa-chevron-right text-sm"></i>';
-            
+
             a.appendChild(iconSpan);
             a.appendChild(textSpan);
             a.appendChild(arrowSpan);

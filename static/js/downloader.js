@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     downloadForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const url = videoUrlInput.value.trim();
-        
+
         if (!url || !isValidUrl(url)) {
             alert('Please enter a valid URL');
             return;
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             fetchBtn.disabled = true;
             fetchBtn.textContent = 'Fetching...';
-            
+
             // Fetch video info
             const response = await fetch('/fetch-video-info', {
                 method: 'POST',
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function displayVideoInfo(info) {
         const durationInMinutes = Math.floor(info.duration / 60);
         const durationSeconds = info.duration % 60;
-        
+
         videoInfo.innerHTML = `
             <div class="video-info-content">
                 <img src="${info.thumbnail}" alt="${info.title}" class="video-thumbnail">
@@ -80,17 +80,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (info.available_qualities && info.available_qualities.length > 0) {
             const qualitySelect = document.getElementById('quality');
             const currentValue = qualitySelect.value;
-            
+
             // Keep the "Best" option and add available qualities
             let options = '<option value="best">Best</option>';
-            
+
             info.available_qualities.forEach(height => {
                 const label = height >= 2160 ? `4K (${height}p)` :
                              height >= 1440 ? `2K (${height}p)` :
                              `${height}p`;
                 options += `<option value="${height}"${currentValue == height ? ' selected' : ''}>${label}</option>`;
             });
-            
+
             qualitySelect.innerHTML = options;
         }
 
@@ -101,9 +101,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle download type change
     downloadTypeSelect.addEventListener('change', () => {
         const isAudio = downloadTypeSelect.value === 'audio';
-        
+
         // Update format options based on download type
-        formatSelect.innerHTML = isAudio ? 
+        formatSelect.innerHTML = isAudio ?
             `<option value="mp3">MP3</option>
              <option value="m4a">M4A</option>` :
             `<option value="mp4">MP4</option>
@@ -122,11 +122,11 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch('/download-progress');
             const data = await response.json();
-            
+
             if (data.progress !== undefined) {
                 progressFill.style.width = `${data.progress}%`;
                 statusText.textContent = data.status || `Downloading: ${Math.round(data.progress)}%`;
-                
+
                 if (data.progress >= 100 || data.status === 'Processing...' || data.status.startsWith('Error')) {
                     if (data.status === 'Processing...') {
                         statusText.textContent = 'Processing video, please wait...';

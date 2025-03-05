@@ -309,10 +309,10 @@
             const rect = video.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
-            
+
             currentSelection.width = x - startX;
             currentSelection.height = y - startY;
-            
+
             drawSelections();
         }
 
@@ -334,7 +334,7 @@
         function drawSelections() {
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
+
             // Draw existing selections
             selections.forEach(selection => {
                 ctx.fillStyle = 'rgba(37, 99, 235, 0.2)';
@@ -343,7 +343,7 @@
                 ctx.lineWidth = 2;
                 ctx.strokeRect(selection.x, selection.y, selection.width, selection.height);
             });
-            
+
             // Draw current selection
             if (currentSelection) {
                 ctx.fillStyle = 'rgba(37, 99, 235, 0.2)';

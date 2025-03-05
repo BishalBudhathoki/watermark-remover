@@ -1,0 +1,627 @@
+{% extends "base.html" %}
+
+{% block title %}Generate Text - Content Repurposing Pipeline{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-12">
+    <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">Generate Text</h1>
+                <p class="text-xl text-gray-600">
+                    Generate engaging captions and hashtags for your video clips using AI.
+                </p>
+            </div>
+
+            <!-- Progress Steps -->
+            <div class="flex items-center justify-between mb-12 px-6">
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <p class="mt-2 text-blue-600 font-medium">Upload</p>
+                </div>
+                <div class="flex-1 h-1 bg-blue-600 mx-4"></div>
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <p class="mt-2 text-blue-600 font-medium">Split</p>
+                </div>
+                <div class="flex-1 h-1 bg-blue-600 mx-4"></div>
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold">3</div>
+                    <p class="mt-2 text-purple-600 font-medium">Generate Text</p>
+                </div>
+                <div class="flex-1 h-1 bg-gray-200 mx-4"></div>
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center font-bold">4</div>
+                    <p class="mt-2 text-gray-500">Post</p>
+                </div>
+            </div>
+
+            <!-- Clips Preview -->
+            <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Your Clips</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    {% for clip in clips %}
+                    <div class="bg-gray-50 rounded-xl overflow-hidden">
+                        <div class="aspect-video bg-black">
+                            <video controls class="w-full h-full">
+                                <source src="{{ url_for('content_pipeline.serve_clip', filename=clip['path'].split('/')[-1]) }}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>
+                        <div class="p-4">
+                            <p class="font-medium text-gray-900">Clip {{ loop.index }}</p>
+                            <p class="text-sm text-gray-600">{{ clip['path'].split('/')[-1] }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="bg-blue-50 rounded-lg p-4">
+                    <div class="flex items-start">
+                        <i class="fas fa-info-circle text-blue-600 text-xl mt-1 mr-4"></i>
+                        <div>
+                            <p class="font-medium text-gray-900">Ready to Generate Text</p>
+                            <p class="text-sm text-gray-600">
+                                We'll analyze your clips and generate engaging captions and hashtags for each one.
+                                This process may take a few moments depending on the number of clips.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Text Generation Settings -->
+            <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Text Generation Settings</h2>
+
+                <!-- Form for text generation -->
+                <form id="generateTextForm" method="POST" action="{{ url_for('content_pipeline.generate_text') }}" class="space-y-6">
+                    <!-- Caption Settings -->
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Caption Settings</label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Caption Variations</label>
+                                <input type="number" name="num_caption_variations" value="3" min="1" max="5" step="1"
+                                       class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-400 focus:border-transparent">
+                                <p class="text-xs text-gray-500 mt-1">Number of caption variations to generate for each clip</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Number of Hashtags</label>
+                                <input type="number" name="num_hashtags" value="10" min="5" max="30" step="1"
+                                       class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-400 focus:border-transparent">
+                                <p class="text-xs text-gray-500 mt-1">Number of hashtags to generate for each clip</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Model Selection -->
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">AI Model</label>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {% if 'openai' in available_models %}
+                            <div class="relative">
+                                <input type="radio" name="ai_provider" id="model-openai" value="openai" class="hidden peer" checked>
+                                <label for="model-openai" class="block p-4 bg-gray-50 rounded-lg border-2 border-gray-200 cursor-pointer peer-checked:border-purple-500 peer-checked:bg-purple-50 hover:bg-gray-100 transition-colors duration-200">
+                                    <div class="text-center">
+                                        <i class="fas fa-robot text-2xl mb-2 text-gray-600 peer-checked:text-purple-600"></i>
+                                        <p class="font-medium text-gray-900">OpenAI</p>
+                                        <p class="text-xs text-gray-600 mt-1">GPT-3.5/4 models</p>
+                                    </div>
+                                </label>
+                            </div>
+                            {% endif %}
+
+                            {% if 'deepseek' in available_models %}
+                            <div class="relative">
+                                <input type="radio" name="ai_provider" id="model-deepseek" value="deepseek" class="hidden peer" {% if 'openai' not in available_models %}checked{% endif %}>
+                                <label for="model-deepseek" class="block p-4 bg-gray-50 rounded-lg border-2 border-gray-200 cursor-pointer peer-checked:border-purple-500 peer-checked:bg-purple-50 hover:bg-gray-100 transition-colors duration-200">
+                                    <div class="text-center">
+                                        <i class="fas fa-brain text-2xl mb-2 text-gray-600 peer-checked:text-purple-600"></i>
+                                        <p class="font-medium text-gray-900">DeepSeek</p>
+                                        <p class="text-xs text-gray-600 mt-1">DeepSeek Chat model</p>
+                                    </div>
+                                </label>
+                            </div>
+                            {% endif %}
+
+                            {% if 'gemini' in available_models %}
+                            <div class="relative">
+                                <input type="radio" name="ai_provider" id="model-gemini" value="gemini" class="hidden peer" {% if 'openai' not in available_models and 'deepseek' not in available_models %}checked{% endif %}>
+                                <label for="model-gemini" class="block p-4 bg-gray-50 rounded-lg border-2 border-gray-200 cursor-pointer peer-checked:border-purple-500 peer-checked:bg-purple-50 hover:bg-gray-100 transition-colors duration-200">
+                                    <div class="text-center">
+                                        <i class="fas fa-gem text-2xl mb-2 text-gray-600 peer-checked:text-purple-600"></i>
+                                        <p class="font-medium text-gray-900">Google Gemini</p>
+                                        <p class="text-xs text-gray-600 mt-1">Gemini Pro model</p>
+                                    </div>
+                                </label>
+                            </div>
+                            {% endif %}
+
+                            {% if not available_models %}
+                            <div class="col-span-3 p-4 bg-red-50 rounded-lg border border-red-200">
+                                <div class="flex items-center">
+                                    <i class="fas fa-exclamation-circle text-red-500 text-xl mr-3"></i>
+                                    <p class="text-red-700">No AI models are available. Please configure API keys in your environment variables.</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Style Settings -->
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2">Caption Style</label>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="relative">
+                                <input type="radio" name="caption_style" id="style-casual" value="casual" class="hidden peer" checked>
+                                <label for="style-casual" class="block p-4 bg-gray-50 rounded-lg border-2 border-gray-200 cursor-pointer peer-checked:border-purple-500 peer-checked:bg-purple-50 hover:bg-gray-100 transition-colors duration-200" id="style-casual-label">
+                                    <div class="text-center">
+                                        <i class="fas fa-smile text-2xl mb-2 text-gray-600 peer-checked:text-purple-600"></i>
+                                        <p class="font-medium text-gray-900">Casual</p>
+                                        <p class="text-xs text-gray-600 mt-1">Friendly and conversational</p>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="relative">
+                                <input type="radio" name="caption_style" id="style-professional" value="professional" class="hidden peer">
+                                <label for="style-professional" class="block p-4 bg-gray-50 rounded-lg border-2 border-gray-200 cursor-pointer peer-checked:border-purple-500 peer-checked:bg-purple-50 hover:bg-gray-100 transition-colors duration-200" id="style-professional-label">
+                                    <div class="text-center">
+                                        <i class="fas fa-briefcase text-2xl mb-2 text-gray-600 peer-checked:text-purple-600"></i>
+                                        <p class="font-medium text-gray-900">Professional</p>
+                                        <p class="text-xs text-gray-600 mt-1">Formal and business-like</p>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="relative">
+                                <input type="radio" name="caption_style" id="style-humorous" value="humorous" class="hidden peer">
+                                <label for="style-humorous" class="block p-4 bg-gray-50 rounded-lg border-2 border-gray-200 cursor-pointer peer-checked:border-purple-500 peer-checked:bg-purple-50 hover:bg-gray-100 transition-colors duration-200" id="style-humorous-label">
+                                    <div class="text-center">
+                                        <i class="fas fa-laugh text-2xl mb-2 text-gray-600 peer-checked:text-purple-600"></i>
+                                        <p class="font-medium text-gray-900">Humorous</p>
+                                        <p class="text-xs text-gray-600 mt-1">Funny and entertaining</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar (hidden by default) -->
+                    <div id="progressContainer" class="hidden mb-8">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Generating Text...</h3>
+                        <p id="progressStatus" class="text-sm text-gray-600 mb-2">Starting text generation...</p>
+                        <div class="w-full bg-gray-200 rounded-full h-4 mb-2">
+                            <div id="progressBar" class="bg-purple-600 h-4 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500">
+                            <span>Initializing</span>
+                            <span>Generating Captions</span>
+                            <span>Generating Hashtags</span>
+                            <span>Finalizing</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">This may take a minute or two, especially for DeepSeek model which can take 20-30 seconds per clip.</p>
+                        <div id="clipProgress" class="mt-4">
+                            <!-- Clip progress indicators will be added here dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="text-center pt-4">
+                        <button type="submit" class="px-8 py-4 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl">
+                            <i class="fas fa-comment-alt mr-2"></i>
+                            Generate Text
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-between">
+                <a href="{{ url_for('content_pipeline.split') }}" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Split
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle AI Model selection
+        const aiModelRadios = document.querySelectorAll('input[name="ai_provider"]');
+        aiModelRadios.forEach(radio => {
+            // Set initial styles for checked radio
+            if (radio.checked) {
+                updateModelStyles(radio);
+            }
+
+            radio.addEventListener('change', function() {
+                // Update visual styles
+                updateModelStyles(this);
+
+                // Ensure this radio button is actually checked in the DOM
+                aiModelRadios.forEach(r => {
+                    r.checked = (r === this);
+                });
+
+                // Do NOT modify caption style when AI model changes
+                // This ensures AI model and caption style selections are independent
+            });
+        });
+
+        // Add a function to validate form selections
+        function validateFormSelections() {
+            // Ensure an AI provider is selected
+            const selectedAIProvider = document.querySelector('input[name="ai_provider"]:checked');
+            if (!selectedAIProvider) {
+                // If no AI provider is selected, select the first available one
+                const firstAIProvider = document.querySelector('input[name="ai_provider"]');
+                if (firstAIProvider) {
+                    firstAIProvider.checked = true;
+                    updateModelStyles(firstAIProvider);
+                }
+            }
+
+            // Ensure a caption style is selected
+            const selectedCaptionStyle = document.querySelector('input[name="caption_style"]:checked');
+            if (!selectedCaptionStyle) {
+                // If no caption style is selected, select the default (casual)
+                const defaultCaptionStyle = document.getElementById('style-casual');
+                if (defaultCaptionStyle) {
+                    defaultCaptionStyle.checked = true;
+                    updateStyleStyles(defaultCaptionStyle);
+                }
+            }
+        }
+
+        // Validate selections when the page loads
+        validateFormSelections();
+
+        // Handle Caption Style selection
+        const captionStyleRadios = document.querySelectorAll('input[name="caption_style"]');
+        captionStyleRadios.forEach(radio => {
+            // Set initial styles for checked radio
+            if (radio.checked) {
+                updateStyleStyles(radio);
+            }
+
+            radio.addEventListener('change', function() {
+                // Update visual styles
+                updateStyleStyles(this);
+
+                // Ensure this radio button is actually checked in the DOM
+                captionStyleRadios.forEach(r => {
+                    r.checked = (r === this);
+                });
+            });
+
+            // Add click handler for the label to ensure the radio button is properly checked
+            const label = document.querySelector(`label[for="${radio.id}"]`);
+            if (label) {
+                label.addEventListener('click', function(e) {
+                    // Don't prevent default behavior - let the browser handle the radio selection
+                    // e.preventDefault();
+
+                    // Just ensure the styles are updated
+                    setTimeout(() => {
+                        updateStyleStyles(radio);
+                    }, 10);
+                });
+            }
+        });
+
+        // Function to update AI Model selection styles
+        function updateModelStyles(selectedRadio) {
+            // Reset all
+            aiModelRadios.forEach(radio => {
+                const label = document.querySelector(`label[for="${radio.id}"]`);
+                const icon = label.querySelector('i');
+
+                if (radio === selectedRadio) {
+                    // Selected styles
+                    label.classList.add('border-purple-500', 'bg-purple-50');
+                    label.classList.remove('border-gray-200', 'bg-gray-50');
+                    icon.classList.add('text-purple-600');
+                    icon.classList.remove('text-gray-600');
+                } else {
+                    // Unselected styles
+                    label.classList.remove('border-purple-500', 'bg-purple-50');
+                    label.classList.add('border-gray-200', 'bg-gray-50');
+                    icon.classList.remove('text-purple-600');
+                    icon.classList.add('text-gray-600');
+                }
+            });
+        }
+
+        // Function to update Caption Style selection styles
+        function updateStyleStyles(selectedRadio) {
+            // Reset all
+            captionStyleRadios.forEach(radio => {
+                const label = document.querySelector(`label[for="${radio.id}"]`);
+                const icon = label.querySelector('i');
+
+                if (radio === selectedRadio) {
+                    // Selected styles
+                    label.classList.add('border-purple-500', 'bg-purple-50');
+                    label.classList.remove('border-gray-200', 'bg-gray-50');
+                    icon.classList.add('text-purple-600');
+                    icon.classList.remove('text-gray-600');
+                } else {
+                    // Unselected styles
+                    label.classList.remove('border-purple-500', 'bg-purple-50');
+                    label.classList.add('border-gray-200', 'bg-gray-50');
+                    icon.classList.remove('text-purple-600');
+                    icon.classList.add('text-gray-600');
+                }
+            });
+        }
+
+        const form = document.getElementById('generateTextForm');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressStatus = document.getElementById('progressStatus');
+        const clipProgressContainer = document.getElementById('clipProgress');
+
+        // Store form data for submission
+        let formData = null;
+
+        form.addEventListener('submit', function(e) {
+            // Only show progress for POST requests
+            if (form.method.toLowerCase() === 'post') {
+                e.preventDefault();
+
+                // Ensure the selected options are properly set before submission
+                const selectedCaptionStyle = document.querySelector('input[name="caption_style"]:checked');
+                const selectedAIProvider = document.querySelector('input[name="ai_provider"]:checked');
+
+                // Validate that we have both selections
+                if (!selectedCaptionStyle || !selectedAIProvider) {
+                    alert('Please select both an AI model and a caption style before proceeding.');
+                    return false;
+                }
+
+                // // console.log(`Submitting form with AI provider: ${selectedAIProvider.value}, Caption style: ${selectedCaptionStyle.value}`);
+
+                // Create a new FormData object to ensure we're getting the current form state
+                formData = new FormData();
+
+                // Manually add the form values to ensure they're correct
+                formData.append('ai_provider', selectedAIProvider.value);
+                formData.append('caption_style', selectedCaptionStyle.value);
+                formData.append('num_caption_variations', document.querySelector('input[name="num_caption_variations"]').value);
+                formData.append('num_hashtags', document.querySelector('input[name="num_hashtags"]').value);
+
+                // Show progress container
+                progressContainer.classList.remove('hidden');
+
+                // Disable form inputs
+                Array.from(form.elements).forEach(input => {
+                    input.disabled = true;
+                });
+
+                // Get selected AI provider
+                const aiProvider = selectedAIProvider.value;
+
+                // Initialize progress tracking
+                initializeProgressTracking(aiProvider);
+            }
+        });
+
+        function initializeProgressTracking(aiProvider) {
+            // Set initial progress
+            updateProgress(5, "Initializing text generation...");
+
+            // Get clips from the page
+            const clipElements = document.querySelectorAll('.grid.grid-cols-1.md\\:grid-cols-2.gap-6.mb-6 > div');
+            const totalClips = clipElements.length;
+
+            // Create clip progress indicators
+            clipProgressContainer.innerHTML = '';
+            for (let i = 0; i < totalClips; i++) {
+                const clipName = clipElements[i].querySelector('.text-sm.text-gray-600').textContent.trim();
+                const clipProgressElement = document.createElement('div');
+                clipProgressElement.className = 'mb-2';
+                clipProgressElement.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs font-medium text-gray-700">Clip ${i+1}: ${clipName}</span>
+                        <span class="text-xs text-gray-500" id="clip-status-${i}">Waiting...</span>
+                    </div>
+                    <div class="w-full bg-gray-100 rounded-full h-2">
+                        <div id="clip-progress-${i}" class="bg-blue-400 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                `;
+                clipProgressContainer.appendChild(clipProgressElement);
+            }
+
+            // Start the form submission with progress tracking
+            submitFormWithProgress(formData, aiProvider, totalClips);
+        }
+
+        function submitFormWithProgress(formData, aiProvider, totalClips) {
+            // Instead of using an iframe, we'll use a direct form submission
+            // but first ensure the form fields are correctly set
+
+            // Get the form fields
+            const aiProviderInputs = document.querySelectorAll('input[name="ai_provider"]');
+            const captionStyleInputs = document.querySelectorAll('input[name="caption_style"]');
+            const numCaptionsInput = document.querySelector('input[name="num_caption_variations"]');
+            const numHashtagsInput = document.querySelector('input[name="num_hashtags"]');
+
+            // Uncheck all radio buttons first
+            aiProviderInputs.forEach(input => input.checked = false);
+            captionStyleInputs.forEach(input => input.checked = false);
+
+            // Get the values from the FormData
+            const selectedAIProviderValue = formData.get('ai_provider');
+            const selectedCaptionStyleValue = formData.get('caption_style');
+
+            // Find and check the correct radio buttons
+            const selectedAIProvider = document.querySelector(`input[name="ai_provider"][value="${selectedAIProviderValue}"]`);
+            const selectedCaptionStyle = document.querySelector(`input[name="caption_style"][value="${selectedCaptionStyleValue}"]`);
+
+            // // console.log(`Setting AI provider to: ${selectedAIProviderValue}`);
+            // // console.log(`Setting caption style to: ${selectedCaptionStyleValue}`);
+
+            // Check the selected radio buttons
+            if (selectedAIProvider) {
+                selectedAIProvider.checked = true;
+            } else {
+                console.error(`Could not find AI provider with value: ${selectedAIProviderValue}`);
+            }
+
+            if (selectedCaptionStyle) {
+                selectedCaptionStyle.checked = true;
+            } else {
+                console.error(`Could not find caption style with value: ${selectedCaptionStyleValue}`);
+            }
+
+            // Log the form state before submission
+            // // console.log("Form state before submission:");
+            // // console.log(`AI provider checked: ${document.querySelector('input[name="ai_provider"]:checked')?.value}`);
+            // // console.log(`Caption style checked: ${document.querySelector('input[name="caption_style"]:checked')?.value}`);
+
+            // Create a hidden form for submission
+            const hiddenForm = document.createElement('form');
+            hiddenForm.method = 'POST';
+            hiddenForm.action = form.action;
+            hiddenForm.style.display = 'none';
+
+            // Add the form fields
+            for (const [key, value] of formData.entries()) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = value;
+                hiddenForm.appendChild(input);
+            }
+
+            // Add the form to the document
+            document.body.appendChild(hiddenForm);
+
+            // Submit the form
+            // // console.log("Submitting form with data:", Object.fromEntries(formData.entries()));
+            hiddenForm.submit();
+
+            // Start progress simulation based on typical processing times
+            let currentClip = 0;
+            let overallProgress = 5;
+            let processingComplete = false;
+
+            // Estimate time based on AI provider
+            const isDeepSeek = aiProvider === 'deepseek';
+            const estimatedTimePerClip = isDeepSeek ? 30000 : 15000; // 30 seconds for DeepSeek, 15 for others
+
+            // Update overall progress
+            function updateOverallProgress() {
+                overallProgress = 5 + (currentClip * 95 / totalClips);
+                updateProgress(overallProgress, `Processing clip ${currentClip+1} of ${totalClips}...`);
+            }
+
+            // Process each clip with realistic timing
+            function processNextClip() {
+                if (currentClip < totalClips && !processingComplete) {
+                    // Update clip status to "Processing"
+                    document.getElementById(`clip-status-${currentClip}`).textContent = "Processing...";
+
+                    // Simulate caption generation (first half of clip processing)
+                    updateClipProgress(currentClip, 10);
+                    setTimeout(() => {
+                        if (!processingComplete) {
+                            updateClipProgress(currentClip, 40);
+                            updateProgressStatus(`Generating captions for clip ${currentClip+1}...`);
+                        }
+                    }, estimatedTimePerClip * 0.2);
+
+                    // Simulate hashtag generation (second half of clip processing)
+                    setTimeout(() => {
+                        if (!processingComplete) {
+                            updateClipProgress(currentClip, 70);
+                            updateProgressStatus(`Generating hashtags for clip ${currentClip+1}...`);
+                        }
+                    }, estimatedTimePerClip * 0.5);
+
+                    // Complete clip processing
+                    setTimeout(() => {
+                        if (!processingComplete) {
+                            updateClipProgress(currentClip, 100);
+                            document.getElementById(`clip-status-${currentClip}`).textContent = "Completed";
+                            document.getElementById(`clip-progress-${currentClip}`).classList.remove('bg-blue-400');
+                            document.getElementById(`clip-progress-${currentClip}`).classList.add('bg-green-500');
+
+                            // Move to next clip
+                            currentClip++;
+                            updateOverallProgress();
+
+                            // Process next clip or finish
+                            if (currentClip < totalClips) {
+                                processNextClip();
+                            } else {
+                                // All clips processed, wait for redirect
+                                updateProgressStatus("All clips processed! Finalizing results...");
+                                updateProgress(95, "Finalizing results...");
+
+                                // Set a timeout to force completion after a reasonable wait time
+                                // This ensures users aren't stuck if redirect detection fails
+                                setTimeout(() => {
+                                    if (!processingComplete) {
+                                        completeProgress();
+                                    }
+                                }, 10000); // 10 second timeout
+                            }
+                        }
+                    }, estimatedTimePerClip * 0.9);
+                }
+            }
+
+            // Function to complete the progress and redirect
+            function completeProgress() {
+                if (!processingComplete) {
+                    processingComplete = true;
+                    updateProgress(100, "Text generation complete! Redirecting to results...");
+
+                    // Force redirect to the post page after a short delay
+                    setTimeout(() => {
+                        window.location.href = '/content-pipeline/post';
+                    }, 1500);
+                }
+            }
+
+            // Start processing the first clip
+            updateOverallProgress();
+            processNextClip();
+
+            // Set a global timeout as a fallback
+            setTimeout(() => {
+                if (!processingComplete) {
+                    completeProgress();
+                }
+            }, estimatedTimePerClip * totalClips * 1.5); // 1.5x the estimated total time
+        }
+
+        function updateProgress(percent, message = null) {
+            progressBar.style.width = `${percent}%`;
+            if (message) {
+                updateProgressStatus(message);
+            }
+        }
+
+        function updateProgressStatus(message) {
+            progressStatus.textContent = message;
+        }
+
+        function updateClipProgress(clipIndex, percent) {
+            const clipProgressBar = document.getElementById(`clip-progress-${clipIndex}`);
+            if (clipProgressBar) {
+                clipProgressBar.style.width = `${percent}%`;
+            }
+        }
+    });
+</script>
+{% endblock %}

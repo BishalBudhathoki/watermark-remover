@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Content Repurposing Pipeline{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-12">
+    <div class="container mx-auto px-4">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-16">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">Content Repurposing Pipeline</h1>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Transform your videos into engaging content for multiple social media platforms.
+                    Upload, split, generate text, and post - all in one place.
+                </p>
+            </div>
+
+            <!-- Pipeline Steps -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-16">
+                <!-- Step 1: Upload -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden transform hover:-translate-y-2 transition-all duration-300">
+                    <div class="h-2 bg-blue-600"></div>
+                    <div class="p-8">
+                        <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mb-6">
+                            <i class="fas fa-upload text-blue-600 text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-4">1. Upload Video</h3>
+                        <p class="text-gray-600 mb-8">
+                            Upload your video to start the repurposing process.
+                            Supports various video formats.
+                        </p>
+                        <a href="{{ url_for('content_pipeline.upload') }}"
+                           class="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium">
+                            Start Upload
+                            <i class="fas fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform duration-200"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Step 2: Split -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden transform hover:-translate-y-2 transition-all duration-300">
+                    <div class="h-2 bg-indigo-600"></div>
+                    <div class="p-8">
+                        <div class="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center mb-6">
+                            <i class="fas fa-cut text-indigo-600 text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-4">2. Split Video</h3>
+                        <p class="text-gray-600 mb-8">
+                            Split your video into smaller clips.
+                            Automatic silence detection available.
+                        </p>
+                        <a href="{{ url_for('content_pipeline.split') }}"
+                           class="inline-flex items-center text-indigo-600 hover:text-indigo-700 font-medium">
+                            Split Video
+                            <i class="fas fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform duration-200"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Step 3: Generate Text -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden transform hover:-translate-y-2 transition-all duration-300">
+                    <div class="h-2 bg-purple-600"></div>
+                    <div class="p-8">
+                        <div class="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mb-6">
+                            <i class="fas fa-comment-alt text-purple-600 text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-4">3. Generate Text</h3>
+                        <p class="text-gray-600 mb-8">
+                            Generate captions and hashtags for your clips
+                            using AI-powered text generation.
+                        </p>
+                        <a href="{{ url_for('content_pipeline.generate_text') }}"
+                           class="inline-flex items-center text-purple-600 hover:text-purple-700 font-medium">
+                            Generate Text
+                            <i class="fas fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform duration-200"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Step 4: Post -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden transform hover:-translate-y-2 transition-all duration-300">
+                    <div class="h-2 bg-pink-600"></div>
+                    <div class="p-8">
+                        <div class="w-16 h-16 bg-pink-100 rounded-2xl flex items-center justify-center mb-6">
+                            <i class="fas fa-share-alt text-pink-600 text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-4">4. Post Content</h3>
+                        <p class="text-gray-600 mb-8">
+                            Post your clips to various social media platforms
+                            with just a few clicks.
+                        </p>
+                        <a href="{{ url_for('content_pipeline.post') }}"
+                           class="inline-flex items-center text-pink-600 hover:text-pink-700 font-medium">
+                            Post Content
+                            <i class="fas fa-arrow-right ml-2 transform group-hover:translate-x-1 transition-transform duration-200"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Supported Platforms -->
+            <div class="bg-white rounded-2xl shadow-lg p-8 mb-16">
+                <h2 class="text-2xl font-bold text-gray-900 mb-8">Supported Platforms</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {% for platform in platforms %}
+                    <div class="bg-gray-50 rounded-xl p-6 flex items-center space-x-4">
+                        {% if platform == 'tiktok' %}
+                        <div class="w-12 h-12 bg-black rounded-xl flex items-center justify-center">
+                            <i class="fab fa-tiktok text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-lg font-semibold text-gray-900">TikTok</p>
+                            <p class="text-sm text-gray-600">Short-form video platform</p>
+                        </div>
+                        {% elif platform == 'instagram' %}
+                        <div class="w-12 h-12 bg-gradient-to-r from-[#405DE6] via-[#5B51D8] to-[#833AB4] rounded-xl flex items-center justify-center">
+                            <i class="fab fa-instagram text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-lg font-semibold text-gray-900">Instagram</p>
+                            <p class="text-sm text-gray-600">Photo and video sharing</p>
+                        </div>
+                        {% elif platform == 'youtube' %}
+                        <div class="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center">
+                            <i class="fab fa-youtube text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-lg font-semibold text-gray-900">YouTube</p>
+                            <p class="text-sm text-gray-600">Video sharing platform</p>
+                        </div>
+                        {% elif platform == 'twitter' %}
+                        <div class="w-12 h-12 bg-[#1DA1F2] rounded-xl flex items-center justify-center">
+                            <i class="fab fa-twitter text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-lg font-semibold text-gray-900">Twitter/X</p>
+                            <p class="text-sm text-gray-600">Microblogging platform</p>
+                        </div>
+                        {% else %}
+                        <div class="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-share-alt text-gray-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-lg font-semibold text-gray-900">{{ platform|capitalize }}</p>
+                            <p class="text-sm text-gray-600">Social media platform</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Get Started CTA -->
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-lg p-12 text-center text-white">
+                <h2 class="text-3xl font-bold mb-6">Ready to Repurpose Your Content?</h2>
+                <p class="text-xl mb-8 opacity-90 max-w-3xl mx-auto">
+                    Start the content repurposing pipeline now and transform your videos into
+                    engaging content for multiple social media platforms.
+                </p>
+                <a href="{{ url_for('content_pipeline.upload') }}"
+                   class="inline-flex items-center px-8 py-4 bg-white text-blue-600 rounded-xl hover:bg-gray-100 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl">
+                    <i class="fas fa-rocket mr-2"></i>
+                    Get Started Now
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

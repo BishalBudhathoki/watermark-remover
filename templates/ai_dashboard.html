@@ -83,7 +83,7 @@
                 try {
                     const response = await fetch(`/ai_video/check-status/${videoId}`);
                     const data = await response.json();
-                    
+
                     if (data.status === 'completed') {
                         progressBar.style.width = '100%';
                         progressText.textContent = 'Processing Complete!';
@@ -116,4 +116,4 @@
         }
     </script>
 </body>
-</html> 
+</html>

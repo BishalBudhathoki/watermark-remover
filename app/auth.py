@@ -22,29 +22,29 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         auth_header = request.headers.get('Authorization')
-        
+
         if not auth_header:
             # Check for session-based authentication
             if not session.get('user'):
                 return redirect(url_for('login'))
             return f(*args, **kwargs)
-            
+
         try:
             # Extract token from Bearer header
             token = auth_header.split(' ')[1]
-            
+
             # Verify token with Supabase
             user = supabase.auth.get_user(token)
-            
+
             # Store user in request context
             request.user = user
-            
+
             return f(*args, **kwargs)
-            
+
         except Exception as e:
             logger.error(f"Authentication error: {str(e)}")
             return jsonify({"error": "Invalid authentication token"}), 401
-            
+
     return decorated_function
 
 def register_user(email: str, password: str, username: str = None):
@@ -63,7 +63,7 @@ def register_user(email: str, password: str, username: str = None):
                 }
             }
         })
-        
+
         if not auth_response.user:
             raise Exception("Failed to create user account")
 
@@ -76,9 +76,9 @@ def register_user(email: str, password: str, username: str = None):
                 'access_token': auth_response.session.access_token,
                 'email_confirmed': False
             }
-        
+
         return auth_response
-            
+
     except Exception as e:
         logger.error(f"Registration error: {str(e)}")
         raise Exception(str(e))
@@ -91,12 +91,12 @@ def login_user(email: str, password: str):
             "email": email,
             "password": password
         })
-        
+
         if auth_response.user:
             # Get username from user metadata
-            username = (auth_response.user.user_metadata.get('username') 
+            username = (auth_response.user.user_metadata.get('username')
                       or auth_response.user.email.split('@')[0])
-            
+
             # Store user session
             session['user'] = {
                 'id': auth_response.user.id,
@@ -104,9 +104,9 @@ def login_user(email: str, password: str):
                 'access_token': auth_response.session.access_token,
                 'username': username
             }
-            
+
             return auth_response
-            
+
     except Exception as e:
         logger.error(f"Login error: {str(e)}")
         raise Exception(str(e))
@@ -126,14 +126,14 @@ def get_current_user():
     try:
         if session.get('user'):
             return session['user']
-            
+
         auth_header = request.headers.get('Authorization')
         if auth_header:
             token = auth_header.split(' ')[1]
             return supabase.auth.get_user(token)
-            
+
         return None
-        
+
     except Exception as e:
         logger.error(f"Error getting current user: {str(e)}")
-        return None 
+        return None

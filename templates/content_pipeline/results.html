@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}Results - Content Repurposing Pipeline{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-12">
+    <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">Posting Results</h1>
+                <p class="text-xl text-gray-600">
+                    Your content has been posted to the selected platforms.
+                </p>
+            </div>
+
+            <!-- Results Summary -->
+            <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Summary</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-green-50 rounded-xl p-6">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">Successful Posts</p>
+                                <p class="text-2xl font-semibold text-gray-900">
+                                    {% set successful_count = 0 %}
+                                    {% for result in results %}
+                                        {% if result.result is mapping %}
+                                            {% for platform, platform_result in result.result.items() %}
+                                                {% if platform_result.success %}
+                                                    {% set successful_count = successful_count + 1 %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% elif result.result.success %}
+                                            {% set successful_count = successful_count + 1 %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {{ successful_count }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-red-50 rounded-xl p-6">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-times-circle text-red-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">Failed Posts</p>
+                                <p class="text-2xl font-semibold text-gray-900">
+                                    {% set failed_count = 0 %}
+                                    {% for result in results %}
+                                        {% if result.result is mapping %}
+                                            {% for platform, platform_result in result.result.items() %}
+                                                {% if not platform_result.success %}
+                                                    {% set failed_count = failed_count + 1 %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% elif not result.result.success %}
+                                            {% set failed_count = failed_count + 1 %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {{ failed_count }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 rounded-xl p-6">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-share-alt text-blue-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">Total Platforms</p>
+                                <p class="text-2xl font-semibold text-gray-900">
+                                    {% set platform_count = 0 %}
+                                    {% for result in results %}
+                                        {% if result.result is mapping %}
+                                            {% set platform_count = platform_count + result.result|length %}
+                                        {% else %}
+                                            {% set platform_count = platform_count + 1 %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {{ platform_count }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 rounded-lg p-4 mb-8">
+                    <div class="flex items-start">
+                        <i class="fas fa-info-circle text-blue-600 text-xl mt-1 mr-4"></i>
+                        <div>
+                            <p class="font-medium text-gray-900">Content Posted Successfully</p>
+                            <p class="text-sm text-gray-600">
+                                Your content has been posted to the selected platforms. You can view the detailed results below.
+                                Some platforms may take a few minutes to process and display your content.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <a href="{{ url_for('content_pipeline.index') }}" class="px-8 py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl">
+                        <i class="fas fa-home mr-2"></i>
+                        Back to Dashboard
+                    </a>
+                </div>
+            </div>
+
+            <!-- Detailed Results -->
+            <div class="bg-white rounded-2xl shadow-lg p-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Detailed Results</h2>
+
+                <div class="space-y-8">
+                    {% for result in results %}
+                    <div class="bg-gray-50 rounded-xl overflow-hidden">
+                        <div class="flex flex-col md:flex-row">
+                            <div class="md:w-1/3">
+                                <div class="aspect-video bg-black">
+                                    <video controls class="w-full h-full">
+                                        <source src="{{ url_for('content_pipeline.serve_clip', filename=result.clip['path'].split('/')[-1]) }}" type="video/mp4">
+                                        Your browser does not support the video tag.
+                                    </video>
+                                </div>
+                                <div class="p-4 bg-gray-100">
+                                    <p class="font-medium text-gray-900">Clip {{ loop.index }}</p>
+                                    <p class="text-sm text-gray-600">{{ result.clip['path'].split('/')[-1] }}</p>
+                                </div>
+                            </div>
+                            <div class="p-6 md:w-2/3">
+                                <h3 class="text-xl font-semibold text-gray-900 mb-4">Platform Results</h3>
+
+                                {% if result.result is mapping %}
+                                    {% for platform, platform_result in result.result.items() %}
+                                    <div class="mb-4 p-4 rounded-lg {% if platform_result.success %}bg-green-50{% else %}bg-red-50{% endif %}">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <div class="flex items-center">
+                                                {% if platform == 'tiktok' %}
+                                                <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center mr-3">
+                                                    <i class="fab fa-tiktok text-white text-sm"></i>
+                                                </div>
+                                                <span class="font-medium text-gray-900">TikTok</span>
+                                                {% elif platform == 'instagram' %}
+                                                <div class="w-8 h-8 bg-gradient-to-r from-[#405DE6] via-[#5B51D8] to-[#833AB4] rounded-full flex items-center justify-center mr-3">
+                                                    <i class="fab fa-instagram text-white text-sm"></i>
+                                                </div>
+                                                <span class="font-medium text-gray-900">Instagram</span>
+                                                {% elif platform == 'youtube' %}
+                                                <div class="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center mr-3">
+                                                    <i class="fab fa-youtube text-white text-sm"></i>
+                                                </div>
+                                                <span class="font-medium text-gray-900">YouTube</span>
+                                                {% elif platform == 'twitter' %}
+                                                <div class="w-8 h-8 bg-[#1DA1F2] rounded-full flex items-center justify-center mr-3">
+                                                    <i class="fab fa-twitter text-white text-sm"></i>
+                                                </div>
+                                                <span class="font-medium text-gray-900">Twitter/X</span>
+                                                {% else %}
+                                                <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mr-3">
+                                                    <i class="fas fa-share-alt text-gray-600 text-sm"></i>
+                                                </div>
+                                                <span class="font-medium text-gray-900">{{ platform|capitalize }}</span>
+                                                {% endif %}
+                                            </div>
+                                            <span class="text-sm px-3 py-1 rounded-full {% if platform_result.success %}bg-green-200 text-green-800{% else %}bg-red-200 text-red-800{% endif %}">
+                                                {% if platform_result.success %}Success{% else %}Failed{% endif %}
+                                            </span>
+                                        </div>
+
+                                        {% if platform_result.success %}
+                                        <div class="text-sm text-gray-600">
+                                            <p><strong>Post ID:</strong> {{ platform_result.post_id }}</p>
+                                            {% if platform_result.post_url %}
+                                            <p class="mt-1">
+                                                <strong>URL:</strong>
+                                                <a href="{{ platform_result.post_url }}" target="_blank" class="text-blue-600 hover:underline">
+                                                    {{ platform_result.post_url }}
+                                                    <i class="fas fa-external-link-alt ml-1 text-xs"></i>
+                                                </a>
+                                            </p>
+                                            {% endif %}
+                                        </div>
+                                        {% else %}
+                                        <div class="text-sm text-red-600">
+                                            <p><strong>Error:</strong> {{ platform_result.error }}</p>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="mb-4 p-4 rounded-lg {% if result.result.success %}bg-green-50{% else %}bg-red-50{% endif %}">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <div class="flex items-center">
+                                                <div class="w-8 h-8 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full flex items-center justify-center mr-3">
+                                                    <i class="fas fa-globe text-white text-sm"></i>
+                                                </div>
+                                                <span class="font-medium text-gray-900">All Platforms</span>
+                                            </div>
+                                            <span class="text-sm px-3 py-1 rounded-full {% if result.result.success %}bg-green-200 text-green-800{% else %}bg-red-200 text-red-800{% endif %}">
+                                                {% if result.result.success %}Success{% else %}Failed{% endif %}
+                                            </span>
+                                        </div>
+
+                                        {% if result.result.success %}
+                                        <div class="text-sm text-gray-600">
+                                            <p><strong>Post ID:</strong> {{ result.result.post_id }}</p>
+                                            {% if result.result.post_url %}
+                                            <p class="mt-1">
+                                                <strong>URL:</strong>
+                                                <a href="{{ result.result.post_url }}" target="_blank" class="text-blue-600 hover:underline">
+                                                    {{ result.result.post_url }}
+                                                    <i class="fas fa-external-link-alt ml-1 text-xs"></i>
+                                                </a>
+                                            </p>
+                                            {% endif %}
+                                        </div>
+                                        {% else %}
+                                        <div class="text-sm text-red-600">
+                                            <p><strong>Error:</strong> {{ result.result.error }}</p>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+
+                                <div class="mt-4">
+                                    <p class="text-sm text-gray-500"><strong>Caption:</strong></p>
+                                    <p class="text-sm text-gray-700 mt-1 p-3 bg-gray-100 rounded-lg">{{ result.clip.captions[0] }}</p>
+
+                                    <p class="text-sm text-gray-500 mt-3"><strong>Hashtags:</strong></p>
+                                    <p class="text-sm text-gray-700 mt-1 p-3 bg-gray-100 rounded-lg">
+                                        {% for hashtag in result.clip.hashtags %}
+                                        <span class="inline-block bg-blue-100 text-blue-800 rounded-full px-2 py-1 text-xs mr-1 mb-1">#{{ hashtag }}</span>
+                                        {% endfor %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

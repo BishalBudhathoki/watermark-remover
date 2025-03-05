@@ -33,11 +33,11 @@ def get_download_path(platform: str, filename: str) -> Path:
     filename_parts = Path(filename).parts
     if any(platform in part for part in filename_parts):
         filename = filename_parts[-1]
-    
+
     # If filename already contains downloads directory, strip it
     if 'downloads' in filename_parts:
         filename = filename_parts[-1]
-    
+
     platform_dirs = {
         'tiktok': TIKTOK_DIR,
         'instagram': INSTAGRAM_DIR,
@@ -51,7 +51,7 @@ def get_relative_path(absolute_path: Path) -> str:
         # Ensure the path is resolved and relative to APP_ROOT
         abs_path = absolute_path.resolve()
         rel_path = abs_path.relative_to(APP_ROOT)
-        
+
         # If path is in downloads directory but doesn't have platform prefix,
         # add it based on the directory structure
         if 'downloads' in rel_path.parts:
@@ -59,7 +59,7 @@ def get_relative_path(absolute_path: Path) -> str:
             if platform_index < len(rel_path.parts):
                 platform = rel_path.parts[platform_index]
                 return str(Path(platform) / rel_path.name)  # Remove downloads from path
-        
+
         return str(rel_path)
     except ValueError:
         # If path is already relative to downloads directory
@@ -77,4 +77,4 @@ def is_safe_path(path: Path) -> bool:
         resolved_path = path.resolve()
         return resolved_path.is_relative_to(APP_ROOT)
     except (ValueError, RuntimeError):
-        return False 
+        return False
