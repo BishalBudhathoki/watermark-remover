@@ -387,7 +387,7 @@
                     return false;
                 }
 
-                // // // // // console.log(`Submitting form with AI provider: ${selectedAIProvider.value}, Caption style: ${selectedCaptionStyle.value}`);
+                // // // // // // console.log(`Submitting form with AI provider: ${selectedAIProvider.value}, Caption style: ${selectedCaptionStyle.value}`);
 
                 // Create a new FormData object to ensure we're getting the current form state
                 formData = new FormData();
@@ -466,8 +466,8 @@
             const selectedAIProvider = document.querySelector(`input[name="ai_provider"][value="${selectedAIProviderValue}"]`);
             const selectedCaptionStyle = document.querySelector(`input[name="caption_style"][value="${selectedCaptionStyleValue}"]`);
 
-            // // // // // console.log(`Setting AI provider to: ${selectedAIProviderValue}`);
-            // // // // // console.log(`Setting caption style to: ${selectedCaptionStyleValue}`);
+            // // // // // // console.log(`Setting AI provider to: ${selectedAIProviderValue}`);
+            // // // // // // console.log(`Setting caption style to: ${selectedCaptionStyleValue}`);
 
             // Check the selected radio buttons
             if (selectedAIProvider) {
@@ -483,9 +483,9 @@
             }
 
             // Log the form state before submission
-            // // // // // console.log("Form state before submission:");
-            // // // // // console.log(`AI provider checked: ${document.querySelector('input[name="ai_provider"]:checked')?.value}`);
-            // // // // // console.log(`Caption style checked: ${document.querySelector('input[name="caption_style"]:checked')?.value}`);
+            // // // // // // console.log("Form state before submission:");
+            // // // // // // console.log(`AI provider checked: ${document.querySelector('input[name="ai_provider"]:checked')?.value}`);
+            // // // // // // console.log(`Caption style checked: ${document.querySelector('input[name="caption_style"]:checked')?.value}`);
 
             // Create a hidden form for submission
             const hiddenForm = document.createElement('form');
@@ -506,7 +506,7 @@
             document.body.appendChild(hiddenForm);
 
             // Submit the form
-            // // // // // console.log("Submitting form with data:", Object.fromEntries(formData.entries()));
+            // // // // // // console.log("Submitting form with data:", Object.fromEntries(formData.entries()));
             hiddenForm.submit();
 
             // Start progress simulation based on typical processing times

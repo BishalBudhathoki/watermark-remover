@@ -17,7 +17,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Create Blueprint
-instagram_bp = Blue# # # # # print('instagram', __name__)
+instagram_bp = Blue# # # # # # print('instagram', __name__)
 
 # Define download and processed folders
 BASE_DIR = Path(__file__).resolve().parent

@@ -42,11 +42,11 @@ def main():
     hashtags = [tag.strip() for tag in hashtags_input.split(",") if tag.strip()]
 
     # Choose platforms
-    # # # # # print("\n=== Available Platforms ===")
-    # # # # # print("1. TikTok")
-    # # # # # print("2. Instagram Reels")
-    # # # # # print("3. YouTube Shorts")
-    # # # # # print("4. All Platforms")
+    # # # # # # print("\n=== Available Platforms ===")
+    # # # # # # print("1. TikTok")
+    # # # # # # print("2. Instagram Reels")
+    # # # # # # print("3. YouTube Shorts")
+    # # # # # # print("4. All Platforms")
 
     choice = input("Choose a platform (1-4): ")
 
@@ -60,13 +60,13 @@ def main():
             hashtags=hashtags
         )
 
-        # # # # # print("\n=== TikTok Posting Result ===")
-        # # # # # print(f"Success: {result['success']}")
+        # # # # # # print("\n=== TikTok Posting Result ===")
+        # # # # # # print(f"Success: {result['success']}")
         if result['success']:
-            # # # # # print(f"Post URL: {result['post_url']}")
-            # # # # # print(f"Post ID: {result['post_id']}")
+            # # # # # # print(f"Post URL: {result['post_url']}")
+            # # # # # # print(f"Post ID: {result['post_id']}")
         else:
-            # # # # # print(f"Error: {result['error']}")
+            # # # # # # print(f"Error: {result['error']}")
 
     elif choice == "2":
         # Post to Instagram
@@ -78,13 +78,13 @@ def main():
             hashtags=hashtags
         )
 
-        # # # # # print("\n=== Instagram Posting Result ===")
-        # # # # # print(f"Success: {result['success']}")
+        # # # # # # print("\n=== Instagram Posting Result ===")
+        # # # # # # print(f"Success: {result['success']}")
         if result['success']:
-            # # # # # print(f"Post URL: {result['post_url']}")
-            # # # # # print(f"Post ID: {result['post_id']}")
+            # # # # # # print(f"Post URL: {result['post_url']}")
+            # # # # # # print(f"Post ID: {result['post_id']}")
         else:
-            # # # # # print(f"Error: {result['error']}")
+            # # # # # # print(f"Error: {result['error']}")
 
     elif choice == "3":
         # Post to YouTube
@@ -96,13 +96,13 @@ def main():
             hashtags=hashtags
         )
 
-        # # # # # print("\n=== YouTube Posting Result ===")
-        # # # # # print(f"Success: {result['success']}")
+        # # # # # # print("\n=== YouTube Posting Result ===")
+        # # # # # # print(f"Success: {result['success']}")
         if result['success']:
-            # # # # # print(f"Post URL: {result['post_url']}")
-            # # # # # print(f"Post ID: {result['post_id']}")
+            # # # # # # print(f"Post URL: {result['post_url']}")
+            # # # # # # print(f"Post ID: {result['post_id']}")
         else:
-            # # # # # print(f"Error: {result['error']}")
+            # # # # # # print(f"Error: {result['error']}")
 
     elif choice == "4":
         # Post to all platforms
@@ -129,15 +129,15 @@ def main():
             platforms_data=platforms_data
         )
 
-        # # # # # print("\n=== All Platforms Posting Results ===")
+        # # # # # # print("\n=== All Platforms Posting Results ===")
         for platform, result in results.items():
-            # # # # # print(f"\n{platform.capitalize()}:")
-            # # # # # print(f"  Success: {result['success']}")
+            # # # # # # print(f"\n{platform.capitalize()}:")
+            # # # # # # print(f"  Success: {result['success']}")
             if result['success']:
-                # # # # # print(f"  Post URL: {result['post_url']}")
-                # # # # # print(f"  Post ID: {result['post_id']}")
+                # # # # # # print(f"  Post URL: {result['post_url']}")
+                # # # # # # print(f"  Post ID: {result['post_id']}")
             else:
-                # # # # # print(f"  Error: {result['error']}")
+                # # # # # # print(f"  Error: {result['error']}")
 
     else:
         logger.error("Invalid choice")

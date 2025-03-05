@@ -15,16 +15,16 @@ def main():
     masked_id = client_id[:4] + '*' * (len(client_id) - 8) + client_id[-4:] if len(client_id) > 8 else '****'
     masked_secret = client_secret[:4] + '*' * (len(client_secret) - 8) + client_secret[-4:] if len(client_secret) > 8 else '****'
 
-    # # # # print(f"Instagram Client ID: {masked_id}")
-    # # # # print(f"Instagram Client Secret: {masked_secret}")
+    # # # # # print(f"Instagram Client ID: {masked_id}")
+    # # # # # print(f"Instagram Client Secret: {masked_secret}")
 
     # Run the app
     try:
         subprocess.run([sys.executable, "app.py"], check=True)
     except KeyboardInterrupt:
-        # # # # print("\nApplication stopped by user")
+        # # # # # print("\nApplication stopped by user")
     except subprocess.CalledProcessError as e:
-        # # # # print(f"Application exited with error code {e.returncode}")
+        # # # # # print(f"Application exited with error code {e.returncode}")
 
 if __name__ == "__main__":
     main()
