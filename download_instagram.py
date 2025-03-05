@@ -87,15 +87,15 @@ def main():
         try:
             # Attempt to log in to Instagram
             loader.login(username, password)
-            # # # print("Login successful!")
+            # # # # print("Login successful!")
         except instaloader.exceptions.BadCredentialsException:
-            # # # print("Error: Invalid Instagram username or password.")
+            # # # # print("Error: Invalid Instagram username or password.")
             sys.exit(1)
         except instaloader.exceptions.TwoFactorAuthRequiredException:
-            # # # print("Error: Two-factor authentication is required.")
+            # # # # print("Error: Two-factor authentication is required.")
             sys.exit(1)
         except instaloader.exceptions.InvalidArgumentException:
-            # # # print("Error: Invalid argument provided.")
+            # # # # print("Error: Invalid argument provided.")
             sys.exit(1)
 
     try:
@@ -105,16 +105,16 @@ def main():
         # Download all posts from the profile
         download_posts(loader, profile)
 
-        # # # print(f"All posts downloaded successfully from the profile: {target_profile}")
+        # # # # print(f"All posts downloaded successfully from the profile: {target_profile}")
 
     except instaloader.exceptions.ProfileNotExistsException:
-        # # # print(f"Error: The profile '{target_profile}' does not exist.")
+        # # # # print(f"Error: The profile '{target_profile}' does not exist.")
 
     except instaloader.exceptions.PrivateProfileNotFollowedException:
-        # # # print(f"Error: The profile '{target_profile}' is private and requires following.")
+        # # # # print(f"Error: The profile '{target_profile}' is private and requires following.")
 
     except Exception as e:
-        # # # print(f"An error occurred: {str(e)}")
+        # # # # print(f"An error occurred: {str(e)}")
 
 if __name__ == "__main__":
     main()

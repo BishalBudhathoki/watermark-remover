@@ -429,7 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedVideos = [];
 
     function showStatus(message, type = 'info') {
-        // // // console.log(`Status message: ${message} (${type})`);
+        // // // // console.log(`Status message: ${message} (${type})`);
         const statusMessage = document.getElementById('statusMessage');
         statusMessage.textContent = message;
         statusMessage.style.display = 'block';
@@ -581,7 +581,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (result.success) {
                     showStatus(`Successfully uploaded "${video.title}" to YouTube Shorts!`);
-                    // // // console.log(`Video uploaded successfully: ${result.video_id}`);
+                    // // // // console.log(`Video uploaded successfully: ${result.video_id}`);
 
                     const videoUrl = `https://www.youtube.com/watch?v=${result.video_id}`;
                     window.open(videoUrl, '_blank');
