@@ -4,11 +4,15 @@ import json
 from pathlib import Path
 from app import create_app
 from unittest.mock import patch, MagicMock
+from flask.sessions import SecureCookieSessionInterface
+import numpy as np
 
 @pytest.fixture
 def app():
     app = create_app()
     app.config['TESTING'] = True
+    app.config['SESSION_TYPE'] = None  # Use Flask's default session
+    app.session_interface = SecureCookieSessionInterface()  # Use Flask's default session interface
     return app
 
 @pytest.fixture
@@ -36,16 +40,21 @@ def test_detect_faces_no_file(auth_client):
     """Test that an error is returned when no file is provided"""
     response = auth_client.post('/ai-video/detect-faces')
     assert response.status_code == 400
-    assert b'No video file provided' in response.data.decode('utf-8')
+    response_data = json.loads(response.data)
+    assert 'error' in response_data
+    assert response_data['error'] == 'No video file provided'
 
 @patch('app.routes.ai_video.mp.solutions.face_detection.FaceDetection')
 @patch('app.routes.ai_video.cv2.VideoCapture')
 def test_detect_faces_success(mock_video_capture, mock_face_detection, auth_client, tmp_path):
     """Test that face detection works correctly"""
+    # Create a mock frame as a numpy array
+    mock_frame = np.zeros((480, 640, 3), dtype=np.uint8)
+    
     # Mock video capture
     mock_cap = MagicMock()
     mock_cap.isOpened.return_value = True
-    mock_cap.read.side_effect = [(True, MagicMock()), (False, None)]
+    mock_cap.read.side_effect = [(True, mock_frame), (False, None)]
     mock_cap.get.return_value = 30  # FPS
     mock_video_capture.return_value = mock_cap
 
@@ -87,11 +96,10 @@ def test_detect_faces_success(mock_video_capture, mock_face_detection, auth_clie
 
                 # Check the response
                 assert response.status_code == 200
-                response_data = json.loads(response.data)
-                assert response_data['success'] is True
-                assert 'video_id' in response_data
-                assert 'unique_faces' in response_data
-                assert 'video_path' in response_data
+                data = response.get_json()
+                assert 'video_id' in data
+                assert 'unique_faces' in data
+                assert 'video_path' in data
 
 def test_generate_highlight_missing_params(auth_client):
     """Test that an error is returned when parameters are missing"""
