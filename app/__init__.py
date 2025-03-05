@@ -126,6 +126,7 @@ def create_app():
     app.register_blueprint(content_pipeline_bp)
     app.register_blueprint(media_bp)
     app.register_blueprint(social_auth_bp)
+    app.register_blueprint(views_bp)
 
     # Add context processor for datetime
     @app.context_processor
