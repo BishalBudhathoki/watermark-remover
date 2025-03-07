@@ -12,12 +12,13 @@ from .routes.content_pipeline import content_pipeline_bp
 from .routes.auth_routes import social_auth_bp
 from pathlib import Path
 from app.routes.views import views_bp
+from config import Config
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def create_app():
+def create_app(config_class=Config):
     # Load environment variables first
     load_dotenv()
 
@@ -40,6 +41,7 @@ def create_app():
     app = Flask(__name__,
                 template_folder='../templates',  # Point to templates directory
                 static_folder='../static')       # Point to static directory
+    app.config.from_object(config_class)
 
     # Initialize Flask app with session settings
     app.config.update(
@@ -233,3 +235,6 @@ def create_app():
         return redirect(url_for('login'))
 
     return app
+
+# Create the app instance
+app = create_app()

@@ -1,12 +1,42 @@
+# Core dependencies
+flask==3.0.3
+flask-cors==5.0.0
+python-dotenv>=1.0.0,<1.1.0
+requests==2.32.3
+aiohttp==3.11.8
+pydantic>=2.10.4
+pydantic-settings>=2.0.0
+
+# AI and Language Processing
+openai>=1.58.1,<2.0.0
+langchain==0.3.14
+langchain-openai>=0.3.1,<0.4.0
+tiktoken>=0.7.0,<0.8.0
+google-generativeai==0.7.2
+# Temporarily commenting out deepseek-api to resolve conflicts
+# deepseek-api==0.5.3
+
+# Authentication and Security
+authlib>=0.15.4,<0.16.0
+PyJWT[crypto]==2.9.0
+
+# Testing
+pytest==8.3.2
+black==24.8.0
+
+# AWS
+boto3==1.35.53
+
+# HTTP Clients
+httpx==0.27.2
+
+# Supabase
+supabase>=2.6.0,<3.0.0
+
 # Core Framework
-Flask==3.0.0
-Werkzeug==3.0.1
-gunicorn==21.2.0
-python-dotenv==1.0.0
 Flask-Mail==0.9.1
 
 # Database and Authentication
-supabase==2.11.0
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 Flask-Login==0.6.3
@@ -17,9 +47,6 @@ redis==5.2.1
 Flask-Caching==2.1.0
 
 # API and Networking
-requests==2.31.0
-aiohttp>=3.11.1
-httpx==0.26.0
 tweepy==4.14.0
 python-twitter-v2==0.8.1
 
@@ -34,7 +61,6 @@ numpy==1.26.3
 pydub>=0.25.1
 
 # Web Framework Extensions
-flask-cors==4.0.0
 flask-session==0.5.0
 
 # Web APIs
@@ -49,9 +75,7 @@ prometheus-flask-exporter==0.23.0
 sentry-sdk[flask]==1.40.0
 
 # Development and Testing
-pytest==7.4.4
 pytest-cov==4.1.0
-black==24.1.1
 flake8==7.0.0
 mypy==1.8.0
 
@@ -62,8 +86,9 @@ Jinja2==3.1.3
 
 # Performance and Optimization
 uvicorn[standard]==0.30.6
+# Fixed the conflicting dependencies by using compatible versions
 fastapi==0.111.0
-pydantic==2.9.2
+starlette>=0.37.2,<0.38.0
 
 # Utilities
 python-slugify==8.0.4
@@ -81,13 +106,11 @@ newrelic==9.6.0
 
 face_recognition
 # Text generation
-openai==0.28.0
-tiktoken>=0.4.0,<0.6.0
-# git+https://github.com/rabilrbl/deepseek-api.git  # Still commenting out until base dependencies work
-google-generativeai>=0.3.0
-
-# Utilities
 validators>=0.22.0
 pyyaml>=6.0.1
 colorlog>=6.7.0
-python-magic>=0.4.27
+
+# Dependencies that need updates
+certifi>=2024.07.04
+charset_normalizer>=3.4.0
+aiofiles>=22.0,<24.0
