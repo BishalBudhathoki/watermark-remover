@@ -10,6 +10,8 @@ import logging
 import json
 from typing import List, Dict, Any, Optional, Union
 from enum import Enum
+import requests
+import base64
 
 # Configure logging
 logging.basicConfig(
@@ -240,7 +242,7 @@ class TextGenerator:
             frame_descriptions: List of frame descriptions extracted from the video
 
         Returns:
-            List of generated hashtags
+            List of generated hashtags with # symbol
         """
         # Add caption style to the prompt
         style_description = "friendly and popular"
@@ -249,64 +251,17 @@ class TextGenerator:
         elif caption_style == "humorous":
             style_description = "trending and funny"
 
-        # Detect if this is likely a comedy video based on filename or description
-        is_comedy = False
-        comedy_keywords = ["funny", "comedy", "laugh", "hilarious", "joke", "humor", "prank", "gag", "blooper"]
-        for keyword in comedy_keywords:
-            if keyword.lower() in video_description.lower():
-                is_comedy = True
-                break
-
         # Create a detailed content description based on video frames if available
         content_description = video_description
         if frame_descriptions and len(frame_descriptions) > 0:
-            # Create a detailed description of the video content based on frames
             content_description = f"{video_description}\n\nDetailed video content analysis:"
-
-            # Check for comedy content in frame descriptions
-            comedy_frames = 0
-
-            # Add frame descriptions with analysis
             for i, frame in enumerate(frame_descriptions):
                 timestamp = frame.get("timestamp", 0)
                 position = frame.get("position", f"{timestamp:.2f}s")
-
-                # Include analysis summary if available
                 analysis = frame.get("analysis", {})
                 analysis_summary = analysis.get("summary", "")
-
-                # Check if this frame might indicate comedy
-                if "content_type" in analysis and "comedy" in analysis.get("content_type", "").lower():
-                    comedy_frames += 1
-
                 if analysis_summary:
                     content_description += f"\n- Frame {i+1} ({position}): {analysis_summary}"
-                else:
-                    content_description += f"\n- Frame {i+1} ({position}): A frame from the video showing content at timestamp {position}."
-
-                # Add more detailed analysis if available
-                if "has_faces" in analysis and analysis["has_faces"]:
-                    content_description += f" Shows {analysis.get('num_faces', 'one or more')} people."
-
-                if "has_text" in analysis and analysis["has_text"]:
-                    content_description += " Contains visible text."
-
-            # If multiple frames suggest comedy, note this in the content description
-            if comedy_frames >= 2 or is_comedy:
-                content_description += "\n\nThis appears to be a comedy or humorous video based on content analysis."
-                is_comedy = True
-
-            content_description += "\n\nPlease analyze these frames to generate hashtags that accurately reflect the actual video content, not just the title."
-
-        # Adjust the prompt based on content type
-        genre_guidance = ""
-        if is_comedy:
-            genre_guidance = """
-            This is a COMEDY video. Generate funny, trending hashtags that match the humorous tone.
-            Include popular comedy and humor hashtags.
-            DO NOT generate dark, spooky, or mysterious hashtags regardless of lighting conditions.
-            Focus on the humor and entertainment value of the content.
-            """
 
         prompt = f"""
         Generate {num_hashtags} relevant and trending hashtags for a social media post about the following video.
@@ -314,16 +269,14 @@ class TextGenerator:
 
         Video Content: {content_description}
 
-        {genre_guidance}
-
-        IMPORTANT: DO NOT misinterpret lighting conditions or color tones as mood indicators.
-        Low lighting does NOT mean the content is spooky, dark, or mysterious.
-        Red tones do NOT indicate horror or suspense.
-
-        The hashtags should be relevant to the actual content shown in the video frames, include a mix of popular and niche tags, and help maximize reach.
-        Make sure the hashtags match the requested {caption_style} style.
-        Focus on what's actually happening in the video, not just the title.
-        Provide only the hashtags without the # symbol, one per line, without numbering or additional text.
+        IMPORTANT:
+        - Focus on what's actually happening in the video, not assumptions
+        - Include a mix of popular and specific hashtags
+        - Make hashtags relevant to the actual content shown
+        - Do not include the # symbol in your response
+        - Provide only the hashtags, one per line
+        - No numbering or additional text
+        - No spaces in hashtags
         """
 
         if self.model_type == AIModel.OPENAI:
@@ -333,7 +286,7 @@ class TextGenerator:
         elif self.model_type == AIModel.GEMINI:
             hashtags = self._generate_with_gemini(prompt, num_hashtags)
 
-        # Clean up hashtags (remove # if present, remove spaces)
+        # Clean up hashtags (remove # if present, remove spaces) and add # symbol
         cleaned_hashtags = []
         for tag in hashtags:
             tag = tag.strip()
@@ -341,7 +294,7 @@ class TextGenerator:
                 tag = tag[1:]
             tag = tag.replace(' ', '')
             if tag:
-                cleaned_hashtags.append(tag)
+                cleaned_hashtags.append(f"#{tag}")
 
         return cleaned_hashtags
 
@@ -518,14 +471,16 @@ class TextGenerator:
             start_time = time.time()
             logger.info(f"Starting Gemini API call for {num_items} items")
 
-            api_key = os.getenv("GOOGLE_API_KEY")
+            api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
             if not api_key:
                 raise ValueError("Google API key not found in environment variables")
 
-            # Use model gemini-2.0-flash as specified
-            api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
+            # Use model gemini-2.0-flash-exp as specified
+            api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={api_key}"
 
-            # Prepare payload
+            # Refined prompt: instruct Gemini to use the context and output only captions/hashtags
+            logger.info(f"Gemini prompt:\n{prompt}")
+
             payload = {
                 "contents": [{
                     "parts": [{"text": prompt}]
@@ -554,7 +509,7 @@ class TextGenerator:
             try:
                 generated_text = response_data["candidates"][0]["content"]["parts"][0]["text"]
                 text = generated_text.strip()
-                logger.info(f"Gemini API call successful with response length: {len(text)}")
+                logger.info(f"Gemini raw response:\n{text}")
             except (KeyError, IndexError) as e:
                 logger.error(f"Error parsing Gemini response: {str(e)}")
                 raise ValueError(f"Invalid Gemini API response format: {str(response_data)}")
@@ -610,3 +565,44 @@ def get_available_models() -> List[str]:
         available_models.append(AIModel.GEMINI.value)
 
     return available_models
+
+def get_gemini_vision_description(image_bytes: bytes) -> str:
+    """
+    Call Gemini Vision API (gemini-2.0-flash-exp) with an image and return a detailed, structured description.
+    """
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        logger.error("GEMINI_API_KEY not set in environment.")
+        return ""
+    api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={api_key}"
+    image_b64 = base64.b64encode(image_bytes).decode()
+    prompt = (
+        "Analyze this video frame and provide a structured JSON object with the following fields: "
+        "number_of_people (int), "
+        "main_actions (list of strings), "
+        "mood_or_emotion (string), "
+        "scene_type (string, e.g., indoor, outdoor, nature, city, etc.), "
+        "detailed_summary (string, 1-2 sentences describing the scene and context). "
+        "If you are unsure about a field, make your best guess."
+    )
+    payload = {
+        "contents": [{
+            "parts": [
+                {"text": prompt},
+                {"inlineData": {"mimeType": "image/jpeg", "data": image_b64}}
+            ]
+        }],
+        "generationConfig": {
+            "temperature": 0.4,
+            "maxOutputTokens": 256
+        }
+    }
+    headers = {'Content-Type': 'application/json'}
+    try:
+        response = requests.post(api_url, headers=headers, json=payload)
+        response.raise_for_status()
+        data = response.json()
+        return data["candidates"][0]["content"]["parts"][0]["text"].strip()
+    except Exception as e:
+        logger.error(f"Error calling Gemini Vision API: {e}")
+        return ""

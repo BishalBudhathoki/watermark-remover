@@ -64,6 +64,10 @@ content_pipeline_bp = Blueprint('content_pipeline', __name__, url_prefix='/conte
 @login_required
 def index():
     """Render the content pipeline dashboard."""
+    if 'user' not in session or 'id' not in session['user']:
+        flash('User not authenticated. Please log in.', 'error')
+        return redirect(url_for('auth.login'))
+    user_id = session['user']['id']
     platforms = get_available_platforms()
     return render_template('content_pipeline/dashboard.html', platforms=platforms)
 
@@ -71,6 +75,10 @@ def index():
 @login_required
 def upload():
     """Handle video upload for content repurposing."""
+    if 'user' not in session or 'id' not in session['user']:
+        flash('User not authenticated. Please log in.', 'error')
+        return redirect(url_for('auth.login'))
+    user_id = session['user']['id']
     if request.method == 'POST':
         # Check if the post request has the file part
         if 'video' not in request.files:
@@ -87,7 +95,7 @@ def upload():
 
         if file:
             filename = secure_filename(file.filename)
-            upload_dir = Path(current_app.config['DOWNLOAD_FOLDER']) / 'uploads' / session.get('user_id', 'anonymous')
+            upload_dir = Path(current_app.config['DOWNLOAD_FOLDER']) / 'uploads' / user_id
             upload_dir.mkdir(parents=True, exist_ok=True)
 
             file_path = str(upload_dir / filename)
@@ -111,25 +119,48 @@ def upload():
 @login_required
 def split():
     """Split the uploaded video into clips."""
+    if 'user' not in session or 'id' not in session['user']:
+        flash('User not authenticated. Please log in.', 'error')
+        return redirect(url_for('auth.login'))
+    user_id = session['user']['id']
     if 'uploaded_video_path' not in session:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({
+                'success': False,
+                'error': 'Please upload a video first'
+            }), 400
         flash('Please upload a video first', 'error')
         return redirect(url_for('content_pipeline.upload'))
 
     video_path = session['uploaded_video_path']
+    logger.info(f"Processing video: {video_path}")
+
+    if not os.path.exists(video_path):
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({
+                'success': False,
+                'error': 'Video file not found'
+            }), 404
+        flash('Video file not found', 'error')
+        return redirect(url_for('content_pipeline.upload'))
 
     if request.method == 'POST':
-        # Get splitting parameters
-        max_clip_duration = float(request.form.get('max_clip_duration', 60))
-        min_clip_duration = float(request.form.get('min_clip_duration', 5))
-        split_on_silence = 'split_on_silence' in request.form
-        silence_threshold = float(request.form.get('silence_threshold', 0.03))
-        silence_duration = float(request.form.get('silence_duration', 0.5))
-
-        # Create output directory
-        output_dir = Path(current_app.config['DOWNLOAD_FOLDER']) / 'clips' / session.get('user_id', 'anonymous')
-        output_dir.mkdir(parents=True, exist_ok=True)
-
         try:
+            # Get splitting parameters
+            max_clip_duration = float(request.form.get('max_clip_duration', 60))
+            min_clip_duration = float(request.form.get('min_clip_duration', 5))
+            split_on_silence = 'split_on_silence' in request.form
+            silence_threshold = float(request.form.get('silence_threshold', 0.03))
+            silence_duration = float(request.form.get('silence_duration', 0.5))
+
+            logger.info(f"Split parameters: max_duration={max_clip_duration}, min_duration={min_clip_duration}, "
+                       f"split_on_silence={split_on_silence}, threshold={silence_threshold}, "
+                       f"silence_duration={silence_duration}")
+
+            # Create output directory
+            output_dir = Path(current_app.config['DOWNLOAD_FOLDER']) / 'clips' / user_id
+            output_dir.mkdir(parents=True, exist_ok=True)
+
             # Split the video
             result = split_video(
                 video_path=video_path,
@@ -144,13 +175,30 @@ def split():
             # Store the clips in the session
             if result["success"]:
                 session['clips'] = result["clips"]
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return jsonify({
+                        'success': True,
+                        'redirect': url_for('content_pipeline.generate_text'),
+                        'message': f'Video split into {len(result["clips"])} clips successfully'
+                    })
                 flash(f'Video split into {len(result["clips"])} clips successfully', 'success')
                 return redirect(url_for('content_pipeline.generate_text'))
             else:
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return jsonify({
+                        'success': False,
+                        'error': result["error"]
+                    }), 500
                 flash(f'Error splitting video: {result["error"]}', 'error')
                 return redirect(request.url)
+
         except Exception as e:
-            logger.error(f"Error splitting video: {e}")
+            logger.error(f"Error splitting video: {e}", exc_info=True)
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({
+                    'success': False,
+                    'error': str(e)
+                }), 500
             flash(f'Error splitting video: {str(e)}', 'error')
             return redirect(request.url)
 
@@ -160,6 +208,10 @@ def split():
 @login_required
 def generate_text():
     """Generate text for the video clips."""
+    if 'user' not in session or 'id' not in session['user']:
+        flash('User not authenticated. Please log in.', 'error')
+        return redirect(url_for('auth.login'))
+    user_id = session['user']['id']
     if not TEXT_GENERATOR_AVAILABLE:
         flash('Text generation is not available. Please install the required dependencies.', 'error')
         return redirect(url_for('content_pipeline.index'))
@@ -198,26 +250,66 @@ def generate_text():
                 caption_style = 'casual'  # Default to casual if not specified
                 logger.warning(f"No caption style specified, defaulting to: {caption_style}")
 
+            # Get user-selected tone/style
+            tone_style = request.form.get('tone_style', 'neutral')
+            logger.info(f"User selected tone/style: {tone_style}")
+
+            # Get user-provided video description
+            video_description = request.form.get('video_description', '').strip()
+
             # Log the selected parameters
-            logger.info(f"Generating text with: AI provider={ai_provider}, Style={caption_style}, Captions={num_caption_variations}, Hashtags={num_hashtags}")
+            logger.info(f"Generating text with: AI provider={ai_provider}, Style={caption_style}, Tone={tone_style}, Captions={num_caption_variations}, Hashtags={num_hashtags}")
 
             # Process each clip to generate text
             processed_clips = []
+            from app.routes.media import save_media_metadata
             for clip in clips:
+                clip_metadata = {
+                    "description": video_description if video_description else os.path.basename(clip['path']),
+                    "duration": clip['duration'],
+                    "start_time": clip['start_time'],
+                    "end_time": clip['end_time'],
+                    "caption_style": caption_style
+                }
                 processed_clip = process_clip(
                     clip_path=clip['path'],
-                    clip_metadata={
-                        "description": os.path.basename(clip['path']),
-                        "duration": clip['duration'],
-                        "start_time": clip['start_time'],
-                        "end_time": clip['end_time'],
-                        "caption_style": caption_style  # Add caption style to clip metadata
-                    },
+                    clip_metadata=clip_metadata,
                     num_caption_variations=num_caption_variations,
                     num_hashtags=num_hashtags,
-                    ai_provider=ai_provider
+                    ai_provider=ai_provider,
+                    tone_style=tone_style
                 )
                 processed_clips.append(processed_clip)
+
+                # Index the processed clip in the media database
+                # Avoid duplicates by checking if already indexed (by path and user)
+                try:
+                    from app.routes.media import get_user_media_items
+                    already_indexed = False
+                    user_media = get_user_media_items(user_id)
+                    for item in user_media:
+                        if item.get('local_path') == clip['path']:
+                            already_indexed = True
+                            break
+                    if not already_indexed:
+                        save_media_metadata(
+                            user_id=user_id,
+                            platform='ai_video',
+                            media_type='video',
+                            file_path=clip['path'],
+                            title=os.path.basename(clip['path']),
+                            original_url=None,
+                            duration=clip['duration'],
+                            metadata={
+                                'captions': processed_clip.get('captions', []),
+                                'hashtags': processed_clip.get('hashtags', []),
+                                'description': clip_metadata['description'],
+                                'caption_style': caption_style,
+                                'tone_style': tone_style
+                            }
+                        )
+                except Exception as e:
+                    logger.error(f"Failed to index generated clip in media database: {e}")
 
             # Store the processed clips in the session
             session['processed_clips'] = processed_clips
@@ -235,6 +327,10 @@ def generate_text():
 @login_required
 def post():
     """Post clips to social media platforms."""
+    if 'user' not in session or 'id' not in session['user']:
+        flash('User not authenticated. Please log in.', 'error')
+        return redirect(url_for('auth.login'))
+    user_id = session['user']['id']
     if not POSTER_AVAILABLE:
         flash('Posting is not available. Please install the required dependencies.', 'error')
         return redirect(url_for('content_pipeline.index'))
@@ -251,12 +347,14 @@ def post():
         flash('No posting platforms are available. Please check your configuration.', 'error')
         return redirect(url_for('content_pipeline.index'))
 
-    # Get user ID for authentication
-    user_id = session.get('user_id', 'anonymous')
-
     # Import auth manager
     from content_pipeline.poster.auth import get_auth_manager
     auth_manager = get_auth_manager(user_id)
+
+    # Check if auth_manager was created successfully
+    if auth_manager is None:
+        flash('Error initializing authentication manager. Please try again.', 'error')
+        return redirect(url_for('content_pipeline.index'))
 
     # Check authentication status for each platform
     platform_auth_status = {}
@@ -366,6 +464,10 @@ def post():
 @login_required
 def results():
     """Display the results of the content repurposing pipeline."""
+    if 'user' not in session or 'id' not in session['user']:
+        flash('User not authenticated. Please log in.', 'error')
+        return redirect(url_for('auth.login'))
+    user_id = session['user']['id']
     if 'posting_results' not in session:
         flash('No posting results available', 'error')
         return redirect(url_for('content_pipeline.index'))
@@ -377,13 +479,19 @@ def results():
 @content_pipeline_bp.route('/clip/<path:filename>')
 def serve_clip(filename):
     """Serve a clip file from the downloads directory."""
-    user_id = session.get('user_id', 'anonymous')
+    if 'user' not in session or 'id' not in session['user']:
+        flash('User not authenticated. Please log in.', 'error')
+        return redirect(url_for('auth.login'))
+    user_id = session['user']['id']
     clips_dir = os.path.join(current_app.config['DOWNLOAD_FOLDER'], 'clips', user_id)
     return send_from_directory(clips_dir, filename)
 
 @content_pipeline_bp.route('/uploaded-video/<path:filename>')
 def serve_uploaded_video(filename):
     """Serve an uploaded video file from the uploads directory."""
-    user_id = session.get('user_id', 'anonymous')
+    if 'user' not in session or 'id' not in session['user']:
+        flash('User not authenticated. Please log in.', 'error')
+        return redirect(url_for('auth.login'))
+    user_id = session['user']['id']
     uploads_dir = os.path.join(current_app.config['DOWNLOAD_FOLDER'], 'uploads', user_id)
     return send_from_directory(uploads_dir, filename)

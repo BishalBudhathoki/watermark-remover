@@ -111,6 +111,23 @@ def dashboard():
         stats = calculate_media_stats(media_items)
         logger.info(f"Media stats: {stats}")
 
+        # In the dashboard route, after fetching media_items:
+        for item in media_items:
+            if item.get('platform') == 'ai_video' and item.get('local_path'):
+                filename = os.path.basename(item['local_path'])
+                item['video_url'] = url_for('content_pipeline.serve_clip', filename=filename)
+            elif item.get('platform') == 'twitter' and item.get('local_path'):
+                rel_path = item['local_path'].lstrip('/')
+                abs_path = os.path.join(current_app.config['DOWNLOAD_FOLDER'], rel_path)
+                if not os.path.exists(abs_path):
+                    # If the image file does not exist, use the static placeholder
+                    item['video_url'] = url_for('static', filename='images/twitter_placeholder.jpg')
+                else:
+                    item['video_url'] = url_for('media.serve_download', filename=rel_path)
+            elif item.get('local_path'):
+                rel_path = item['local_path'].lstrip('/')
+                item['video_url'] = url_for('media.serve_download', filename=rel_path)
+
         return render_template('media_dashboard.html',
                              media_items=media_items,
                              stats=stats)
@@ -325,36 +342,27 @@ def download_file(filename):
     try:
         return send_file(filename, as_attachment=True)
     except Exception as e:
-        abort(404)
+        return jsonify({'error': 'File not found'}), 404
 
 @media_bp.route('/downloads/<path:filename>')
 def serve_download(filename):
-    """Serve downloaded files with support for subdirectories."""
     try:
-        # Get the full path from the app's download folder
         file_path = Path(current_app.config['DOWNLOAD_FOLDER']) / filename
-
-        # Try platform-specific directories if file not found
-        if not file_path.exists():
-            for platform in ['youtube', 'tiktok', 'instagram']:
-                platform_path = Path(current_app.config['DOWNLOAD_FOLDER']) / platform / Path(filename).name
-                if platform_path.exists():
-                    file_path = platform_path
-                    break
-
-        # Verify the file path is within the allowed directory
-        if not str(file_path.resolve()).startswith(str(Path(current_app.config['DOWNLOAD_FOLDER']).resolve())):
-            logger.error(f"Attempted to access file outside download directory: {file_path}")
-            abort(404)
-
         if not file_path.exists():
             logger.error(f"File not found: {file_path}")
-            abort(404)
-
-        # Get file extension
+            return jsonify({'error': 'File not found'}), 404
+        for platform in ['youtube', 'tiktok', 'instagram']:
+            platform_path = Path(current_app.config['DOWNLOAD_FOLDER']) / platform / Path(filename).name
+            if platform_path.exists():
+                file_path = platform_path
+                break
+        if not str(file_path.resolve()).startswith(str(Path(current_app.config['DOWNLOAD_FOLDER']).resolve())):
+            logger.error(f"Attempted to access file outside download directory: {file_path}")
+            return jsonify({'error': 'File not found'}), 404
+        if not file_path.exists():
+            logger.error(f"File not found: {file_path}")
+            return jsonify({'error': 'File not found'}), 404
         ext = file_path.suffix.lower()
-
-        # Determine content type
         content_types = {
             '.mp4': 'video/mp4',
             '.mov': 'video/quicktime',
@@ -367,9 +375,7 @@ def serve_download(filename):
             '.m4a': 'audio/mp4'
         }
         content_type = content_types.get(ext, 'application/octet-stream')
-
         logger.info(f"Serving file: {file_path} with content type: {content_type}")
-
         return send_file(
             file_path,
             mimetype=content_type,
@@ -378,7 +384,7 @@ def serve_download(filename):
         )
     except Exception as e:
         logger.error(f"Error serving file: {str(e)}")
-        abort(404)
+        return jsonify({'error': 'File not found'}), 404
 
 def save_media_metadata(user_id, platform, media_type, file_path, title, original_url=None, duration=None, metadata=None, thumbnail_path=None):
     """Save media metadata to database."""

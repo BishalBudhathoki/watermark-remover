@@ -5,8 +5,9 @@ APP_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # Define common directories (at project root level)
 DOWNLOAD_DIR = APP_ROOT / 'downloads'
-UPLOAD_DIR = APP_ROOT / 'uploads'
-PROCESSED_DIR = APP_ROOT / 'processed'
+UPLOAD_DIR = DOWNLOAD_DIR / 'uploads'  # Changed to be under downloads
+PROCESSED_DIR = DOWNLOAD_DIR / 'processed'
+CLIPS_DIR = DOWNLOAD_DIR / 'clips'  # Added clips directory
 
 # Platform-specific directories
 TIKTOK_DIR = DOWNLOAD_DIR / 'tiktok'
@@ -20,6 +21,7 @@ def ensure_directories():
         DOWNLOAD_DIR,
         UPLOAD_DIR,
         PROCESSED_DIR,
+        CLIPS_DIR,  # Added clips directory
         TIKTOK_DIR,
         INSTAGRAM_DIR,
         YOUTUBE_DIR

@@ -119,3 +119,172 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [MoviePy](https://zulko.github.io/moviepy/) for video processing
 - [OpenAI](https://openai.com/) for text generation
 - Various social media platform APIs
+
+# Watermark Remover - Production Deployment Guide
+
+This repository contains a production-ready Docker Compose setup for the Watermark Remover application, featuring Flask, Nginx, Certbot, Redis, and Celery.
+
+## Architecture
+
+The application uses the following components:
+- Flask application server
+- Nginx as reverse proxy with SSL termination
+- Redis as message broker and caching
+- Celery for background task processing
+- Certbot for SSL certificate management
+
+## Prerequisites
+
+- Docker and Docker Compose installed
+- Domain name pointed to your server (A record for smm.bishalbudhathoki.engineer)
+- Open ports 80 and 443 on your firewall
+
+## Directory Structure
+
+```
+.
+├── app/                    # Flask application code
+├── nginx/                  # Nginx configuration
+│   └── conf.d/            # Nginx site configurations
+├── certbot/               # SSL certificates and configuration
+│   ├── conf/              # Let's Encrypt configuration
+│   └── www/              # ACME challenge files
+├── redis/                # Redis data directory
+│   └── data/            # Persistent Redis data
+├── logs/                 # Application logs
+│   ├── nginx/           # Nginx logs
+│   ├── flask/           # Flask application logs
+│   └── celery/          # Celery worker logs
+├── docker-compose.yml    # Docker Compose configuration
+├── .env                 # Environment variables
+└── init-letsencrypt.sh  # SSL certificate initialization script
+```
+
+## Initial Setup
+
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd watermark-remover
+   ```
+
+2. Create required directories:
+   ```bash
+   mkdir -p nginx/conf.d certbot/conf certbot/www redis/data logs/{nginx,flask,celery}
+   ```
+
+3. Configure environment variables:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+4. Initialize SSL certificates:
+   ```bash
+   chmod +x init-letsencrypt.sh
+   ./init-letsencrypt.sh
+   ```
+
+## Deployment
+
+1. Start the application:
+   ```bash
+   docker-compose up -d
+   ```
+
+2. Verify all services are running:
+   ```bash
+   docker-compose ps
+   ```
+
+3. Check the health endpoint:
+   ```bash
+   curl https://smm.bishalbudhathoki.engineer/health
+   ```
+
+## Scaling
+
+To scale the Flask application horizontally:
+```bash
+docker-compose up -d --scale flask=3
+```
+
+## Monitoring
+
+- View logs:
+  ```bash
+  # All logs
+  docker-compose logs -f
+
+  # Specific service
+  docker-compose logs -f flask
+  ```
+
+- Monitor containers:
+  ```bash
+  docker stats
+  ```
+
+## SSL Certificate Renewal
+
+Certificates are automatically renewed by the Certbot container. To manually renew:
+```bash
+docker-compose run --rm certbot renew
+```
+
+## Maintenance
+
+1. Update containers:
+   ```bash
+   docker-compose pull
+   docker-compose up -d
+   ```
+
+2. Backup Redis data:
+   ```bash
+   docker-compose exec redis redis-cli SAVE
+   ```
+
+3. Clean up old containers and images:
+   ```bash
+   docker-compose down
+   docker system prune
+   ```
+
+## Troubleshooting
+
+1. Check service health:
+   ```bash
+   curl https://smm.bishalbudhathoki.engineer/health
+   ```
+
+2. View logs:
+   ```bash
+   tail -f logs/flask/app.log
+   tail -f logs/nginx/error.log
+   tail -f logs/celery/tasks.log
+   ```
+
+3. Restart services:
+   ```bash
+   docker-compose restart flask
+   docker-compose restart celery_worker
+   ```
+
+## Security Best Practices
+
+1. Keep Docker and all packages updated
+2. Use non-root users in containers
+3. Implement rate limiting in Nginx
+4. Regular security audits
+5. Monitor logs for suspicious activity
+6. Keep backups of Redis data
+7. Use secure passwords and API keys
+
+## Contributing
+
+Please read CONTRIBUTING.md for details on our code of conduct and the process for submitting pull requests.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

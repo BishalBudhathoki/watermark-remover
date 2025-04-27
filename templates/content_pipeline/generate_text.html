@@ -82,6 +82,11 @@
 
                 <!-- Form for text generation -->
                 <form id="generateTextForm" method="POST" action="{{ url_for('content_pipeline.generate_text') }}" class="space-y-6">
+                    <div class="form-group mb-6">
+                        <label for="video_description" class="block text-lg font-semibold text-gray-800 mb-2">Describe your video <span class="text-gray-500 text-sm">(optional, improves caption/hashtag quality)</span>:</label>
+                        <textarea class="form-control w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-400 focus:border-transparent p-3 text-base" id="video_description" name="video_description" rows="5" placeholder="e.g. A single person talking about travel in a vlog style, sharing tips and experiences. The mood is calm and informative."></textarea>
+                        <p class="text-xs text-gray-500 mt-1">Describe the main subject, actions, mood, and setting for best results.</p>
+                    </div>
                     <!-- Caption Settings -->
                     <div>
                         <label class="block text-gray-700 font-medium mb-2">Caption Settings</label>
@@ -190,6 +195,54 @@
                                 </label>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Tone/Style Settings -->
+                    <div>
+                        <label class="block text-gray-700 font-medium mb-2 mt-6">Tone/Style <span class="text-gray-500 text-sm">(optional, for more control)</span></label>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="relative">
+                                <input type="radio" name="tone_style" id="tone-neutral" value="neutral" class="hidden peer" checked>
+                                <label for="tone-neutral" class="block p-4 bg-gray-50 rounded-lg border-2 border-gray-200 cursor-pointer peer-checked:border-purple-500 peer-checked:bg-purple-50 hover:bg-gray-100 transition-colors duration-200">
+                                    <div class="text-center">
+                                        <i class="fas fa-balance-scale text-2xl mb-2 text-gray-600 peer-checked:text-purple-600"></i>
+                                        <p class="font-medium text-gray-900">Neutral</p>
+                                        <p class="text-xs text-gray-600 mt-1">Objective, factual</p>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="relative">
+                                <input type="radio" name="tone_style" id="tone-humorous" value="humorous" class="hidden peer">
+                                <label for="tone-humorous" class="block p-4 bg-gray-50 rounded-lg border-2 border-gray-200 cursor-pointer peer-checked:border-purple-500 peer-checked:bg-purple-50 hover:bg-gray-100 transition-colors duration-200">
+                                    <div class="text-center">
+                                        <i class="fas fa-grin-squint-tears text-2xl mb-2 text-gray-600 peer-checked:text-purple-600"></i>
+                                        <p class="font-medium text-gray-900">Humorous</p>
+                                        <p class="text-xs text-gray-600 mt-1">Funny, light-hearted</p>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="relative">
+                                <input type="radio" name="tone_style" id="tone-descriptive" value="descriptive" class="hidden peer">
+                                <label for="tone-descriptive" class="block p-4 bg-gray-50 rounded-lg border-2 border-gray-200 cursor-pointer peer-checked:border-purple-500 peer-checked:bg-purple-50 hover:bg-gray-100 transition-colors duration-200">
+                                    <div class="text-center">
+                                        <i class="fas fa-align-left text-2xl mb-2 text-gray-600 peer-checked:text-purple-600"></i>
+                                        <p class="font-medium text-gray-900">Descriptive</p>
+                                        <p class="text-xs text-gray-600 mt-1">Rich, detailed</p>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="relative">
+                                <input type="radio" name="tone_style" id="tone-inquisitive" value="inquisitive" class="hidden peer">
+                                <label for="tone-inquisitive" class="block p-4 bg-gray-50 rounded-lg border-2 border-gray-200 cursor-pointer peer-checked:border-purple-500 peer-checked:bg-purple-50 hover:bg-gray-100 transition-colors duration-200">
+                                    <div class="text-center">
+                                        <i class="fas fa-question text-2xl mb-2 text-gray-600 peer-checked:text-purple-600"></i>
+                                        <p class="font-medium text-gray-900">Inquisitive</p>
+                                        <p class="text-xs text-gray-600 mt-1">Curious, question-asking</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Choose a tone/style for your captions and hashtags. This gives you more creative control over the output.</p>
                     </div>
 
                     <!-- Progress Bar (hidden by default) -->
@@ -306,12 +359,48 @@
             const label = document.querySelector(`label[for="${radio.id}"]`);
             if (label) {
                 label.addEventListener('click', function(e) {
-                    // Don't prevent default behavior - let the browser handle the radio selection
-                    // e.preventDefault();
-
-                    // Just ensure the styles are updated
                     setTimeout(() => {
                         updateStyleStyles(radio);
+                    }, 10);
+                });
+            }
+        });
+
+        // --- Tone/Style selection logic ---
+        function updateToneStyleStyles(selectedRadio) {
+            const toneStyleRadios = document.querySelectorAll('input[name="tone_style"]');
+            toneStyleRadios.forEach(radio => {
+                const label = document.querySelector(`label[for="${radio.id}"]`);
+                const icon = label.querySelector('i');
+                if (radio === selectedRadio) {
+                    label.classList.add('border-purple-500', 'bg-purple-50');
+                    label.classList.remove('border-gray-200', 'bg-gray-50');
+                    icon.classList.add('text-purple-600');
+                    icon.classList.remove('text-gray-600');
+                } else {
+                    label.classList.remove('border-purple-500', 'bg-purple-50');
+                    label.classList.add('border-gray-200', 'bg-gray-50');
+                    icon.classList.remove('text-purple-600');
+                    icon.classList.add('text-gray-600');
+                }
+            });
+        }
+        const toneStyleRadios = document.querySelectorAll('input[name="tone_style"]');
+        toneStyleRadios.forEach(radio => {
+            if (radio.checked) {
+                updateToneStyleStyles(radio);
+            }
+            radio.addEventListener('change', function() {
+                updateToneStyleStyles(this);
+                toneStyleRadios.forEach(r => {
+                    r.checked = (r === this);
+                });
+            });
+            const label = document.querySelector(`label[for="${radio.id}"]`);
+            if (label) {
+                label.addEventListener('click', function() {
+                    setTimeout(() => {
+                        updateToneStyleStyles(radio);
                     }, 10);
                 });
             }
@@ -397,6 +486,7 @@
                 formData.append('caption_style', selectedCaptionStyle.value);
                 formData.append('num_caption_variations', document.querySelector('input[name="num_caption_variations"]').value);
                 formData.append('num_hashtags', document.querySelector('input[name="num_hashtags"]').value);
+                formData.append('tone_style', document.querySelector('input[name="tone_style"]:checked').value);
 
                 // Show progress container
                 progressContainer.classList.remove('hidden');
@@ -624,3 +714,4 @@
         }
     });
 </script>
+{% endblock %}

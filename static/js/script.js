@@ -206,6 +206,46 @@ if (watermarkForm) {
     });
 }
 
+// Split video form submission
+const splitVideoForm = document.getElementById('splitVideoForm');
+if (splitVideoForm) {
+    splitVideoForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Show processing indicator
+        showProcessingIndicator('Splitting video into clips... This may take a few minutes.');
+
+        try {
+            // Submit the form
+            const formData = new FormData(splitVideoForm);
+            const response = await fetch(splitVideoForm.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            
+            if (result.success) {
+                // Redirect to the next step
+                window.location.href = result.redirect;
+            } else {
+                throw new Error(result.error || 'Failed to split video');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            hideProcessingIndicator();
+            alert('Error splitting video: ' + error.message);
+        }
+    });
+}
+
 function fetchFormats() {
     const url = document.getElementById('url').value;
     if (!url) {
@@ -244,3 +284,4 @@ function fetchFormats() {
         console.error('Error:', error);
         alert('Failed to fetch formats. Please check your network connection and try again.');
     });
+}

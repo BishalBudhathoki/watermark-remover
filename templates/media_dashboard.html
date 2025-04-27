@@ -704,167 +704,161 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {% if media_items %}
                 {% for item in media_items %}
-                {% if item.platform == 'ai_video' %}
-                    {% set video_url = url_for('ai_video.serve_ai_video', filename=item.local_path.replace('/static/processed/', '')) %}
-                {% else %}
-                    {% set video_url = url_for('media.serve_download', filename=item.local_path) %}
-                {% endif %}
+                    <div class="media-card" data-media-id="{{ item.id }}" data-media-type="{{ item.media_type }}">
+                        <!-- Thumbnail / Preview -->
+                        <div class="media-thumbnail" data-video-url="{{ item.video_url }}">
+                            {% if item.media_type in ['video', 'highlight'] %}
+                                <video preload="metadata" poster="{{ item.video_url }}?poster=true" class="preview-media">
+                                    <source src="{{ item.video_url }}" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            {% else %}
+                                <img class="preview-media"
+                                     src="{{ item.video_url }}"
+                                     alt="{{ item.title }}"
+                                     loading="lazy">
+                            {% endif %}
 
-                <div class="media-card" data-media-id="{{ item.id }}" data-media-type="{{ item.media_type }}">
-                    <!-- Thumbnail / Preview -->
-                    <div class="media-thumbnail" data-video-url="{{ video_url }}">
-                        {% if item.media_type in ['video', 'highlight'] %}
-                            <video preload="metadata" poster="{{ video_url }}?poster=true" class="preview-media">
-                                <source src="{{ video_url }}" type="video/mp4">
-                                Your browser does not support the video tag.
-                            </video>
-                        {% else %}
-                            <img class="preview-media"
-                                 src="{{ video_url }}"
-                                 alt="{{ item.title }}"
-                                 loading="lazy">
-                        {% endif %}
-
-                        <div class="media-overlay">
-                            <div class="play-button">
-                                <i class="fas fa-{% if item.media_type in ['video', 'highlight'] %}play{% else %}search-plus{% endif %}"></i>
+                            <div class="media-overlay">
+                                <div class="play-button">
+                                    <i class="fas fa-{% if item.media_type in ['video', 'highlight'] %}play{% else %}search-plus{% endif %}"></i>
+                                </div>
                             </div>
-                        </div>
 
-                        {% if item.media_type in ['video', 'highlight'] %}
-                        <div class="video-controls">
-                            <div class="video-progress">
-                                <div class="video-progress-bar"></div>
+                            {% if item.media_type in ['video', 'highlight'] %}
+                            <div class="video-controls">
+                                <div class="video-progress">
+                                    <div class="video-progress-bar"></div>
+                                </div>
+                                <div class="video-time">0:00</div>
                             </div>
-                            <div class="video-time">0:00</div>
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="media-info">
-                        <!-- Platform Badge -->
-                        <div class="media-header">
-                            <span class="platform-badge {% if item.platform == 'youtube' %}bg-red-50 text-red-600
-                                      {% elif item.platform == 'twitter' %}bg-blue-50 text-blue-400
-                                      {% elif item.platform == 'instagram' %}bg-pink-50 text-pink-500
-                                      {% elif item.platform == 'tiktok' %}bg-gray-50 text-gray-900
-                                      {% elif item.platform == 'ai_video' %}bg-purple-50 text-purple-600{% endif %}">
-                                <i class="{% if item.platform == 'youtube' %}fab fa-youtube
-                                          {% elif item.platform == 'twitter' %}fab fa-twitter
-                                          {% elif item.platform == 'instagram' %}fab fa-instagram
-                                          {% elif item.platform == 'tiktok' %}fab fa-tiktok
-                                          {% elif item.platform == 'ai_video' %}fas fa-robot{% endif %} mr-1"></i>
-                                {{ item.platform|replace('_', ' ')|title }}
-                            </span>
+                            {% endif %}
                         </div>
 
-                        <!-- Title -->
-                        <h3 class="media-title">{{ item.title }}</h3>
+                        <div class="media-info">
+                            <!-- Platform Badge -->
+                            <div class="media-header">
+                                <span class="platform-badge {% if item.platform == 'youtube' %}bg-red-50 text-red-600
+                                          {% elif item.platform == 'twitter' %}bg-blue-50 text-blue-400
+                                          {% elif item.platform == 'instagram' %}bg-pink-50 text-pink-500
+                                          {% elif item.platform == 'tiktok' %}bg-gray-50 text-gray-900
+                                          {% elif item.platform == 'ai_video' %}bg-purple-50 text-purple-600{% endif %}">
+                                    <i class="{% if item.platform == 'youtube' %}fab fa-youtube
+                                              {% elif item.platform == 'twitter' %}fab fa-twitter
+                                              {% elif item.platform == 'instagram' %}fab fa-instagram
+                                              {% elif item.platform == 'tiktok' %}fab fa-tiktok
+                                              {% elif item.platform == 'ai_video' %}fas fa-robot{% endif %} mr-1"></i>
+                                    {{ item.platform|replace('_', ' ')|title }}
+                                </span>
+                            </div>
 
-                        <!-- Meta Info -->
-                        <div class="media-meta">
-                            {% if item.metadata.uploader %}
-                                <div class="meta-item">
-                                    <i class="fas fa-user text-xs"></i>
-                                    <span>{{ item.metadata.uploader }}</span>
+                            <!-- Title -->
+                            <h3 class="media-title">{{ item.title }}</h3>
+
+                            <!-- Meta Info -->
+                            <div class="media-meta">
+                                {% if item.metadata.uploader %}
+                                    <div class="meta-item">
+                                        <i class="fas fa-user text-xs"></i>
+                                        <span>{{ item.metadata.uploader }}</span>
+                                    </div>
+                                {% endif %}
+
+                                {% if item.metadata.like_count is defined %}
+                                    <div class="meta-item">
+                                        <i class="fas fa-heart text-xs text-pink-500"></i>
+                                        <span>{{ '{:,}'.format(item.metadata.like_count) }}</span>
+                                    </div>
+                                {% endif %}
+
+                                <div class="meta-item ml-auto">
+                                    <i class="fas fa-calendar text-xs"></i>
+                                    <span>{{ item.created_at.strftime('%b %d, %Y') }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Technical Specs -->
+                            {% if item.platform == 'youtube' and item.metadata %}
+                                <div class="media-specs">
+                                    {% if item.metadata.download_type %}
+                                        <div class="spec-item">
+                                            <span class="spec-label">Type</span>
+                                            <span class="spec-value">{{ item.metadata.download_type|title }}</span>
+                                        </div>
+                                    {% endif %}
+
+                                    {% if item.metadata.format %}
+                                        <div class="spec-item">
+                                            <span class="spec-label">Format</span>
+                                            <span class="spec-value">{{ item.metadata.format|upper }}</span>
+                                        </div>
+                                    {% endif %}
+
+                                    {% if item.metadata.actual_resolution %}
+                                        <div class="spec-item">
+                                            <span class="spec-label">Resolution</span>
+                                            <span class="spec-value">{{ item.metadata.actual_resolution }}</span>
+                                        </div>
+                                    {% endif %}
+
+                                    {% if item.metadata.file_size_mb %}
+                                        <div class="spec-item">
+                                            <span class="spec-label">Size</span>
+                                            <span class="spec-value">{{ item.metadata.file_size_mb }} MB</span>
+                                        </div>
+                                    {% endif %}
                                 </div>
                             {% endif %}
 
-                            {% if item.metadata.like_count is defined %}
-                                <div class="meta-item">
-                                    <i class="fas fa-heart text-xs text-pink-500"></i>
-                                    <span>{{ '{:,}'.format(item.metadata.like_count) }}</span>
-                                </div>
+                            <!-- Description -->
+                            {% if item.metadata.description %}
+                                <p class="media-description">{{ item.metadata.description }}</p>
                             {% endif %}
 
-                            <div class="meta-item ml-auto">
-                                <i class="fas fa-calendar text-xs"></i>
-                                <span>{{ item.created_at.strftime('%b %d, %Y') }}</span>
-                            </div>
-                        </div>
+                            <!-- Actions -->
+                            <div class="media-actions">
+                                <div class="action-buttons">
+                                    <button class="action-btn edit" title="Edit" onclick="handleEdit('{{ item.id }}')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="action-btn share" title="Share" onclick="handleShare('{{ item.id }}')">
+                                        <i class="fas fa-share-alt"></i>
+                                    </button>
+                                    <button class="action-btn delete" title="Delete" onclick="handleDelete('{{ item.id }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
 
-                        <!-- Technical Specs -->
-                        {% if item.platform == 'youtube' and item.metadata %}
-                            <div class="media-specs">
-                                {% if item.metadata.download_type %}
-                                    <div class="spec-item">
-                                        <span class="spec-label">Type</span>
-                                        <span class="spec-value">{{ item.metadata.download_type|title }}</span>
-                                    </div>
-                                {% endif %}
+                                <div class="primary-actions">
+                                    {% if item.media_type == 'video' or item.platform == 'ai_video' %}
+                                    <button class="btn-sm bg-blue-600 text-white hover:bg-blue-700 view-media-btn"
+                                            data-media-url="{{ item.video_url }}"
+                                            data-media-type="video"
+                                            data-media-title="{{ item.title }}"
+                                            data-media-uploader="{{ item.metadata.uploader if item.metadata and item.metadata.uploader else '' }}"
+                                            data-media-date="{{ item.created_at.strftime('%b %d, %Y') }}">
+                                        <i class="fas fa-play"></i> View
+                                    </button>
+                                    {% elif item.media_type == 'image' %}
+                                    <button class="btn-sm bg-blue-600 text-white hover:bg-blue-700 view-media-btn"
+                                            data-media-url="{{ item.video_url }}"
+                                            data-media-type="image"
+                                            data-media-title="{{ item.title }}"
+                                            data-media-uploader="{{ item.metadata.uploader if item.metadata and item.metadata.uploader else '' }}"
+                                            data-media-date="{{ item.created_at.strftime('%b %d, %Y') }}">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                    {% endif %}
 
-                                {% if item.metadata.format %}
-                                    <div class="spec-item">
-                                        <span class="spec-label">Format</span>
-                                        <span class="spec-value">{{ item.metadata.format|upper }}</span>
-                                    </div>
-                                {% endif %}
-
-                                {% if item.metadata.actual_resolution %}
-                                    <div class="spec-item">
-                                        <span class="spec-label">Resolution</span>
-                                        <span class="spec-value">{{ item.metadata.actual_resolution }}</span>
-                                    </div>
-                                {% endif %}
-
-                                {% if item.metadata.file_size_mb %}
-                                    <div class="spec-item">
-                                        <span class="spec-label">Size</span>
-                                        <span class="spec-value">{{ item.metadata.file_size_mb }} MB</span>
-                                    </div>
-                                {% endif %}
-                            </div>
-                        {% endif %}
-
-                        <!-- Description -->
-                        {% if item.metadata.description %}
-                            <p class="media-description">{{ item.metadata.description }}</p>
-                        {% endif %}
-
-                        <!-- Actions -->
-                        <div class="media-actions">
-                            <div class="action-buttons">
-                                <button class="action-btn edit" title="Edit" onclick="handleEdit('{{ item.id }}')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="action-btn share" title="Share" onclick="handleShare('{{ item.id }}')">
-                                    <i class="fas fa-share-alt"></i>
-                                </button>
-                                <button class="action-btn delete" title="Delete" onclick="handleDelete('{{ item.id }}')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-
-                            <div class="primary-actions">
-                                {% if item.media_type == 'video' or item.platform == 'ai_video' %}
-                                <button class="btn-sm bg-blue-600 text-white hover:bg-blue-700 view-media-btn"
-                                        data-media-url="{{ video_url }}"
-                                        data-media-type="video"
-                                        data-media-title="{{ item.title }}"
-                                        data-media-uploader="{{ item.metadata.uploader if item.metadata and item.metadata.uploader else '' }}"
-                                        data-media-date="{{ item.created_at.strftime('%b %d, %Y') }}">
-                                    <i class="fas fa-play"></i> View
-                                </button>
-                                {% elif item.media_type == 'image' %}
-                                <button class="btn-sm bg-blue-600 text-white hover:bg-blue-700 view-media-btn"
-                                        data-media-url="{{ video_url }}"
-                                        data-media-type="image"
-                                        data-media-title="{{ item.title }}"
-                                        data-media-uploader="{{ item.metadata.uploader if item.metadata and item.metadata.uploader else '' }}"
-                                        data-media-date="{{ item.created_at.strftime('%b %d, %Y') }}">
-                                    <i class="fas fa-eye"></i> View
-                                </button>
-                                {% endif %}
-
-                                <a href="{{ video_url }}"
-                                   class="btn-sm bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                   download="{{ item.title }}">
-                                    <i class="fas fa-download"></i> Download
-                                </a>
+                                    <a href="{{ item.video_url }}"
+                                       class="btn-sm bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                       download="{{ item.title }}">
+                                        <i class="fas fa-download"></i> Download
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
                 {% endfor %}
             {% else %}
                 <div class="col-span-full">
@@ -1213,8 +1207,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function handleDelete(mediaId) {
         if (confirm('Are you sure you want to delete this media?')) {
-            fetch(`/media/delete/${mediaId}`, {
-                method: 'DELETE',
+            fetch(`/api/media/delete/${mediaId}`, {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 }

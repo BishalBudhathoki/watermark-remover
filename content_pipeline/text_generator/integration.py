@@ -16,6 +16,8 @@ import numpy as np
 import base64
 from io import BytesIO
 from PIL import Image
+import io
+from difflib import SequenceMatcher
 
 # Try to import the unified text generator
 try:
@@ -24,6 +26,12 @@ try:
 except ImportError:
     UNIFIED_AVAILABLE = False
 
+try:
+    import torch
+    BLIP_AVAILABLE = True
+except ImportError:
+    BLIP_AVAILABLE = False
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -31,6 +39,21 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+def advanced_frame_caption(image_bytes):
+    if not BLIP_AVAILABLE:
+        logger.warning("BLIP not available: skipping local frame captioning.")
+        return ""
+    try:
+        from transformers import pipeline
+        blip = pipeline('image-to-text', model='Salesforce/blip-image-captioning-base')
+        img = Image.open(io.BytesIO(image_bytes)).convert('RGB')
+        result = blip(img)
+        caption = result[0]['generated_text'] if result and 'generated_text' in result[0] else ''
+        logger.info(f"BLIP caption: {caption}")
+        return caption
+    except Exception as e:
+        logger.error(f"BLIP captioning failed: {e}")
+        return ''
 
 def process_clip(
     clip_path: str,
@@ -40,7 +63,8 @@ def process_clip(
     num_hashtags: int = 10,
     text_generator: Optional[TextGenerator] = None,
     text_generator_config: Optional[Dict[str, Any]] = None,
-    ai_provider: Optional[str] = None
+    ai_provider: Optional[str] = None,
+    tone_style: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Process a video clip to generate captions, hashtags, and platform-specific text variations.
@@ -54,6 +78,7 @@ def process_clip(
         text_generator: TextGenerator instance (optional, will create one if not provided)
         text_generator_config: Configuration for the text generator (optional)
         ai_provider: AI provider to use ('openai', 'deepseek', or 'gemini') (optional)
+        tone_style: User-selectable tone/style for text generation
 
     Returns:
         Dictionary containing:
@@ -62,6 +87,7 @@ def process_clip(
             - platforms: Dictionary mapping platform names to dictionaries containing:
                 - caption: Platform-specific caption
                 - hashtags: Platform-specific hashtags
+            - tone_style: The selected tone/style for text generation
     """
     overall_start_time = time.time()
 
@@ -81,8 +107,15 @@ def process_clip(
     logger.info(f"Starting text generation process for clip: {os.path.basename(clip_path)}")
     logger.info(f"Using AI provider: {ai_provider if ai_provider else 'default'}")
 
-    # Extract frames from the video for better content analysis
-    frame_descriptions = extract_video_frames(clip_path)
+    # --- Dynamic frame sampling based on video length ---
+    video_duration = clip_metadata.get("duration", 0)
+    if video_duration > 60:
+        num_frames = 15
+    elif video_duration > 30:
+        num_frames = 10
+    else:
+        num_frames = 5
+    frame_descriptions = extract_video_frames(clip_path, num_frames=num_frames)
     if frame_descriptions:
         clip_metadata["frame_descriptions"] = frame_descriptions
         logger.info(f"Extracted {len(frame_descriptions)} frame descriptions from video")
@@ -91,38 +124,25 @@ def process_clip(
     is_comedy = False
     comedy_keywords = ["funny", "comedy", "laugh", "hilarious", "joke", "humor", "prank", "gag", "blooper"]
 
-    # Check filename for comedy indicators
+    # Only check filename and description for explicit comedy indicators
     filename = os.path.basename(clip_path).lower()
-    for keyword in comedy_keywords:
-        if keyword.lower() in filename:
-            is_comedy = True
-            logger.info(f"Detected comedy content from filename: {filename}")
-            break
+    if any(keyword in filename for keyword in comedy_keywords):
+        is_comedy = True
+        logger.info(f"Detected comedy content from filename: {filename}")
 
-    # Check metadata description for comedy indicators
+    # Check metadata description for explicit comedy indicators
     if not is_comedy and "description" in clip_metadata:
-        for keyword in comedy_keywords:
-            if keyword.lower() in clip_metadata["description"].lower():
-                is_comedy = True
-                logger.info(f"Detected comedy content from description: {clip_metadata['description']}")
-                break
-
-    # Check frame descriptions for comedy indicators
-    if not is_comedy and frame_descriptions:
-        comedy_frames = 0
-        for frame in frame_descriptions:
-            if "analysis" in frame and "content_type" in frame["analysis"]:
-                if "comedy" in frame["analysis"]["content_type"].lower():
-                    comedy_frames += 1
-
-        if comedy_frames >= 2:
+        if any(keyword in clip_metadata["description"].lower() for keyword in comedy_keywords):
             is_comedy = True
-            logger.info(f"Detected comedy content from {comedy_frames} video frames")
+            logger.info(f"Detected comedy content from description: {clip_metadata['description']}")
 
-    # If comedy is detected, set the caption style to humorous
-    if is_comedy and "caption_style" not in clip_metadata:
-        clip_metadata["caption_style"] = "humorous"
-        logger.info("Setting caption style to 'humorous' based on content detection")
+    # Remove automatic comedy detection from frame analysis
+    if not is_comedy and frame_descriptions:
+        for frame in frame_descriptions:
+            if "analysis" in frame:
+                # Remove content type from frame analysis to prevent false positives
+                if "content_type" in frame["analysis"]:
+                    del frame["analysis"]["content_type"]
 
     # Create text generator if not provided
     if text_generator is None:
@@ -150,6 +170,50 @@ def process_clip(
 
     logger.info(f"Generating text for clip: {os.path.basename(clip_path)}")
 
+    user_description = clip_metadata.get("description", "") if clip_metadata else ""
+    fallback = os.path.basename(clip_path)
+
+    # --- Gemini Vision and local analysis integration ---
+    gemini_descriptions = []
+    frame_captions = []
+    try:
+        from .ai_models import get_gemini_vision_description
+        # Use up to 3 key frames for Gemini Vision and BLIP
+        for idx, frame in enumerate((frame_descriptions or [])[:3]):
+            img_b64 = frame.get("image_data")
+            if img_b64:
+                image_bytes = base64.b64decode(img_b64)
+                # Try Gemini Vision first
+                vision_desc = get_gemini_vision_description(image_bytes)
+                if vision_desc:
+                    gemini_descriptions.append(vision_desc)
+                # Always run BLIP as local fallback
+                blip_caption = advanced_frame_caption(image_bytes)
+                if blip_caption:
+                    frame_captions.append(f"Frame {idx+1}: {blip_caption}")
+    except Exception as e:
+        logger.error(f"Gemini Vision/BLIP integration failed: {e}")
+
+    # --- Tone/style selection ---
+    # Use user-selected tone/style if provided, else fallback to caption_style or 'casual'
+    selected_style = tone_style or clip_metadata.get('caption_style', 'casual')
+    logger.info(f"Using tone/style: {selected_style}")
+
+    # Build context summary before prompt construction
+    context_parts = []
+    if user_description:
+        context_parts.append(f"User description: {user_description}")
+    if gemini_descriptions:
+        context_parts.append("Gemini Vision analysis:")
+        context_parts.extend(gemini_descriptions)
+    if frame_captions:
+        context_parts.append("Local frame captions:")
+        context_parts.extend(frame_captions)
+    if not context_parts:
+        context_parts.append(fallback)
+    summarized = "\n".join(context_parts)
+    logger.info(f"Context summary for AI model:\n{summarized}")
+
     try:
         # Check if we're using the unified text generator
         if UNIFIED_AVAILABLE and isinstance(text_generator, UnifiedTextGenerator):
@@ -163,61 +227,70 @@ def process_clip(
             # Log the provider being used
             logger.info(f"Using AI provider: {text_generator.model_type.value}")
 
-            # Get caption style if provided
-            caption_style = clip_metadata.get('caption_style', 'casual')
-            logger.info(f"Using caption style: {caption_style}")
-
             # Get frame descriptions if available
             frame_descriptions = clip_metadata.get('frame_descriptions', None)
             if frame_descriptions:
                 logger.info(f"Using {len(frame_descriptions)} frame descriptions for text generation")
 
+            # Build a clear, explicit prompt for the AI model
+            def build_generation_prompt(context, task, style, num_items, item_type):
+                if item_type == "captions":
+                    diversity_instruction = (
+                        "Each caption must offer a unique perspective or highlight a different aspect of the video's content. "
+                        "Think about different angles a viewer might find interesting or engaging. "
+                        "Aim for a mix of concise, descriptive, and potentially engaging tones. "
+                        "Avoid repeating the same core message with slightly different wording. "
+                        "If possible, relate each caption to a distinct moment, action, or key visual element within the video. "
+                        "If the video tells a story or has a progression, each caption should touch upon a different part. "
+                        "Vary the tone: some captions can be attention-grabbing, others descriptive, and some humorous or inquisitive."
+                    )
+                else:
+                    diversity_instruction = ""
+                # Add explicit style/tone instruction
+                style_instruction = f"Use a {style} style that matches the user's preference. "
+                return (
+                    f"Context:\n{context}\n"
+                    f"Task: Generate {num_items} {style} {item_type} for a social media post about this video. "
+                    f"Do not mention the context or analysis block. Output only the {item_type}, one per line.\n"
+                    f"{style_instruction}"
+                    f"{diversity_instruction}"
+                )
+
+            # Use the summarized context for both captions and hashtags
+            logger.info(f"Context being sent to prompt builder: {summarized}")
+            prompt_captions = build_generation_prompt(
+                summarized,
+                task="Generate captions",
+                style=selected_style,
+                num_items=num_caption_variations,
+                item_type="captions"
+            )
+            prompt_hashtags = build_generation_prompt(
+                summarized,
+                task="Generate hashtags",
+                style=selected_style,
+                num_items=num_hashtags,
+                item_type="hashtags"
+            )
+            # Pass these prompts to the text generator
+            # (Override video_description for captions, and pass prompt_hashtags for hashtags)
+            # Only for unified text generator
             # Generate captions
-            logger.info(f"Generating {num_caption_variations} caption variations with {caption_style} style")
-            try:
-                captions = text_generator.generate_captions(
-                    video_description=video_description,
-                    num_variations=num_caption_variations,
-                    caption_style=caption_style,
-                    frame_descriptions=frame_descriptions
-                )
-                # Ensure there's at least some content
-                if not captions or all(not caption for caption in captions):
-                    logger.warning("No valid captions returned, using fallback captions")
-                    desc = os.path.basename(clip_path).replace('_', ' ').replace('.mp4', '')
-                    captions = [
-                        f"Check out this {desc} video!",
-                        f"Had to share this {desc} moment!",
-                        f"This {desc} is too good not to share!"
-                    ]
-            except Exception as e:
-                logger.error(f"Error generating captions: {str(e)}")
-                desc = os.path.basename(clip_path).replace('_', ' ').replace('.mp4', '')
-                captions = [
-                    f"Check out this {desc} video!",
-                    f"Had to share this {desc} moment!",
-                    f"This {desc} is too good not to share!"
-                ]
-
+            logger.info(f"Prompt for captions:\n{prompt_captions}")
+            captions = text_generator.generate_captions(
+                video_description=prompt_captions,
+                num_variations=num_caption_variations,
+                caption_style=selected_style,
+                frame_descriptions=frame_descriptions
+            )
             # Generate hashtags
-            logger.info(f"Generating {num_hashtags} hashtags")
-            try:
-                hashtags = text_generator.generate_hashtags(
-                    video_description=video_description,
-                    num_hashtags=num_hashtags,
-                    caption_style=caption_style,
-                    frame_descriptions=frame_descriptions
-                )
-                # Ensure there's at least some content
-                if not hashtags or all(not tag for tag in hashtags):
-                    logger.warning("No valid hashtags returned, using fallback hashtags")
-                    hashtags = ["trending", "viral", "video", "content", "social", "follow", "share", "like", "comment", "fyp"]
-            except Exception as e:
-                logger.error(f"Error generating hashtags: {str(e)}")
-                hashtags = ["trending", "viral", "video", "content", "social", "follow", "share", "like", "comment", "fyp"]
-
-            # Log what was generated
-            logger.info(f"Generated {len(captions)} captions and {len(hashtags)} hashtags")
+            logger.info(f"Prompt for hashtags:\n{prompt_hashtags}")
+            hashtags = text_generator.generate_hashtags(
+                video_description=prompt_hashtags,
+                num_hashtags=num_hashtags,
+                caption_style=selected_style,
+                frame_descriptions=frame_descriptions
+            )
 
             # Generate platform-specific variations (simplified for unified text generator)
             logger.info(f"Generating platform-specific variations for: {', '.join(platforms)}")
@@ -256,6 +329,13 @@ def process_clip(
             # No text generator available, use fallback values
             raise ValueError("No text generator available")
 
+        # After hashtags are generated, ensure they all start with #
+        if hashtags:
+            hashtags = [tag if tag.startswith('#') else f'#{tag.lstrip('#')}' for tag in hashtags]
+
+        # Filter similar captions
+        captions = filter_similar_captions(captions)
+
         # Return the results
         overall_duration = time.time() - overall_start_time
         logger.info(f"Total text generation process completed in {overall_duration:.2f} seconds")
@@ -264,33 +344,34 @@ def process_clip(
             "path": clip_path,
             "captions": captions,
             "hashtags": hashtags,
-            "platforms": platform_variations
+            "platforms": platform_variations,
+            "tone_style": selected_style
         }
 
     except Exception as e:
         logger.error(f"Error processing clip: {str(e)}")
-        # Return fallback results
+        # Return fallback results (do not reference 'summarized')
+        fallback_desc = user_description or os.path.basename(clip_path)
         fallback_captions = [
-            f"Check out this {clip_metadata.get('description', 'amazing')} video!",
-            f"Had to share this {clip_metadata.get('description', 'cool')} moment!",
-            f"This is what happens when {clip_metadata.get('description', 'creativity strikes')}!"
+            f"Check out this {fallback_desc} video!",
+            f"Had to share this {fallback_desc} moment!",
+            f"This is what happens when {fallback_desc}!"
         ]
-        fallback_hashtags = ["trending", "viral", "fyp", "foryou", "content", "video", "share", "follow", "like", "comment"]
+        fallback_hashtags = ["#trending", "#viral", "#fyp", "#foryou", "#content", "#video", "#share", "#follow", "#like", "#comment"]
         fallback_platforms = {}
         for platform in platforms:
             fallback_platforms[platform] = {
-                "caption": f"Check out this {clip_metadata.get('description', 'amazing')} video!",
-                "hashtags": ["trending", "viral", platform.lower(), "content", "video"]
+                "caption": f"Check out this {fallback_desc} video!",
+                "hashtags": ["#trending", "#viral", f"#{platform.lower()}", "#content", "#video"]
             }
-
         overall_duration = time.time() - overall_start_time
         logger.info(f"Total text generation process (fallback) completed in {overall_duration:.2f} seconds")
-
         return {
             "path": clip_path,
             "captions": fallback_captions[:num_caption_variations],
             "hashtags": fallback_hashtags[:num_hashtags],
-            "platforms": fallback_platforms
+            "platforms": fallback_platforms,
+            "tone_style": selected_style
         }
 
 def extract_video_frames(video_path: str, num_frames: int = 5) -> List[Dict]:
@@ -309,7 +390,7 @@ def extract_video_frames(video_path: str, num_frames: int = 5) -> List[Dict]:
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
             logger.error(f"Could not open video file: {video_path}")
-            return []
+            raise FileNotFoundError(f"Could not open video file: {video_path}")
 
         # Get video properties
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -326,37 +407,60 @@ def extract_video_frames(video_path: str, num_frames: int = 5) -> List[Dict]:
         frame_descriptions = []
         for idx in frame_indices:
             cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
-            ret, frame = cap.read()
-            if ret:
+            try:
+                ret, frame = cap.read()
+                if not ret:
+                    logger.warning(f"Failed to read frame {idx} from {video_path}")
+                    continue
                 # Convert frame to RGB
                 frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            except cv2.error as e:
+                logger.error(f"cv2 error reading frame {idx}: {e}")
+                continue
+            except Exception as e:
+                logger.error(f"Unexpected error reading frame {idx}: {e}")
+                continue
 
-                # Create a basic description of the frame
-                timestamp = idx / fps if fps > 0 else 0
-                height, width, _ = frame.shape
+            # Create a basic description of the frame
+            timestamp = idx / fps if fps > 0 else 0
+            height, width, _ = frame.shape
 
-                # Perform basic image analysis
+            # Perform basic image analysis
+            try:
                 frame_analysis = analyze_frame_content(frame_rgb)
+            except Exception as e:
+                logger.error(f"Error analyzing frame {idx}: {e}")
+                frame_analysis = {"error": str(e)}
 
-                # Convert frame to base64 for potential use with vision models
+            # Convert frame to base64 for potential use with vision models
+            try:
                 pil_img = Image.fromarray(frame_rgb)
                 buffered = BytesIO()
                 pil_img.save(buffered, format="JPEG", quality=70)  # Lower quality to reduce size
                 img_str = base64.b64encode(buffered.getvalue()).decode()
+            except Exception as e:
+                logger.error(f"Error encoding frame {idx} to base64: {e}")
+                img_str = ""
 
-                frame_descriptions.append({
-                    "timestamp": timestamp,
-                    "position": f"{timestamp:.2f}s / {duration:.2f}s",
-                    "resolution": f"{width}x{height}",
-                    "frame_index": idx,
-                    "image_data": img_str,
-                    "analysis": frame_analysis
-                })
+            frame_descriptions.append({
+                "timestamp": timestamp,
+                "position": f"{timestamp:.2f}s / {duration:.2f}s",
+                "resolution": f"{width}x{height}",
+                "frame_index": idx,
+                "image_data": img_str,
+                "analysis": frame_analysis
+            })
 
         cap.release()
-        logger.info(f"Extracted {len(frame_descriptions)} frames from video")
+        logger.info(f"Extracted {len(frame_descriptions)} frames from video {video_path}")
         return frame_descriptions
 
+    except FileNotFoundError as e:
+        logger.error(f"File not found: {e}")
+        return []
+    except cv2.error as e:
+        logger.error(f"OpenCV error: {e}")
+        return []
     except Exception as e:
         logger.error(f"Error extracting frames from video: {str(e)}")
         return []
@@ -392,7 +496,6 @@ def analyze_frame_content(frame):
         num_faces = len(faces)
 
         # Attempt to detect text using contour analysis
-        # This is a simple approximation, not as good as OCR
         _, thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY_INV)
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5,5))
         dilated = cv2.dilate(thresh, kernel, iterations=3)
@@ -424,8 +527,6 @@ def analyze_frame_content(frame):
 
         # Color description - use more neutral language
         r, g, b = color_means
-
-        # Determine dominant color
         max_color = max(r, g, b)
         if max_color > 0.3:  # Only describe color if it's significant
             if r > g * 1.2 and r > b * 1.2:
@@ -447,27 +548,21 @@ def analyze_frame_content(frame):
         elif edge_density > 0.2:
             description.append("detailed composition")
 
-        # Face description - add potential for comedy detection
+        # Face description
         if has_faces:
             if num_faces == 1:
                 description.append("shows 1 person")
-
-                # Check for potential comedy indicators in facial features
-                # This is a simple heuristic and not very accurate
+                # Check for potential expressive faces (but do not guess comedy)
                 for (x, y, w, h) in faces:
                     face_roi = frame[y:y+h, x:x+w]
-                    # A simple check for exaggerated expressions
-                    if face_roi.size > 0:  # Make sure the ROI is valid
+                    if face_roi.size > 0:
                         face_gray = cv2.cvtColor(face_roi, cv2.COLOR_RGB2GRAY)
                         face_edges = cv2.Canny(face_gray, 100, 200)
                         face_edge_density = np.count_nonzero(face_edges) / (face_edges.shape[0] * face_edges.shape[1])
-
-                        # Higher edge density in face might indicate exaggerated expressions
                         if face_edge_density > 0.15:
                             description.append("possibly expressive face")
             else:
                 description.append(f"shows {num_faces} people")
-                # Multiple people often indicates social/comedy content
                 if num_faces >= 2:
                     description.append("social interaction")
 
@@ -475,13 +570,8 @@ def analyze_frame_content(frame):
         if has_text:
             description.append("contains text")
 
-        # Create a summary
+        # Create a summary (do not guess content type unless certain)
         summary = "Frame " + ", ".join(description)
-
-        # Add content type estimation
-        content_type = estimate_content_type(frame, brightness, edge_density, has_faces, num_faces)
-        if content_type:
-            summary += f". Possible content type: {content_type}."
 
         return {
             "brightness": brightness,
@@ -494,7 +584,6 @@ def analyze_frame_content(frame):
             "has_faces": has_faces,
             "num_faces": num_faces,
             "has_text": has_text,
-            "content_type": content_type,
             "summary": summary
         }
     except Exception as e:
@@ -534,3 +623,10 @@ def estimate_content_type(frame, brightness, edge_density, has_faces, num_faces)
 
     # Default to neutral description
     return "general content"
+
+def filter_similar_captions(captions, threshold=0.8):
+    unique = []
+    for caption in captions:
+        if all(SequenceMatcher(None, caption, u).ratio() < threshold for u in unique):
+            unique.append(caption)
+    return unique

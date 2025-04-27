@@ -244,3 +244,8 @@ def get_auth_manager(user_id: str) -> AuthManager:
     Returns:
         AuthManager instance
     """
+    try:
+        return AuthManager(user_id)
+    except Exception as e:
+        logger.error(f"Error creating AuthManager for user {user_id}: {str(e)}")
+        return None
