@@ -29,7 +29,17 @@ fi
 
 # Run tests with proper Python path
 echo -e "${YELLOW}Running tests...${NC}"
-if PYTHONPATH="$PROJECT_ROOT:$PYTHONPATH" pytest tests/ -v; then
+
+# Check if a specific test file was provided
+if [ ! -z "$2" ]; then
+    TEST_PATH="$2"
+    echo -e "${YELLOW}Running specific test: ${TEST_PATH}${NC}"
+else
+    TEST_PATH="tests/"
+    echo -e "${YELLOW}Running all tests${NC}"
+fi
+
+if PYTHONPATH="$PROJECT_ROOT" pytest "$TEST_PATH" -v; then
     echo -e "${GREEN}All tests passed!${NC}"
 else
     echo -e "${RED}Tests failed. Fix the issues before pushing to GitHub.${NC}"
